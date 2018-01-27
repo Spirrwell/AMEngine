@@ -1,0 +1,3 @@
+ShaderName = "basicShader"
+
+$diffuse "textures/cube/test2.png"
