@@ -158,7 +158,7 @@ bool RendererGL::Init()
 		2, 1, 3,
 	};
 
-	m_pModel = new ModelGL( std::string( GAME_DIR ) + "models/bowman.amdl" );
+	m_pModel = new ModelGL( std::string( GAME_DIR ) + "models/cube.amdl" );
 	m_pSkybox = new Skybox;
 
 	//TextureGL *pTexture = new TextureGL( std::string( GAME_DIR ) + "models/cube.fbm/test2.png" );
