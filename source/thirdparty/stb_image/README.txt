@@ -1,0 +1,1 @@
+stb_image is in the public domain and can be found here https://github.com/nothings/stb
