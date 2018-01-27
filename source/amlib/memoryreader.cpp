@@ -75,4 +75,6 @@ bool MemoryReader::read( char *pDst, size_t count )
 
 	std::memcpy( ( void* )pDst, ( void* )&m_pData[ m_Pos ], count );
 	m_Pos += count;
+
+	return true;
 }

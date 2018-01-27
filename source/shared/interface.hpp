@@ -16,7 +16,7 @@ public:
 		GetFactory()->RemoveDLLInterface( this );
 	}
 
-	virtual const std::string &GetInterfaceName() override { return ""; }
+	virtual const std::string &GetInterfaceName() override { static std::string empty = ""; return empty; }
 	virtual void *GetInterface() override { return nullptr; }
 };
 
