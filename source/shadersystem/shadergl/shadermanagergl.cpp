@@ -1,7 +1,7 @@
 #include "shadermanagergl.hpp"
 #include "interface.hpp"
-#include "genericshader.hpp"
-#include "skyshader.hpp"
+#include "renderer/irenderer.hpp"
+#include "shadergl.hpp"
 
 IRenderer *g_pRenderer = nullptr;
 
