@@ -82,7 +82,7 @@ void NetworkHost::Update()
 			case ENET_EVENT_TYPE_CONNECT:
 			{
 				std::cout << "A new client connected from " << IPToString( netEvent.peer->address.host ) << ":" << netEvent.peer->address.port << std::endl;
-				netEvent.peer->data = "Client information";
+				netEvent.peer->data = ( void* )"Client information";
 
 				m_pPeers.push_back( netEvent.peer );
 
@@ -100,13 +100,13 @@ void NetworkHost::Update()
 			}
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
-				printf
+				/*printf
 				(
 					"A packet of length %u was received from %s on channel %u.\n",
 					( unsigned int )netEvent.packet->dataLength,
 					( char* )netEvent.peer->data,
 					netEvent.channelID
-				);
+				);*/
 
 				enet_packet_destroy( netEvent.packet );
 

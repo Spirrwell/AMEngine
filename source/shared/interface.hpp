@@ -7,7 +7,7 @@
 class DLLInterfaceOverride : IDLLInterface
 {
 public:
-	DLLInterfaceOverride::DLLInterfaceOverride()
+	DLLInterfaceOverride()
 	{
 		GetFactory()->AddDLLInterface( this );
 	}

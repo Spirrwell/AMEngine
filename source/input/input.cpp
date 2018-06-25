@@ -14,7 +14,7 @@ Input::Input()
 
 Input::~Input()
 {
-	if ( m_pCurrentKeyboardState )
+	if ( m_pOldKeyboardState )
 		delete[] m_pOldKeyboardState;
 }
 

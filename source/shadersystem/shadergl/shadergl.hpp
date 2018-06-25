@@ -43,7 +43,7 @@ public:
 	virtual std::vector < MaterialParameter_t > GetMaterialParameters();
 
 	// Used for setting non-opaque uniform types, meaning they are part of a uniform block
-	// We're using SPIR-V requires these uniforms to to be set as part of a uniform block
+	// We're using SPIR-V which requires these uniforms to to be set as part of a uniform block
 	void SetMatrix3f( const std::string &uniform, Matrix3f mat3x3 ) override;
 	void SetMatrix4f( const std::string &uniform, Matrix4f mat4x4 ) override;
 	void SetVector2f( const std::string &uniform, Vector2f vec2 ) override;
@@ -72,7 +72,7 @@ protected:
 	unsigned int m_iShaderIndex;
 
 	GLuint m_hProgram;
-	GLuint m_iShaders[NUM_SHADERS];
+	GLuint m_iShaders[ NUM_SHADERS ];
 
 	std::string m_strCurrentUBO;
 
