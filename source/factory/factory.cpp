@@ -6,7 +6,7 @@ Module::Module( const std::string &strModulePath )
 {
 	m_hDLL = nullptr;
 #ifdef _WIN32
-	m_hDLL = ::LoadLibrary( TEXT( strModulePath.c_str() ) );
+	m_hDLL = ::LoadLibraryA( strModulePath.c_str() );
 #elif defined ( __linux__ )
 	m_hDLL = dlopen( strModulePath.c_str(), RTLD_LAZY );
 	if ( !IsValid() )
@@ -21,7 +21,7 @@ Module::~Module()
 		::FreeLibrary( m_hDLL );
 #elif defined ( __linux__ )
         if ( dlclose( m_hDLL ) != 0 )
-			printf("Error: %s\n", dlerror() );
+			printf( "Error: %s\n", dlerror() );
 #endif
 }
 
@@ -29,6 +29,8 @@ Factory::~Factory()
 {
 	for ( auto &pModule : m_pModules )
 		delete pModule;
+
+	m_pModules.clear();
 }
 
 void Factory::AddDLLInterface( IDLLInterface *pDLLInterface )
@@ -40,12 +42,12 @@ void Factory::AddDLLInterface( IDLLInterface *pDLLInterface )
 void Factory::RemoveDLLInterface( IDLLInterface *pDLLInterface )
 {
 	assert( pDLLInterface != nullptr );
-	for ( unsigned int i = 0; i < m_pInterfaces.size(); i++ )
+	for ( auto it = m_pInterfaces.begin(); it != m_pInterfaces.end(); it++ )
 	{
-		if ( m_pInterfaces[i] == pDLLInterface )
+		if ( *it == pDLLInterface )
 		{
-			m_pInterfaces.erase( m_pInterfaces.begin() + i );
-			break;
+			m_pInterfaces.erase( it );
+			return;
 		}
 	}
 }
@@ -81,7 +83,7 @@ bool Factory::LoadModule( const std::string &strModule )
 	{
 		for ( size_t i = oldInterfaceCount; i < newInterfaceCount; i++ )
 		{
-			if ( !m_pInterfaces[i]->Init() )
+			if ( !m_pInterfaces[ i ]->Init() )
 			{
 				delete pModule;
 				return false;

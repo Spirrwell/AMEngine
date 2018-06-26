@@ -64,12 +64,12 @@ void NetworkClient::Update()
 		{
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
-				printf
+				/*printf
 				(
 					"A packet of length %u was received on channel %u.\n",
 					( unsigned int )netEvent.packet->dataLength,
 					netEvent.channelID
-				);
+				);*/
 
 				switch ( netEvent.channelID )
 				{

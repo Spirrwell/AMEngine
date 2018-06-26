@@ -1,0 +1,87 @@
+project "client"
+	kind "SharedLib"
+	language "C++"
+	cppdialect "C++17"
+	location "./"
+	targetname "client"
+	
+	defines { "CLIENT_DLL" }
+	
+	vpaths {
+		[ "Header Files" ] = { "**.hpp", "../shared/**.hpp", "../../shared/**.hpp" },
+		[ "Source Files" ] = { "**.cpp", "../shared/**.cpp" }
+	}
+	
+	files {
+			"%{cfg.location}/client.hpp",
+			"%{cfg.location}/client.cpp",
+			"%{cfg.location}/viewport.hpp",
+			"%{cfg.location}/viewport.cpp",
+			"../shared/dummyobject.hpp",
+			"../shared/dummyobject.cpp",
+			"../shared/gameobject.hpp",
+			"../shared/gameobject.cpp",
+			"../shared/gameobjectfactory.hpp",
+			"../shared/gameobjectfactory.cpp",
+			"../shared/networktable.hpp",
+			"../shared/networktable.cpp",
+			"../shared/networkvar.hpp",
+			"../../shared/icamera.hpp",
+			"../../shared/iviewport.hpp",
+			"../../shared/game/client/iclient.hpp"
+		}
+		
+	includedirs {
+				"../shared",
+				"../../shared",
+				"../../shared/game/client",
+				"../../thirdparty/glm/include"
+		}
+	
+	links {
+			"amlib", --Project
+			"factory" --Project
+		}
+	
+	filter { "system:Windows" }
+		links {
+				"amlib.lib",
+				"factory.lib"
+			}
+	
+	filter { "configurations:Debug"	}
+		symbols "On"
+		
+	filter { "configurations:Release" }
+		optimize "On"
+	
+	filter { "platforms:Win64", "configurations:Debug" }
+		targetdir "debug_win64"
+		architecture "x64"
+		debugcommand "../../../game/win64/debug/launcher.exe"
+		debugdir "../../../game/win64/debug"
+
+	filter { "platforms:Win64", "configurations:Release" }
+		targetdir "release_win64"
+		architecture "x64"
+		debugcommand "../../../game/win64/release/launcher.exe"
+		debugdir "../../../game/win64/release"
+
+	filter { "platforms:Win64", "configurations:Debug" }
+		libdirs {
+				"../../lib/shared/win64/debug"
+			}
+		
+	filter { "platforms:Win64", "configurations:Release" }
+		libdirs {
+				"../../lib/shared/win64/release"
+			}
+
+	filter { "system:Windows" }
+		defines { "_CRT_SECURE_NO_WARNINGS" }
+
+	filter { "action:vs*", "platforms:Win64", "configurations:Debug" }
+		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../../game/win64/debug/bin\" /s /i /y" }
+
+	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
+		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../../game/win64/release/bin\" /s /i /y" }

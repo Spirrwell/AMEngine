@@ -15,9 +15,9 @@ class Module
 {
 public:
 	Module( const std::string &strModulePath );
-	~Module();
+	virtual ~Module();
 
-	bool IsValid() { return m_hDLL != nullptr; };
+	inline bool IsValid() { return m_hDLL != nullptr; };
 private:
 
 #ifdef _WIN32

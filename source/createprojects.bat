@@ -1,0 +1,1 @@
+..\tools\devtools\bin\premake\premake5.exe --file=AMEnginePremake.lua vs2017

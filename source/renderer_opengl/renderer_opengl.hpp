@@ -28,11 +28,11 @@ public:
 	virtual void Clear() override;
 	virtual void Swap() override;
 
-	virtual ITexture *CreateTexture( const std::string &textureName, bool bCubeMap = false ) override;
+	virtual ITexture *CreateTexture( const string &textureName, bool bCubeMap = false ) override;
 
 	virtual unsigned int GetShaderCount();
 	virtual IBaseShader *GetShader( unsigned int iShaderIndex ) override;
-	virtual IBaseShader *GetShader( const std::string &shaderName ) override;
+	virtual IBaseShader *GetShader( const string &shaderName ) override;
 
 	unsigned int AddShader ( IBaseShader *pShader ) override;
 

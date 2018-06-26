@@ -18,13 +18,13 @@ std::vector < char > ReadBinaryShader( const std::string &strFileName, ShaderTyp
 		break;
 	default:
 		// Something bad happened
-		return std::vector< char >();
+		return {};
 	}
 
 	std::string fullPath = std::string( GAME_DIR ) + std::string( "shaders/" ) + strFileName + strShaderExtension;
 	std::ifstream file( fullPath, std::ios::ate | std::ios::binary );
 
-	size_t fileSize = ( size_t )file.tellg();
+	size_t fileSize = static_cast< size_t >( file.tellg() );
 	std::vector< char > shader( fileSize );
 
 	file.seekg( 0 );

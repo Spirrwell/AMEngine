@@ -1,6 +1,5 @@
 #include <cassert>
 #include <fstream>
-#include <string>
 #include <sstream>
 
 #include "renderer_opengl.hpp"
@@ -108,7 +107,7 @@ bool RendererGL::Init()
 		return false;
 	}
 
-	if ( !GetFactory()->LoadModule( "bin/shadergl" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/shadergl" + string( DLL_EXTENSION ) ) )
     {
         printf( "Renderer failed to get shadergl module\n" );
 		return false;
@@ -119,7 +118,7 @@ bool RendererGL::Init()
 	if ( !g_pShaderManager || !g_pShaderManager->Init() )
 		return false;
 
-	if ( !GetFactory()->LoadModule( "bin/materialsystem" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/materialsystem" + string( DLL_EXTENSION ) ) )
     {
         printf( "Renderer failed to get materialsystem module\n" );
 		return false;
@@ -158,10 +157,10 @@ bool RendererGL::Init()
 		2, 1, 3,
 	};
 
-	m_pModel = new ModelGL( std::string( GAME_DIR ) + "models/cube.amdl" );
+	m_pModel = new ModelGL( string( GAME_DIR ) + "models/cube.amdl" );
 	m_pSkybox = new Skybox;
 
-	//TextureGL *pTexture = new TextureGL( std::string( GAME_DIR ) + "models/cube.fbm/test2.png" );
+	//TextureGL *pTexture = new TextureGL( string( GAME_DIR ) + "models/cube.fbm/test2.png" );
 
 	//m_pMesh = new MeshGL( vertices, indices, m_pShaders[ 0 ] );
 	//m_pMesh = new MeshGL( realModelVerts, realModelIndicies, m_pShaders[ 0 ] );
@@ -233,24 +232,24 @@ void RendererGL::Swap()
 	SDL_GL_SwapWindow( m_pMainWindow );
 }
 
-ITexture *RendererGL::CreateTexture( const std::string &textureName, bool bCubeMap /*= false*/ )
+ITexture *RendererGL::CreateTexture( const string &textureName, bool bCubeMap /*= false*/ )
 {
 	if ( bCubeMap )
 	{
-		std::vector < std::string > faces =
+		std::vector < string > faces =
 		{
-			std::string( GAME_DIR ) + textureName + "_right.jpg",
-			std::string( GAME_DIR ) + textureName + "_left.jpg",
-			std::string( GAME_DIR ) + textureName + "_top.jpg",
-			std::string( GAME_DIR ) + textureName + "_bottom.jpg",
-			std::string( GAME_DIR ) + textureName + "_back.jpg",
-			std::string( GAME_DIR ) + textureName + "_front.jpg"
+			string( GAME_DIR ) + textureName + "_right.jpg",
+			string( GAME_DIR ) + textureName + "_left.jpg",
+			string( GAME_DIR ) + textureName + "_top.jpg",
+			string( GAME_DIR ) + textureName + "_bottom.jpg",
+			string( GAME_DIR ) + textureName + "_back.jpg",
+			string( GAME_DIR ) + textureName + "_front.jpg"
 		};
 
 		return new TextureGL( faces );
 	}
 
-	return new TextureGL( std::string( GAME_DIR ) + textureName );
+	return new TextureGL( string( GAME_DIR ) + textureName );
 }
 
 unsigned int RendererGL::GetShaderCount()
@@ -264,7 +263,7 @@ IBaseShader *RendererGL::GetShader( unsigned int iShaderIndex )
 	return m_pShaders[ iShaderIndex ];
 }
 
-IBaseShader *RendererGL::GetShader( const std::string &shaderName )
+IBaseShader *RendererGL::GetShader( const string &shaderName )
 {
 	for ( IBaseShader *& pShader : m_pShaders )
 		if ( pShader->GetName() == shaderName )

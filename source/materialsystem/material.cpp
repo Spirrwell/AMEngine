@@ -35,10 +35,10 @@ Material::Material( const std::string &materialPath )
 
 		if ( tokens.size() == 2 )
 		{
-			if ( tokens[0] == "ShaderName" )
+			if ( tokens[ 0 ] == "ShaderName" )
 			{
-				tokens[1].erase( std::remove( tokens[1].begin(), tokens[1].end(), '\"' ), tokens[1].end() );
-				m_pShader = g_pRenderer->GetShader( tokens[1] );
+				tokens[ 1 ].erase( std::remove( tokens[ 1 ].begin(), tokens[ 1 ].end(), '\"' ), tokens[1].end() );
+				m_pShader = g_pRenderer->GetShader( tokens[ 1 ] );
 				break;
 			}
 		}
@@ -63,33 +63,35 @@ Material::Material( const std::string &materialPath )
 		std::istringstream ss( line );
 		std::string token;
 
-		while ( ss >> token )
-			tokens.push_back( token );
+		while ( ss >> token ) tokens.push_back( token );
 
 		if ( tokens.size() == 2 )
 		{
-			if ( tokens[0].at( 0 ) == '$' )
+			if ( tokens[ 0 ].at( 0 ) == '$' )
 			{
-				tokens[0].erase( tokens[0].begin() );
-				tokens[1].erase( std::remove( tokens[1].begin(), tokens[1].end(), '\"' ), tokens[1].end() );
+				tokens[ 0 ].erase( tokens[ 0 ].begin() );
+				tokens[ 1 ].erase( std::remove( tokens[ 1 ].begin(), tokens[ 1 ].end(), '\"' ), tokens[ 1 ].end() );
 
 				for ( MaterialParameter_t &matParam : m_vMaterialParameters )
 				{
-					if ( matParam.parameterName == tokens[0] && matParam.type == MATP_TEXTURE )
+					if ( matParam.parameterName == tokens[ 0 ] )
 					{
-						m_mapTextures[ matParam.parameterName ] = g_pRenderer->CreateTexture( tokens[1] );
-					}
-					else if ( matParam.parameterName == tokens[0] && matParam.type == MATP_SKYTEXTURE )
-					{
-						m_mapTextures[ matParam.parameterName ] = g_pRenderer->CreateTexture( tokens[1], true );
-					}
-					else if ( matParam.parameterName == tokens[0] && matParam.type == MATP_FLOAT )
-					{
-						m_mapFloats[ matParam.parameterName ] = std::stof( tokens[1] );
+						switch ( matParam.type )
+						{
+						case MATP_TEXTURE:
+							m_mapTextures[ matParam.parameterName ] = g_pRenderer->CreateTexture( tokens[ 1 ] );
+							break;
+						case MATP_SKYTEXTURE:
+							m_mapTextures[ matParam.parameterName ] = g_pRenderer->CreateTexture( tokens[ 1 ], true );
+							break;
+						case MATP_FLOAT:
+							m_mapFloats[ matParam.parameterName ] = std::stof( tokens[ 1 ] );
+							break;
+						}
 					}
 				}
 
-				printf( "parameterName: %s parameterValue: %s\n", tokens[0].c_str(), tokens[1].c_str() );
+				printf( "parameterName: %s parameterValue: %s\n", tokens[ 0 ].c_str(), tokens[ 1 ].c_str() );
 			}
 		}
 	}

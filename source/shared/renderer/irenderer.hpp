@@ -2,7 +2,7 @@
 #define IRENDERER_HPP
 
 #include <stdint.h>
-#include <string>
+#include "string.hpp"
 
 #include "shadersystem/ishader.hpp"
 #include "shadersystem/ibaseshader.hpp"
