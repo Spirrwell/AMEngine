@@ -15,10 +15,10 @@ public:
 
 	virtual bool Init();
 
-	virtual bool IsButtonPressed( const std::string &strButtonName );
-	virtual bool IsButtonReleased( const std::string &strButtonName );
-	virtual bool IsButtonJustPressed( const std::string &strButtonName );
-	virtual bool IsButtonJustReleased( const std::string &strButtonName );
+	virtual bool IsButtonPressed( const string &strButtonName );
+	virtual bool IsButtonReleased( const string &strButtonName );
+	virtual bool IsButtonJustPressed( const string &strButtonName );
+	virtual bool IsButtonJustReleased( const string &strButtonName );
 
 	virtual void Update();
 
@@ -26,7 +26,7 @@ public:
 	virtual float GetMouseDeltaY() { return m_flMouseDeltaY; }
 
 private:
-	std::map< std::string, Uint8 > m_mapButtons;
+	std::map< string, Uint8 > m_mapButtons;
 	const Uint8 *m_pCurrentKeyboardState;
 	Uint8 *m_pOldKeyboardState;
 

@@ -14,7 +14,7 @@
 class Module
 {
 public:
-	Module( const std::string &strModulePath );
+	Module( const string &strModulePath );
 	virtual ~Module();
 
 	inline bool IsValid() { return m_hDLL != nullptr; };
@@ -36,8 +36,8 @@ public:
 	virtual ~Factory();
 	virtual void AddDLLInterface( IDLLInterface *pDLLInterface );
 	virtual void RemoveDLLInterface( IDLLInterface *pDLLInterface );
-	virtual void *GetInterface( const std::string &strInterfaceName );
-	virtual bool LoadModule( const std::string &strModule );
+	virtual void *GetInterface( const string &strInterfaceName );
+	virtual bool LoadModule( const string &strModule );
 
 private:
 	std::vector < IDLLInterface* > m_pInterfaces;

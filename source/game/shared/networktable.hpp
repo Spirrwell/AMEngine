@@ -1,10 +1,10 @@
 #ifndef NETWORKTABLE_HPP
 #define NETWORKTABLE_HPP
 
-#include <string>
 #include <vector>
 #include <map>
 
+#include "string.hpp"
 #include "networkvar.hpp"
 #include "engine/inetworktable.hpp"
 

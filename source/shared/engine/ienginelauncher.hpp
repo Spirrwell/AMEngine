@@ -4,7 +4,7 @@
 class IEngineLauncher
 {
 public:
-    virtual ~IEngineLauncher() {}
+	virtual ~IEngineLauncher() = default;
 
 	virtual bool Init() = 0;
 	virtual void PostInit() = 0;

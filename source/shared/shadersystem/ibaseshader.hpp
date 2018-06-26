@@ -3,8 +3,8 @@
 
 #include "materialsystem/imaterial.hpp"
 #include "ishader.hpp"
+#include "string.hpp"
 
-#include <string>
 #include <vector>
 
 class IBaseShader
@@ -21,7 +21,7 @@ public:
 
 	virtual std::vector < MaterialParameter_t > GetMaterialParameters() = 0;
 
-	virtual const std::string &GetName() = 0;
+	virtual const string &GetName() = 0;
 };
 
 #endif // IBASESHADER_HPP

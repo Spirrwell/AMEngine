@@ -23,9 +23,9 @@ bool MaterialSystem::Init()
 	return true;
 }
 
-IMaterial *MaterialSystem::CreateMaterial( const std::string &materialName )
+IMaterial *MaterialSystem::CreateMaterial( const string &materialName )
 {
-	return new Material( std::string( GAME_DIR ) + materialName );
+	return new Material( string( GAME_DIR ) + materialName );
 }
 
 static DLLInterface < IMaterialSystem, MaterialSystem > s_MaterialSystem( MATERIALSYSTEM_INTERFACE_VERSION );

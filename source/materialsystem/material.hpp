@@ -2,9 +2,9 @@
 #define MATERIAL_HPP
 
 #include <map>
-#include <string>
 #include <vector>
 
+#include "string.hpp"
 #include "imaterial.hpp"
 #include "renderer/itexture.hpp"
 
@@ -14,20 +14,20 @@
 class Material : public IMaterial
 {
 public:
-	Material( const std::string &materialPath );
+	Material( const string &materialPath );
 	virtual ~Material();
 
 	virtual void Bind();
 	virtual bool IsValid();
 
-	virtual ITexture *GetTexture( const std::string &paramName );
+	virtual ITexture *GetTexture( const string &paramName );
 	virtual IBaseShader *GetShader() override { return m_pShader; }
 
-	virtual float GetFloat( const std::string &paramName );
+	virtual float GetFloat( const string &paramName );
 
 private:
-	std::map < std::string, ITexture * > m_mapTextures;
-	std::map < std::string, float > m_mapFloats;
+	std::map < string, ITexture * > m_mapTextures;
+	std::map < string, float > m_mapFloats;
 
 	std::vector < MaterialParameter_t > m_vMaterialParameters;
 

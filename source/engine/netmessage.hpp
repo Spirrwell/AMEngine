@@ -15,7 +15,7 @@ enum NetMessageType
 class INetMessage
 {
 public:
-	virtual ~INetMessage() {}
+	virtual ~INetMessage() = default;
 
 	virtual const NetMessageType GetType() const = 0;
 };

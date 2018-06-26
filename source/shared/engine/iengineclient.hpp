@@ -6,7 +6,7 @@
 class IEngineClient
 {
 public:
-	virtual ~IEngineClient() {}
+	virtual ~IEngineClient() = default;
 
 	//virtual void RegisterNetworkTable( INetworkTable *pNetTable ) = 0;
 };

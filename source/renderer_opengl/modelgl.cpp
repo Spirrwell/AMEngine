@@ -11,7 +11,7 @@
 
 extern IMaterialSystem *g_pMaterialSystem;
 
-ModelGL::ModelGL( const std::string &modelFile )
+ModelGL::ModelGL( const string &modelFile )
 {
 	/*Assimp::Importer Importer;
 	const aiScene *pScene = Importer.ReadFile( modelFile, aiProcess_Triangulate | aiProcess_FlipUVs  );
@@ -50,7 +50,7 @@ ModelGL::ModelGL( const std::string &modelFile )
 				aiString matName;
 
 				pAIMaterial->Get( AI_MATKEY_NAME, matName );
-				pMaterial = new MaterialGL( std::string( GAME_DIR ) + "models/" + std::string( matName.C_Str() ) + ".amat" );
+				pMaterial = new MaterialGL( string( GAME_DIR ) + "models/" + string( matName.C_Str() ) + ".amat" );
 			}
 		}
 
@@ -66,7 +66,7 @@ ModelGL::ModelGL( const std::string &modelFile )
 	amdlFile.read( ( char * )&version, sizeof( version ) );
 	amdlFile.read( ( char * )&numMaterialPaths, sizeof( numMaterialPaths ) );
 
-	std::vector < std::string > matPaths;
+	std::vector < string > matPaths;
 
 	for ( uint32_t i = 0; i < numMaterialPaths; i++ )
 	{
@@ -74,7 +74,7 @@ ModelGL::ModelGL( const std::string &modelFile )
 
 		amdlFile.read( ( char * )&pathLen, sizeof ( pathLen ) );
 
-		std::string path( pathLen, ' ' );
+		string path( pathLen, ' ' );
 		amdlFile.read( path.data(), pathLen );
 
 		matPaths.push_back( path );
@@ -169,13 +169,13 @@ ModelGL::ModelGL( const std::string &modelFile )
 			uint32_t matNameLen = 0;
 			amdlFile.read( ( char * )&matNameLen, sizeof( matNameLen ) );
 
-			std::string matName( matNameLen, ' ' );
+			string matName( matNameLen, ' ' );
 			//matName.resize( matNameLen );
 			amdlFile.read( matName.data(), matNameLen );
 
 			for ( unsigned int x = 0; x < matPaths.size(); x++ )
 			{
-				std::string path = std::string( GAME_DIR ) + matPaths[x] + "/" + matName + ".amat";
+				string path = string( GAME_DIR ) + matPaths[x] + "/" + matName + ".amat";
 				std::ifstream f( path );
 
 				if ( f.good() )

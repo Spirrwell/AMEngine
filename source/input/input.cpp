@@ -46,22 +46,22 @@ bool Input::Init()
 }
 
 // May want to do checks to see if a button name is valid
-bool Input::IsButtonPressed( const std::string &strButtonName )
+bool Input::IsButtonPressed( const string &strButtonName )
 {
 	return ( m_pCurrentKeyboardState[ m_mapButtons[ strButtonName ] ] == 1 );
 }
 
-bool Input::IsButtonReleased( const std::string &strButtonName )
+bool Input::IsButtonReleased( const string &strButtonName )
 {
 	return !IsButtonPressed( strButtonName );
 }
 
-bool Input::IsButtonJustPressed( const std::string &strButtonName )
+bool Input::IsButtonJustPressed( const string &strButtonName )
 {
 	return ( m_pCurrentKeyboardState[ m_mapButtons[ strButtonName ] ] == 1 && m_pOldKeyboardState[ m_mapButtons[ strButtonName ] ] == 0 );
 }
 
-bool Input::IsButtonJustReleased( const std::string &strButtonName )
+bool Input::IsButtonJustReleased( const string &strButtonName )
 {
 	return ( m_pCurrentKeyboardState[ m_mapButtons[ strButtonName ] ] == 0 && m_pOldKeyboardState[ m_mapButtons[ strButtonName ] ] == 1 );
 }

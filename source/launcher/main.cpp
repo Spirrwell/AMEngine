@@ -9,7 +9,7 @@
 
 int main( int argc, char *argv[] )
 {
-	if ( !GetFactory()->LoadModule( "bin/engine" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/engine" + string( DLL_EXTENSION ) ) )
 	{
 		printf( "Failed to load engine library.\n" );
 		std::cin.get();

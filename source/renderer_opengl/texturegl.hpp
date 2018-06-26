@@ -3,16 +3,16 @@
 
 #include <GL/glew.h>
 
-#include <string>
 #include <vector>
 
+#include "string.hpp"
 #include "itexture.hpp"
 
 class TextureGL : public ITexture
 {
 public:
-	TextureGL( const std::string &fileName );
-	TextureGL( std::vector < std::string > faces );
+	TextureGL( const string &fileName );
+	TextureGL( std::vector < string > faces );
 	virtual ~TextureGL();
 
 	virtual void Bind( unsigned int samplerID, TextureType samplerType );

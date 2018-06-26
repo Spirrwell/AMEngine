@@ -8,11 +8,11 @@ class MaterialSystem : public IMaterialSystem
 {
 public:
 	MaterialSystem();
-	virtual ~MaterialSystem() {}
+	virtual ~MaterialSystem() = default;
 
 	bool Init() override;
 
-	IMaterial *CreateMaterial( const std::string &materialName ) override;
+	IMaterial *CreateMaterial( const string &materialName ) override;
 };
 
 extern IRenderer *g_pRenderer;

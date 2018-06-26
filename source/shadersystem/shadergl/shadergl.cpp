@@ -4,24 +4,24 @@
 #include "platform.hpp"
 #include "factory/ifactory.hpp"
 
-std::vector < char > ReadBinaryShader( const std::string &strFileName, ShaderType eShaderType )
+std::vector < char > ReadBinaryShader( const string &strFileName, ShaderType eShaderType )
 {
-	std::string strShaderExtension;
+	string strShaderExtension;
 
 	switch( eShaderType )
 	{
 	case VERTEX_SHADER:
-		strShaderExtension = std::string( VERTEXSHADER_EXTENSION ) + std::string ( SPIRV_EXTENSION );
+		strShaderExtension = string( VERTEXSHADER_EXTENSION ) + string ( SPIRV_EXTENSION );
 		break;
 	case FRAGMENT_SHADER:
-		strShaderExtension = std::string( FRAGMENTSHADER_EXTENSION ) + std::string( SPIRV_EXTENSION );
+		strShaderExtension = string( FRAGMENTSHADER_EXTENSION ) + string( SPIRV_EXTENSION );
 		break;
 	default:
 		// Something bad happened
 		return {};
 	}
 
-	std::string fullPath = std::string( GAME_DIR ) + std::string( "shaders/" ) + strFileName + strShaderExtension;
+	string fullPath = string( GAME_DIR ) + string( "shaders/" ) + strFileName + strShaderExtension;
 	std::ifstream file( fullPath, std::ios::ate | std::ios::binary );
 
 	size_t fileSize = static_cast< size_t >( file.tellg() );
@@ -35,9 +35,9 @@ std::vector < char > ReadBinaryShader( const std::string &strFileName, ShaderTyp
 	return shader;
 }
 
-std::string ReadShader( const std::string &strFileName, ShaderType eShaderType )
+string ReadShader( const string &strFileName, ShaderType eShaderType )
 {
-	std::string strShaderExtension;
+	string strShaderExtension;
 
 	switch( eShaderType )
 	{
@@ -53,10 +53,10 @@ std::string ReadShader( const std::string &strFileName, ShaderType eShaderType )
 	}
 
 	std::ifstream file;
-	std::string fullPath = std::string( GAME_DIR ) + std::string( "shaders/" ) + strFileName + strShaderExtension;
+	string fullPath = string( GAME_DIR ) + string( "shaders/" ) + strFileName + strShaderExtension;
 	file.open( fullPath );
 
-	std::string output, line;
+	string output, line;
 
 	if ( file.is_open() )
 	{
@@ -72,7 +72,7 @@ std::string ReadShader( const std::string &strFileName, ShaderType eShaderType )
 	return output;
 }
 
-void CheckShaderError( GLuint shader, GLuint flag, bool isProgram, const std::string &errorMessage )
+void CheckShaderError( GLuint shader, GLuint flag, bool isProgram, const string &errorMessage )
 {
     GLint success = 0;
     GLint infoLogLen = 0;
@@ -104,7 +104,7 @@ void CheckShaderError( GLuint shader, GLuint flag, bool isProgram, const std::st
 	}
 }
 
-GLuint CreateShader( const std::string &text, GLenum shaderType )
+GLuint CreateShader( const string &text, GLenum shaderType )
 {
 	GLuint shader = glCreateShader( shaderType );
 
@@ -128,7 +128,7 @@ GLuint CreateShader( const std::string &text, GLenum shaderType )
 	return shader;
 }
 
-ShaderGL::ShaderGL( const std::string &strShaderName )
+ShaderGL::ShaderGL( const string &strShaderName )
 {
 	m_strShaderName = strShaderName;
 }
@@ -146,7 +146,7 @@ void ShaderGL::Initialize()
 
 	glShaderBinary( 1, &hVertexShader, GL_SHADER_BINARY_FORMAT_SPIR_V, vertexShader.data(), ( GLsizei )vertexShader.size() );
 
-	std::string vsEntryPoint = "main";
+	string vsEntryPoint = "main";
 	glSpecializeShader( hVertexShader, ( const GLchar* )vsEntryPoint.c_str(), 0, nullptr, nullptr );
 
 	CheckShaderError( hVertexShader, GL_COMPILE_STATUS, false, "Compiler Error" );
@@ -155,7 +155,7 @@ void ShaderGL::Initialize()
 
 	glShaderBinary( 1, &hFragmentShader, GL_SHADER_BINARY_FORMAT_SPIR_V, fragmentShader.data(), ( GLsizei )fragmentShader.size()  );
 
-	std::string fsEntryPoint = "main";
+	string fsEntryPoint = "main";
 	glSpecializeShader( hFragmentShader, ( GLchar* )fsEntryPoint.c_str(), 0, nullptr, nullptr );
 
 	CheckShaderError( hFragmentShader, GL_COMPILE_STATUS, false, "Compiler Error" );
@@ -173,8 +173,8 @@ void ShaderGL::Initialize()
 
 	/*m_iProgram = glCreateProgram();
 
-	std::string strVertexShader = ReadShader( GetName(), VERTEX_SHADER );
-	std::string strFragmentShader = ReadShader( GetName(), FRAGMENT_SHADER );
+	string strVertexShader = ReadShader( GetName(), VERTEX_SHADER );
+	string strFragmentShader = ReadShader( GetName(), FRAGMENT_SHADER );
 
 	m_iShaders[ VERTEX_SHADER ] = CreateShader( strVertexShader, GL_VERTEX_SHADER );
 	m_iShaders[ FRAGMENT_SHADER ] = CreateShader( strFragmentShader, GL_FRAGMENT_SHADER );
@@ -183,7 +183,7 @@ void ShaderGL::Initialize()
         glAttachShader( m_iProgram, m_iShaders[i] );*/
 }
 
-const std::string &ShaderGL::GetName()
+const string &ShaderGL::GetName()
 {
 	return m_strShaderName;
 }
@@ -198,49 +198,49 @@ std::vector < MaterialParameter_t > ShaderGL::GetMaterialParameters()
 	return m_vMaterialParameters;
 }
 
-void ShaderGL::SetMatrix3f( const std::string &uniform, Matrix3f mat3x3 )
+void ShaderGL::SetMatrix3f( const string &uniform, Matrix3f mat3x3 )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( mat3x3 ), &mat3x3[0][0] );
 }
 
-void ShaderGL::SetMatrix4f( const std::string &uniform, Matrix4f mat4x4 )
+void ShaderGL::SetMatrix4f( const string &uniform, Matrix4f mat4x4 )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( mat4x4 ), &mat4x4[0][0] );
 }
 
-void ShaderGL::SetVector2f( const std::string &uniform, Vector2f vec2 )
+void ShaderGL::SetVector2f( const string &uniform, Vector2f vec2 )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( vec2 ), &vec2[0] );
 }
 
-void ShaderGL::SetVector3f( const std::string &uniform, Vector3f vec3 )
+void ShaderGL::SetVector3f( const string &uniform, Vector3f vec3 )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( vec3 ), &vec3[0] );
 }
 
-void ShaderGL::SetVector4f( const std::string &uniform, Vector4f vec4 )
+void ShaderGL::SetVector4f( const string &uniform, Vector4f vec4 )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( vec4 ), &vec4[0] );
 }
 
-void ShaderGL::SetFloat( const std::string &uniform, float flValue )
+void ShaderGL::SetFloat( const string &uniform, float flValue )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( flValue ), &flValue );
 }
 
-void ShaderGL::SetInt( const std::string &uniform, int iValue )
+void ShaderGL::SetInt( const string &uniform, int iValue )
 {
 	assert( !m_strCurrentUBO.empty() );
 	glBufferSubData( GL_UNIFORM_BUFFER, m_mapUniformOffsets[ m_strCurrentUBO + "." + uniform ], sizeof( iValue ), &iValue );
 }
 
-void ShaderGL::SetSampler( const std::string &uniform, int iValue )
+void ShaderGL::SetSampler( const string &uniform, int iValue )
 {
 	glUniform1iv( m_mapUniforms[ uniform ], 1, &iValue );
 }
@@ -264,7 +264,7 @@ void ShaderGL::Shutdown()
 	glDeleteProgram( m_hProgram );
 }
 
-void ShaderGL::CreateUniformBlock( const std::string &strBlockName )
+void ShaderGL::CreateUniformBlock( const string &strBlockName )
 {
 	GLuint blockIndex = glGetUniformBlockIndex( m_hProgram, ( const GLchar* )strBlockName.c_str() );
 	GLint blockSize = 0;
@@ -287,11 +287,11 @@ void ShaderGL::CreateUniformBlock( const std::string &strBlockName )
 	blockBinding++;
 }
 
-void ShaderGL::AddUniformToBlock( const std::string &strBlockName, const std::string &strUniformName )
+void ShaderGL::AddUniformToBlock( const string &strBlockName, const string &strUniformName )
 {
 	GLuint index = 0;
 
-	std::string fullUniformName = strBlockName + "." + strUniformName;
+	string fullUniformName = strBlockName + "." + strUniformName;
 	const GLchar *pszFullUniformName = fullUniformName.c_str();
 
 	glGetUniformIndices( m_hProgram, 1, &pszFullUniformName, &index );
@@ -302,7 +302,7 @@ void ShaderGL::AddUniformToBlock( const std::string &strBlockName, const std::st
 	m_mapUniformOffsets[ fullUniformName ] = offset;
 }
 
-void ShaderGL::AddUniform( const std::string &strUniformName )
+void ShaderGL::AddUniform( const string &strUniformName )
 {
 	GLint iUniformLocation = glGetUniformLocation( m_hProgram, strUniformName.c_str() );
 
@@ -314,7 +314,7 @@ void ShaderGL::AddUniform( const std::string &strUniformName )
 	m_mapUniforms[ strUniformName ] = iUniformLocation;
 }
 
-void ShaderGL::BindUBO( const std::string &strBlockName )
+void ShaderGL::BindUBO( const string &strBlockName )
 {
 	m_strCurrentUBO = strBlockName;
 	glBindBuffer( GL_UNIFORM_BUFFER, m_mapUBOHandles[ strBlockName ] );

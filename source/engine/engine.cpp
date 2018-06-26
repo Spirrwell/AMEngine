@@ -28,7 +28,7 @@ enum
 };
 
 // TODO: Come up with a cleaner way to do this
-static const std::string g_strConfigVariables[] =
+static const string g_strConfigVariables[] =
 {
 	"resolution_width",
 	"resolution_height",
@@ -57,7 +57,7 @@ bool Engine::Init()
 
 	m_bSDLInitialized = true;
 
-	if ( !GetFactory()->LoadModule( "bin/input" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/input" + string( DLL_EXTENSION ) ) )
 	{
 		printf( "Failed to load input module!\n" );
 		return false;
@@ -75,17 +75,17 @@ bool Engine::Init()
 		return false;
 
 	std::ifstream config;
-	config.open( std::string( GAME_DIR ) + "cfg/config.cfg", std::ifstream::in );
+	config.open( string( GAME_DIR ) + "cfg/config.cfg", std::ifstream::in );
 
 	if ( config.is_open() )
 	{
-		std::string line;
+		string line;
 		while ( !config.eof() )
 		{
 			std::getline( config, line );
-			std::vector < std::string > tokens;
+			std::vector < string > tokens;
 			std::istringstream ss( line );
-			std::string token;
+			string token;
 			while ( ss >> token )
 				tokens.push_back( token );
 
@@ -108,7 +108,7 @@ bool Engine::Init()
 	m_flAspectRatio = ( ( float )m_Config.windowConfig.resolution_width / ( float )m_Config.windowConfig.resolution_height );
 
 	// Use OpenGL explicitly for now
-	if ( !GetFactory()->LoadModule( "bin/renderer_opengl" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/renderer_opengl" + string( DLL_EXTENSION ) ) )
 	{
 		printf( "Failed to load renderer module!\n" );
 		return false;
@@ -125,7 +125,7 @@ bool Engine::Init()
 	if ( !g_pRenderer->Init() )
 		return false;
 
-	if ( !GetFactory()->LoadModule( "bin/client" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/client" + string( DLL_EXTENSION ) ) )
 		return false;
 
 	g_pClientDLL = ( IClientDLL* )GetFactory()->GetInterface( CLIENT_INTERFACE_VERSION );
@@ -150,7 +150,7 @@ bool Engine::Init()
 		return false;
 	}
 
-	if ( !GetFactory()->LoadModule( "bin/server" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/server" + string( DLL_EXTENSION ) ) )
 		return false;
 
 	g_pServerDLL = ( IServerDLL* )GetFactory()->GetInterface( SERVER_INTERFACE_VERSION );
@@ -261,10 +261,10 @@ int Engine::RunMainLoop()
 	return 0;
 }
 
-void Engine::LoadMap( const std::string &mapName )
+void Engine::LoadMap( const string &mapName )
 {
 	std::ifstream map;
-	map.open( std::string( GAME_DIR ) + "maps/" + mapName );
+	map.open( string( GAME_DIR ) + "maps/" + mapName );
 
 	if ( map.is_open() )
 	{
@@ -278,7 +278,7 @@ void Engine::LoadMap( const std::string &mapName )
 			uint64_t objectNameLen = 0;
 			map.read( ( char* )&objectNameLen, sizeof( objectNameLen ) );
 
-			std::string objectName( objectNameLen, ' ' );
+			string objectName( objectNameLen, ' ' );
 			map.read( objectName.data(), objectNameLen );
 
 			std::cout << "Creating object " << objectName << std::endl;

@@ -12,7 +12,7 @@ static std::map < TextureType, GLenum > g_TextureTypeMap =
 	{ TEXTURE_CUBE_MAP, GL_TEXTURE_CUBE_MAP }
 };
 
-TextureGL::TextureGL( const std::string &fileName )
+TextureGL::TextureGL( const string &fileName )
 {
 	m_bCubeMap = false;
 	m_hTextureID = 0;
@@ -39,7 +39,7 @@ TextureGL::TextureGL( const std::string &fileName )
 	stbi_image_free( pImageData );
 }
 
-TextureGL::TextureGL( std::vector < std::string > faces )
+TextureGL::TextureGL( std::vector < string > faces )
 {
 	m_bCubeMap = true;
 

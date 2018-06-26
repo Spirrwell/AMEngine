@@ -2,14 +2,14 @@
 #include "netmessage.hpp"
 #include "engineserver.hpp"
 #include "engine.hpp"
+#include "string.hpp"
 
 #include <cstdio>
-#include <string>
 #include <iostream>
 
 extern Engine *GetEngine_Internal();
 
-std::string IPToString( enet_uint32 IP )
+string IPToString( enet_uint32 IP )
 {
 	return
 		std::to_string( IP & 0x000000FF ) +

@@ -1,16 +1,16 @@
 #ifndef MODELGL_HPP
 #define MODELGL_HPP
 
-#include <string>
 #include <vector>
 
+#include "string.hpp"
 #include "imodel.hpp"
 #include "meshgl.hpp"
 
 class ModelGL : public IModel
 {
 public:
-	ModelGL( const std::string &modelFile );
+	ModelGL( const string &modelFile );
 	virtual ~ModelGL();
 
 	void Draw() override;

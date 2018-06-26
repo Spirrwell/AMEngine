@@ -7,7 +7,7 @@
 class ICamera
 {
 public:
-    virtual ~ICamera() {}
+	virtual ~ICamera() = default;
 	virtual Matrix4f GetViewMatrix() = 0;
 
 	virtual const Vector3f &GetPosition() = 0;

@@ -1,7 +1,7 @@
 #include "baseshader.hpp"
 #include "amshaderlib/shaderdll.hpp"
 
-CBaseShader::CBaseShader( const std::string &strShaderName )
+CBaseShader::CBaseShader( const string &strShaderName )
 {
 	m_strShaderName = strShaderName;
 

@@ -2,17 +2,17 @@
 #define INETWORKTABLE_HPP
 
 #include "inetworkvar.hpp"
+#include "string.hpp"
 
 #include <vector>
 #include <map>
-#include <string>
 
 class INetworkTable
 {
 	friend class EngineServer;
 	friend class EngineClient;
 public:
-	virtual ~INetworkTable() {}
+	virtual ~INetworkTable() = default;
 
 	virtual void UpdateNetworkTable( void *pData, size_t length ) = 0;
 
@@ -37,7 +37,7 @@ public:
 
 	virtual bool StateChanged() = 0;
 	virtual std::vector < INetObject * > GetNetObjects() = 0;
-	virtual const std::string &GetName() = 0;
+	virtual const string &GetName() = 0;
 };*/
 
 /*struct StateChange
@@ -52,7 +52,7 @@ StateChange BuildNetworkUpdate()
 
 	if ( pTable->StateChanged() )
 	{
-		std::string tableName = pTable->GetName();
+		string tableName = pTable->GetName();
 
 		unsigned int totalSize = 0;
 		std::vector < INetObject * > objects = pTable->GetNetObjects();

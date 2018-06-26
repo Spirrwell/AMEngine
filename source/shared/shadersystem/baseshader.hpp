@@ -1,8 +1,7 @@
 #ifndef BASESHADER_HPP
 #define BASESHADER_HPP
 
-#include <string>
-
+#include "string.hpp"
 #include "ishader.hpp"
 #include "ibaseshader.hpp"
 
@@ -23,12 +22,12 @@ enum ShaderParamType_t
 class CShaderParam
 {
 public:
-	CShaderParam( ShaderMaterialVars_t var, ShaderParamType_t type, const std::string &strDefaultValue, CShaderParam **pShaderParamsOverrides[ NUM_SHADER_MATERIAL_VARS ] )
+	CShaderParam( ShaderMaterialVars_t var, ShaderParamType_t type, const string &strDefaultValue, CShaderParam **pShaderParamsOverrides[ NUM_SHADER_MATERIAL_VARS ] )
 	{
 		( *pShaderParamsOverrides )[ var ] = this;
 		m_iIndex = var;
 	}
-	CShaderParam( const std::string &strName, const std::string &strDefaultValue, ShaderParamType_t type, std::vector < CShaderParam * > *pShaderParams )
+	CShaderParam( const string &strName, const string &strDefaultValue, ShaderParamType_t type, std::vector < CShaderParam * > *pShaderParams )
 	{
 		m_iIndex = ( int )pShaderParams->size();
 		pShaderParams->push_back( this );
@@ -39,20 +38,20 @@ public:
 		return m_iIndex;
 	}
 
-	operator std::string()
+	operator string()
 	{
 		return m_strName;
 	}
 
 private:
 	int m_iIndex;
-	std::string m_strName;
+	string m_strName;
 };
 
 class CBaseShader : public IBaseShader
 {
 public:
-	CBaseShader( const std::string &strShaderName );
+	CBaseShader( const string &strShaderName );
 
 	bool Init();
 	virtual void InitShaderParams() {}
@@ -65,11 +64,11 @@ public:
 
 	std::vector < MaterialParameter_t > GetMaterialParameters() { return m_vMaterialParameters; };
 
-	const std::string &GetName() { return m_strShaderName; }
+	const string &GetName() { return m_strShaderName; }
 
 protected:
 
-	std::string m_strShaderName;
+	string m_strShaderName;
 	IShader *m_pShader;
 	std::vector < MaterialParameter_t > m_vMaterialParameters;
 };

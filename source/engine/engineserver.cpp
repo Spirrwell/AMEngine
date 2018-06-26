@@ -65,7 +65,7 @@ InitWorldState_t EngineServer::GetInitWorldState()
 	
 	for ( IGameObject *pGameObject : m_pGameObjects )
 	{
-		std::string gameObjectName = pGameObject->GetRegister()->GetName();
+		string gameObjectName = pGameObject->GetRegister()->GetName();
 		std::cout << "Registered Name: " << gameObjectName << std::endl;
 		uint64_t hashID = g_pServerGameObjectFactory->GetHashID( gameObjectName );
 

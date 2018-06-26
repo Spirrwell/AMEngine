@@ -15,7 +15,7 @@ bool ShaderManagerGL::Init()
 		return false;
     }
 
-	if ( !GetFactory()->LoadModule( "bin/standard_shaders" + std::string( DLL_EXTENSION ) ) )
+	if ( !GetFactory()->LoadModule( "bin/standard_shaders" + string( DLL_EXTENSION ) ) )
 	{
 		printf( "Failed to load standard_shaders module!\n" );
 		return false;
@@ -33,7 +33,7 @@ void ShaderManagerGL::InserShader( IBaseShader *pShader )
 	m_pShaders.push_back( pShader );
 }
 
-IShader *ShaderManagerGL::CreateShaderObject( const std::string &strShaderName )
+IShader *ShaderManagerGL::CreateShaderObject( const string &strShaderName )
 {
 	ShaderGL *pShader = new ShaderGL( strShaderName );
 

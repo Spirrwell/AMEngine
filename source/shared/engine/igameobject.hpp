@@ -4,8 +4,7 @@
 #include "mathdefs.hpp"
 #include "engine/inetobject.hpp"
 #include "engine/inetworktable.hpp"
-
-#include <string>
+#include "string.hpp"
 
 class IGameObjectRegister;
 
@@ -14,9 +13,9 @@ class IGameObject
 	friend struct NetObject;
 
 public:
-	virtual ~IGameObject() {}
+	virtual ~IGameObject() = default;
 
-	virtual bool InitializeGameObject( const std::string &strModelName = "" ) = 0;
+	virtual bool InitializeGameObject( const string &strModelName = "" ) = 0;
 
 	virtual void Spawn() = 0;
 

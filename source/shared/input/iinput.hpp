@@ -1,17 +1,17 @@
 #ifndef IINPUT_HPP
 #define IINPUT_HPP
 
-#include <string>
+#include "string.hpp"
 
 class IInput
 {
 public:
 	virtual bool Init() = 0;
 
-	virtual bool IsButtonPressed( const std::string &strButtonName ) = 0;
-	virtual bool IsButtonReleased( const std::string &strButtonName ) = 0;
-	virtual bool IsButtonJustPressed( const std::string &strButtonName ) = 0;
-	virtual bool IsButtonJustReleased( const std::string &strButtonName ) = 0;
+	virtual bool IsButtonPressed( const string &strButtonName ) = 0;
+	virtual bool IsButtonReleased( const string &strButtonName ) = 0;
+	virtual bool IsButtonJustPressed( const string &strButtonName ) = 0;
+	virtual bool IsButtonJustReleased( const string &strButtonName ) = 0;
 
 	virtual void Update() = 0;
 

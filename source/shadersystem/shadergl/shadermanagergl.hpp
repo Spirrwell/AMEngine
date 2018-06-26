@@ -9,7 +9,7 @@ public:
 	bool Init() override;
 	void InserShader( IBaseShader *pShader ) override;
 
-	IShader *CreateShaderObject( const std::string &strShaderName ) override;
+	IShader *CreateShaderObject( const string &strShaderName ) override;
 
 private:
 	std::vector < IBaseShader * > m_pShaders;

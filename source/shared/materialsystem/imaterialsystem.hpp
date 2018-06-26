@@ -2,17 +2,16 @@
 #define IMATERIALSYSTEM_HPP
 
 #include "imaterial.hpp"
-
-#include <string>
+#include "string.hpp"
 
 class IMaterialSystem
 {
 public:
-	virtual ~IMaterialSystem() {}
+	virtual ~IMaterialSystem() = default;
 
 	virtual bool Init() = 0;
 
-	virtual IMaterial *CreateMaterial( const std::string &materialName ) = 0;
+	virtual IMaterial *CreateMaterial( const string &materialName ) = 0;
 };
 
 #define MATERIALSYSTEM_INTERFACE_VERSION "MATSYSV001"

@@ -29,7 +29,7 @@ enum ShaderType
 class ShaderGL : public IShader
 {
 public:
-	ShaderGL( const std::string &strShaderName );
+	ShaderGL( const string &strShaderName );
 	virtual ~ShaderGL();
 
 	virtual void Initialize();
@@ -37,49 +37,49 @@ public:
 
 	virtual void Update( IMaterial *pMaterial ) {}
 
-	const std::string &GetName();
+	const string &GetName();
 	unsigned int GetIndex();
 
 	virtual std::vector < MaterialParameter_t > GetMaterialParameters();
 
 	// Used for setting non-opaque uniform types, meaning they are part of a uniform block
 	// We're using SPIR-V which requires these uniforms to to be set as part of a uniform block
-	void SetMatrix3f( const std::string &uniform, Matrix3f mat3x3 ) override;
-	void SetMatrix4f( const std::string &uniform, Matrix4f mat4x4 ) override;
-	void SetVector2f( const std::string &uniform, Vector2f vec2 ) override;
-	void SetVector3f( const std::string &uniform, Vector3f vec3 ) override;
-	void SetVector4f( const std::string &uniform, Vector4f vec4 ) override;
-	void SetFloat( const std::string &uniform, float flValue ) override;
-	void SetInt( const std::string &uniform, int iValue ) override;
+	void SetMatrix3f( const string &uniform, Matrix3f mat3x3 ) override;
+	void SetMatrix4f( const string &uniform, Matrix4f mat4x4 ) override;
+	void SetVector2f( const string &uniform, Vector2f vec2 ) override;
+	void SetVector3f( const string &uniform, Vector3f vec3 ) override;
+	void SetVector4f( const string &uniform, Vector4f vec4 ) override;
+	void SetFloat( const string &uniform, float flValue ) override;
+	void SetInt( const string &uniform, int iValue ) override;
 
 	// Used for setting opaque uniform types, which cannot be part of a uniform block
-	void SetSampler( const std::string &uniform, int iValue ) override;
+	void SetSampler( const string &uniform, int iValue ) override;
 
-	void BindUBO( const std::string &strBlockName ) override;
+	void BindUBO( const string &strBlockName ) override;
 	void UnbindUBO() override;
 
 	void BindShader();
 	virtual void Shutdown();
 
-	void CreateUniformBlock( const std::string &strBlockName ) override;
+	void CreateUniformBlock( const string &strBlockName ) override;
 
-	void AddUniformToBlock( const std::string &strBlockName, const std::string &strUniformName ) override;
-	void AddUniform( const std::string &strUniformName ) override;
+	void AddUniformToBlock( const string &strBlockName, const string &strUniformName ) override;
+	void AddUniform( const string &strUniformName ) override;
 
 protected:
 
-	std::string m_strShaderName;
+	string m_strShaderName;
 	unsigned int m_iShaderIndex;
 
 	GLuint m_hProgram;
 	GLuint m_iShaders[ NUM_SHADERS ];
 
-	std::string m_strCurrentUBO;
+	string m_strCurrentUBO;
 
-	std::map < std::string, GLint > m_mapUniforms;
+	std::map < string, GLint > m_mapUniforms;
 
-	std::map < std::string, GLint > m_mapUniformOffsets;
-	std::map < std::string, GLuint > m_mapUBOHandles;
+	std::map < string, GLint > m_mapUniformOffsets;
+	std::map < string, GLuint > m_mapUBOHandles;
 
 	std::vector < MaterialParameter_t > m_vMaterialParameters;
 

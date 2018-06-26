@@ -8,7 +8,7 @@ GameObject::GameObject()
 	m_iIndex = 0;
 }
 
-bool GameObject::InitializeGameObject( const std::string &strModelName /*= ""*/ )
+bool GameObject::InitializeGameObject( const string &strModelName /*= ""*/ )
 {
 	if ( !strModelName.empty() )
 	{

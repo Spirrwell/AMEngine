@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 
-Material::Material( const std::string &materialPath )
+Material::Material( const string &materialPath )
 {
 	std::ifstream materialFile( materialPath );
 
@@ -19,15 +19,15 @@ Material::Material( const std::string &materialPath )
 		return;
 	}
 
-	std::string line;
+	string line;
 
 	// First obtain the shader by name
 	while ( !materialFile.eof() )
 	{
 		std::getline( materialFile, line );
-		std::vector < std::string > tokens;
+		std::vector < string > tokens;
 		std::istringstream ss( line );
-		std::string token;
+		string token;
 
 		while ( ss >> token )
 			if ( token != "=" )
@@ -59,9 +59,9 @@ Material::Material( const std::string &materialPath )
 	while ( !materialFile.eof() )
 	{
 		std::getline( materialFile, line );
-		std::vector < std::string > tokens;
+		std::vector < string > tokens;
 		std::istringstream ss( line );
-		std::string token;
+		string token;
 
 		while ( ss >> token ) tokens.push_back( token );
 
@@ -124,12 +124,12 @@ bool Material::IsValid()
 	return ( m_pShader != nullptr );
 }
 
-ITexture *Material::GetTexture( const std::string &paramName )
+ITexture *Material::GetTexture( const string &paramName )
 {
 	return m_mapTextures[ paramName ];
 }
 
-float Material::GetFloat( const std::string &paramName )
+float Material::GetFloat( const string &paramName )
 {
 	return m_mapFloats[ paramName ];
 }

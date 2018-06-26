@@ -34,7 +34,7 @@ public:
 
 	virtual config &GetConfig() { return m_Config; }
 
-	void LoadMap( const std::string &mapname );
+	void LoadMap( const string &mapname );
 
 	std::chrono::high_resolution_clock::time_point GetCurTime() { return m_CurrentTime; }
 

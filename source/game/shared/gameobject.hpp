@@ -9,9 +9,9 @@ class GameObject : public IGameObject
 {
 public:
 	GameObject();
-	virtual ~GameObject() {}
+	virtual ~GameObject() = default;
 
-	bool InitializeGameObject( const std::string &strModelName = "" ) override;
+	bool InitializeGameObject( const string &strModelName = "" ) override;
 
 	virtual void Spawn() override;
 

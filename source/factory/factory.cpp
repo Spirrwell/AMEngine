@@ -2,7 +2,7 @@
 
 #include "factory.hpp"
 
-Module::Module( const std::string &strModulePath )
+Module::Module( const string &strModulePath )
 {
 	m_hDLL = nullptr;
 #ifdef _WIN32
@@ -52,7 +52,7 @@ void Factory::RemoveDLLInterface( IDLLInterface *pDLLInterface )
 	}
 }
 
-void *Factory::GetInterface( const std::string &strInterfaceName )
+void *Factory::GetInterface( const string &strInterfaceName )
 {
 	// If an interface has no name, we shouldn't be trying to get it
 	if ( strInterfaceName.empty() )
@@ -66,7 +66,7 @@ void *Factory::GetInterface( const std::string &strInterfaceName )
 	return nullptr;
 }
 
-bool Factory::LoadModule( const std::string &strModule )
+bool Factory::LoadModule( const string &strModule )
 {
 	size_t oldInterfaceCount = m_pInterfaces.size();
 	Module *pModule = new Module( strModule );
