@@ -23,7 +23,7 @@ protected:
 /*class INetObject
 {
 public:
-	virtual ~INetObject() {}
+	virtual ~INetObject() = default;
 
 	virtual unsigned int GetNetIndex() = 0;
 	virtual std::vector < INetworkVar * > GetNetVars() = 0;
@@ -33,7 +33,7 @@ public:
 class INetworkTable
 {
 public:
-	virtual ~INetworkTable() {}
+	virtual ~INetworkTable() = default;
 
 	virtual bool StateChanged() = 0;
 	virtual std::vector < INetObject * > GetNetObjects() = 0;

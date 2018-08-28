@@ -55,3 +55,4 @@ game/win64/release/*.dll
 game/win64/debug/*.dll
 game/win64/release/*.exe
 game/win64/debug/*.exe
+source/\.vscode/

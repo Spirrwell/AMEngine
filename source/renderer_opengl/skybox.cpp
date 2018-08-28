@@ -5,6 +5,9 @@
 #include "materialsystem/imaterialsystem.hpp"
 #include "materialsystem/imaterial.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern RendererGL *GetGLRenderer_Internal();
 extern IMaterialSystem *g_pMaterialSystem;
 

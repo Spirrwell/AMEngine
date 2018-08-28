@@ -2,10 +2,13 @@
 #include "input/iinput.hpp"
 #include "engine/iengine.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern IInput *g_pInput;
 extern IEngine *g_pEngine;
 
-Camera::Camera( const Vector3f &vPosition /*= Vector3f()*/ )
+Camera::Camera( Vector3f vPosition /*= Vector3f()*/ )
 {	
 	SetPosition( vPosition );
 }

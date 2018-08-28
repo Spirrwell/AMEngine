@@ -10,7 +10,7 @@ enum TextureType
 class ITexture
 {
 public:
-    virtual ~ITexture() {}
+    virtual ~ITexture() = default;
 
 	virtual void Bind( unsigned int samplerID, TextureType samplerType ) = 0;
 	virtual bool IsValid() = 0;

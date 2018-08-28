@@ -9,6 +9,9 @@ class IFactory
 {
 public:
 	virtual ~IFactory() = default;
+
+	virtual void Shutdown() = 0;
+
 	virtual void AddDLLInterface( IDLLInterface *pDLLInterface ) = 0;
 	virtual void RemoveDLLInterface( IDLLInterface *pDLLInterface ) = 0;
 

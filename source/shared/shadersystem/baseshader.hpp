@@ -58,7 +58,7 @@ public:
 	virtual void Draw( IMaterial *pMaterial ) {}
 
 	void BindShader() { m_pShader->BindShader(); }
-	void Shutdown() { m_pShader->Shutdown(); }
+	void Shutdown();
 
 	IShader *GetIShader() { return m_pShader; }
 

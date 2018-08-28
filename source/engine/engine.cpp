@@ -12,6 +12,9 @@
 #include "enet/enet.h"
 #include "engineserver.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 IRenderer *g_pRenderer = nullptr;
 IInput *g_pInput = nullptr;
 IClientDLL *g_pClientDLL = nullptr;
@@ -253,7 +256,7 @@ int Engine::RunMainLoop()
 		g_pRenderer->DrawScene();
 		g_pRenderer->Swap();
 
-		std::this_thread::sleep_for( 1ms );
+		//std::this_thread::sleep_for( 1ms );
 		//std::this_thread::yield();
 		frameTicks++;
 	}

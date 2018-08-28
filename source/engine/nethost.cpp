@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <iostream>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern Engine *GetEngine_Internal();
 
 string IPToString( enet_uint32 IP )

@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <cstring>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 MemoryWriter::MemoryWriter( bool bAutoFree /*= true*/ )
 {
 	m_pData = nullptr;

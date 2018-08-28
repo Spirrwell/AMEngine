@@ -13,11 +13,18 @@
 
 class Module
 {
+	friend class Factory;
 public:
 	Module( const string &strModulePath );
 	virtual ~Module();
 
+	bool Init();
+	void Shutdown();
+
 	inline bool IsValid() { return m_hDLL != nullptr; };
+
+protected:
+	void AddInterface( IDLLInterface *pInterface ) { m_pInterfaces.push_back( pInterface ); }
 private:
 
 #ifdef _WIN32
@@ -28,12 +35,17 @@ private:
 	// Should just be a void* for other platforms and using dlopen()
 	#error
 #endif
+
+	std::vector < IDLLInterface* > m_pInterfaces;
 };
 
 class Factory : public IFactory
 {
 public:
 	virtual ~Factory();
+
+	virtual void Shutdown();
+
 	virtual void AddDLLInterface( IDLLInterface *pDLLInterface );
 	virtual void RemoveDLLInterface( IDLLInterface *pDLLInterface );
 	virtual void *GetInterface( const string &strInterfaceName );

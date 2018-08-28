@@ -8,7 +8,7 @@
 class IEngine
 {
 public:
-    virtual ~IEngine() {}
+    virtual ~IEngine() = default;
 
 	virtual bool Init() = 0;
 	virtual void PostInit() = 0;

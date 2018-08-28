@@ -11,7 +11,7 @@ class IBaseShader;
 class IMaterial
 {
 public:
-    virtual ~IMaterial() {}
+    virtual ~IMaterial() = default;
 
 	virtual void Bind() = 0;
 	virtual bool IsValid() = 0;

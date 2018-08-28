@@ -2,6 +2,9 @@
 #include "interface.hpp"
 #include "gameobjectfactory.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 bool ServerDLL::Init()
 {
 	return true;

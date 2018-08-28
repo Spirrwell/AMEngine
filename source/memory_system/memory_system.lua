@@ -1,36 +1,29 @@
-project "launcher"
-	kind "ConsoleApp" --Change to WindowedApp at some point
+project "memory_system"
+	kind "SharedLib"
 	language "C++"
 	cppdialect "C++17"
 	location "./"
-	targetname "launcher"
+	targetname "memory_system"
 	
-	vpaths {
-		[ "Header Files" ] = { "**.hpp", "../shared/**.hpp" },
-		[ "Source Files" ] = { "**.cpp" }
-	}
+	defines { "MEMORY_SYSTEM_DLL_EXPORT" }
 	
 	files {
-			"%{cfg.location}/main.cpp"
+			"%{cfg.location}/memory_system.hpp",
+			"%{cfg.location}/memory_system.cpp"
 		}
 		
 	includedirs {
-				"../shared"
+				"../shared",
+				"../shared/memory_system"
 		}
 	
 	links {
-			"amlib", --Project
-			"factory", --Project
-			"memlib", --Project
-			"memory_system" --Project
+			"amlib" --Project
 		}
 	
 	filter { "system:Windows" }
 		links {
-				"amlib.lib",
-				"factory.lib",
-				"memlib.lib",
-				"memory_system.lib"
+				"amlib.lib"
 			}
 	
 	filter { "configurations:Debug"	}
@@ -66,7 +59,7 @@ project "launcher"
 		defines { "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS" }
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Debug" }
-		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/debug\" /s /i /y" }
+		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/debug\" /s /i /y", "xcopy \"$(TargetDir)$(TargetName).lib\" \"../lib/shared/win64/debug\" /s /i /y" }
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
-		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release\" /s /i /y" }
+		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release\" /s /i /y", "xcopy \"$(TargetDir)$(TargetName).lib\" \"../lib/shared/win64/release\" /s /i /y" }

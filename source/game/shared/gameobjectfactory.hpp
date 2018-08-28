@@ -5,6 +5,8 @@
 
 #include <map>
 
+#include "memlib/memoryoverride.hpp"
+
 class GameObjectFactory : public IGameObjectFactory
 {
 public:
@@ -40,5 +42,7 @@ public:
 private:
 	string m_strName;
 };
+
+#include "memlib/memoryoverride_off.hpp"
 
 #endif // GAMEOBJECTFACTORY_HPP

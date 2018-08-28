@@ -1,6 +1,8 @@
 #include "networktable.hpp"
 #include "amlib/memoryreader.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
 
 void NetworkTable::UpdateNetworkTable( void *pData, size_t length )
 {

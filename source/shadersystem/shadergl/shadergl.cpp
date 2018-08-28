@@ -4,6 +4,9 @@
 #include "platform.hpp"
 #include "factory/ifactory.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 std::vector < char > ReadBinaryShader( const string &strFileName, ShaderType eShaderType )
 {
 	string strShaderExtension;

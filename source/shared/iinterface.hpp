@@ -6,9 +6,10 @@
 class IDLLInterface
 {
 public:
-	virtual ~IDLLInterface() {}
+	virtual ~IDLLInterface() = default;
 
 	virtual bool Init() = 0;
+	virtual void Shutdown() = 0;
 
     virtual const std::string &GetInterfaceName() = 0;
     virtual void *GetInterface() = 0;

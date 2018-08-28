@@ -16,6 +16,7 @@ public:
 	virtual ~CShaderDLL();
 
 	bool Init() override;
+	void Shutdown() override;
 
 	void InsertShader( IBaseShader *pShader );
 	IBaseShader *GetShader( size_t iShader );

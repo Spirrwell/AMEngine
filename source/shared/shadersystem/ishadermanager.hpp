@@ -11,6 +11,7 @@ public:
 	virtual void InserShader( IBaseShader *pShader ) = 0;
 
 	virtual IShader *CreateShaderObject( const std::string &strShaderName ) = 0;
+	virtual void DeleteShaderObject( IShader *pShader ) = 0;
 };
 
 #define SHADERMANAGER_INTERFACE_GL "SHADERMANAGER_GL_V001"

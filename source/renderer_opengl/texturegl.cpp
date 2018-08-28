@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <map>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 static std::map < TextureType, GLenum > g_TextureTypeMap =
 {
 	{ TEXTURE_2D, GL_TEXTURE_2D },

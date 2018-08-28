@@ -26,13 +26,17 @@ project "standard_shaders"
 	
 	links {
 			"amshaderlib", --Project
-			"factory" --Project
+			"factory", --Project
+			"memlib", --Project
+			"memory_system" --Project
 		}
 	
 	filter { "system:Windows" }
 		links {
 				"amshaderlib.lib",
-				"factory.lib"
+				"factory.lib",
+				"memlib.lib",
+				"memory_system.lib"
 			}
 	
 	filter { "configurations:Debug"	}

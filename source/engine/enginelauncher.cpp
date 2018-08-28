@@ -1,6 +1,9 @@
 #include "enginelauncher.hpp"
 #include "engine.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern Engine *GetEngine_Internal();
 
 EngineLauncher::~EngineLauncher()

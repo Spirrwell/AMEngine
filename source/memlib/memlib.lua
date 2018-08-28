@@ -1,22 +1,18 @@
-project "amlib"
+project "memlib"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
 	location "./"
-	targetname "amlib"
+	targetname "memlib"
 	
 	files { 
-			"%{cfg.location}/memoryreader.cpp",
-			"%{cfg.location}/memorywriter.cpp",
-			"%{cfg.location}/transform.cpp",
-			"../shared/amlib/memoryreader.hpp",
-			"../shared/amlib/memorywriter.hpp",
+			"%{cfg.location}/memoryoverride.cpp",
+			"../shared/memlib/memoryoverride.hpp"
 		}
 		
 	includedirs {
 				"../shared",
-				"../shared/amlib",
-				"../thirdparty/glm/include"
+				"../shared/memlib"
 		}
 	
 	filter { "configurations:Debug"	}

@@ -23,13 +23,17 @@ project "input"
 	
 	links {
 			"amlib", --Project
-			"factory" --Project
+			"factory", --Project
+			"memlib", --Project
+			"memory_system" --Project
 		}
 	
 	filter { "system:Windows" }
 		links {
 				"amlib.lib",
 				"factory.lib",
+				"memlib.lib",
+				"memory_system.lib",
 				"SDL2main.lib",
 				"SDL2.lib"
 			}

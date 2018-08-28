@@ -9,7 +9,7 @@ project "factory"
 	
 	files {
 			"%{cfg.location}/factory.hpp",
-			"%{cfg.location}/factory.cpp"
+			"%{cfg.location}/factory.cpp",
 		}
 		
 	includedirs {
@@ -18,12 +18,16 @@ project "factory"
 		}
 	
 	links {
-			"amlib" --Project
+			"amlib", --Project
+			"memlib", --Project
+			"memory_system" --Project
 		}
 	
 	filter { "system:Windows" }
 		links {
-				"amlib.lib"
+				"amlib.lib",
+				"memlib.lib",
+				"memory_system.lib"
 			}
 	
 	filter { "configurations:Debug"	}

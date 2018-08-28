@@ -1,6 +1,9 @@
 #include "meshgl.hpp"
 #include "renderer_opengl.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern RendererGL *GetGLRenderer_Internal();
 
 MeshGL::MeshGL( std::vector < Vertex > Vertices, std::vector < unsigned int > Indices, IMaterial *pMaterial )

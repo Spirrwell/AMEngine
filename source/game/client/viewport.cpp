@@ -2,6 +2,9 @@
 #include "renderer/irenderer.hpp"
 #include "factory/ifactory.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 // TODO: Move this and create an extern
 extern IRenderer *g_pRenderer;
 

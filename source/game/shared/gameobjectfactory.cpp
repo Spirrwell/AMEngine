@@ -2,6 +2,9 @@
 
 #include <functional>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 void GameObjectFactory::RegisterGameObjectCreateFunc( const string &gameObjectName, void *( *pCreateFn )() )
 {
 	m_mapGameObjectCreateFunctions[ gameObjectName ] = pCreateFn;

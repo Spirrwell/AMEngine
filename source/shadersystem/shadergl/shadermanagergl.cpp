@@ -3,6 +3,9 @@
 #include "renderer/irenderer.hpp"
 #include "shadergl.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 IRenderer *g_pRenderer = nullptr;
 
 bool ShaderManagerGL::Init()
@@ -21,7 +24,7 @@ bool ShaderManagerGL::Init()
 		return false;
 	}
 
-	for ( IBaseShader *& pShader : m_pShaders )
+	for ( auto &pShader : m_pShaders )
 		pShader->InitShaderParams();
 
 	return true;
@@ -41,6 +44,11 @@ IShader *ShaderManagerGL::CreateShaderObject( const string &strShaderName )
 	pShader->LinkAndValidate();
 
 	return pShader;
+}
+
+void ShaderManagerGL::DeleteShaderObject( IShader *pShader )
+{
+	delete pShader;
 }
 
 static DLLInterface < IShaderManager, ShaderManagerGL > s_ShaderManager( SHADERMANAGER_INTERFACE_GL );

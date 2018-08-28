@@ -18,6 +18,12 @@
 	#define FACTORY_INTERFACE DLL_IMPORT
 #endif
 
+#ifdef MEMORY_SYSTEM_DLL_EXPORT
+	#define MEMORY_SYSTEM_INTERFACE DLL_EXPORT
+#else
+	#define MEMORY_SYSTEM_INTERFACE DLL_IMPORT
+#endif
+
 // Note: We use std::strings to load our modules, but for the sake of potential future use, these will be C strings for now
 #ifdef _WIN32
 	#define DLL_EXTENSION ".dll"

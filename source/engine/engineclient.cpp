@@ -5,6 +5,9 @@
 
 #include <iostream>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern IGameObjectFactory *g_pClientGameObjectFactory;
 
 EngineClient::~EngineClient()

@@ -7,7 +7,7 @@
 class IMesh
 {
 public:
-    virtual ~IMesh() {}
+    virtual ~IMesh() = default;
 
 	virtual void Draw() = 0;
 	virtual void SetModelMatrix( Matrix4f modelMatrix ) = 0;

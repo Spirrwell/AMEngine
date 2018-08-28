@@ -6,6 +6,9 @@
 #include <cassert>
 #include <iostream>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern IGameObjectFactory *g_pServerGameObjectFactory;
 
 EngineServer::~EngineServer()
@@ -66,12 +69,12 @@ InitWorldState_t EngineServer::GetInitWorldState()
 	for ( IGameObject *pGameObject : m_pGameObjects )
 	{
 		string gameObjectName = pGameObject->GetRegister()->GetName();
-		std::cout << "Registered Name: " << gameObjectName << std::endl;
+		stprintf( "Registered Name: " ) << gameObjectName << std::endl;
 		uint64_t hashID = g_pServerGameObjectFactory->GetHashID( gameObjectName );
 
 		if ( hashID == 0 )
 		{
-			printf( "An error occurred looking up a game object!\n" );
+			stprintf( "An error occurred looking up a game object!\n" );
 			return worldState;
 		}
 
@@ -79,7 +82,7 @@ InitWorldState_t EngineServer::GetInitWorldState()
 
 		if ( pNetObject == nullptr )
 		{
-			printf( "An error occurred while looking up net object!\n" );
+			stprintf( "An error occurred while looking up net object!\n" );
 			return worldState;
 		}
 

@@ -4,7 +4,7 @@
 class IModel
 {
 public:
-	virtual ~IModel() {}
+	virtual ~IModel() = default;
 
 	virtual void Draw() = 0;
 	virtual unsigned int GetModelIndex() = 0;

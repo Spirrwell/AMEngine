@@ -27,7 +27,7 @@ struct MaterialParameter_t
 class IShader
 {
 public:
-    virtual ~IShader() {}
+	virtual ~IShader() = default;
 
 	virtual void Initialize() = 0;
 	virtual void Update( IMaterial *pMaterial ) = 0;

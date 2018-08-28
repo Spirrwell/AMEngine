@@ -9,6 +9,9 @@
 #include <fstream>
 #include <sstream>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 Material::Material( const string &materialPath )
 {
 	std::ifstream materialFile( materialPath );

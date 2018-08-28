@@ -1,6 +1,7 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 #include "renderer_opengl.hpp"
 #include "engine/iengine.hpp"
@@ -13,6 +14,9 @@
 #include "materialsystem/imaterial.hpp"
 #include "materialsystem/imaterialsystem.hpp"
 #include "texturegl.hpp"
+
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
 
 IEngine *g_pEngine = nullptr;
 IShaderManager *g_pShaderManager = nullptr;
@@ -174,8 +178,8 @@ bool RendererGL::Init()
 
 void RendererGL::PostInit()
 {
-	for ( unsigned int i = 0; i < m_pViewPorts.size(); i++ )
-		m_pViewPorts[ i ]->InitPerspectiveViewPort( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 1000.0f, new Camera( Vector3f( 0.0f, 0.0f, -1.0f ) ) );
+	for ( auto &viewport : m_pViewPorts )
+		viewport->InitPerspectiveViewPort( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 1000.0f, new Camera( Vector3f( 0.0f, 0.0f, -1.0f ) ) );
 
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -183,10 +187,10 @@ void RendererGL::PostInit()
 
 void RendererGL::Shutdown()
 {
-	for ( IBaseShader *& pShader : m_pShaders )
-		pShader->Shutdown();
+	//for ( auto &pShader : m_pShaders )
+		//pShader->Shutdown();
 
-	for ( IViewPort *pViewPort : m_pViewPorts )
+	for ( auto &pViewPort : m_pViewPorts )
         pViewPort->Shutdown();
 
 	if ( m_pSkybox )

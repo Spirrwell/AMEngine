@@ -1,6 +1,9 @@
 #include "transform.hpp"
 #include <stdio.h>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 Transform::Transform( const Vector3f &pos /*= Vector3f()*/, const Vector3f &rot /*= Vector3f()*/, const Vector3f &scale /*= Vector3f( 1.0f, 1.0f, 1.0f )*/ )
 {
 	m_vPosition = pos;

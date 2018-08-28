@@ -25,12 +25,16 @@ project "materialsystem"
 		}
 	
 	links {
-			"factory" --Project
+			"factory", --Project
+			"memlib", --Project
+			"memory_system" --Project
 		}
 	
 	filter { "system:Windows" }
 		links {
-				"factory.lib"
+				"factory.lib",
+				"memlib.lib",
+				"memory_system.lib"
 			}
 	
 	filter { "configurations:Debug"	}

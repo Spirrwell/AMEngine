@@ -6,7 +6,7 @@
 class Camera : public ICamera
 {
 public:
-	Camera( const Vector3f &vPosition = Vector3f() );
+	Camera( Vector3f vPosition = Vector3f() );
 	virtual ~Camera();
 	
 	Matrix4f GetViewMatrix() override { return m_mat4ViewMatrix; }

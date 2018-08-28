@@ -9,6 +9,9 @@
 
 #include <fstream>
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 extern IMaterialSystem *g_pMaterialSystem;
 
 ModelGL::ModelGL( const string &modelFile )

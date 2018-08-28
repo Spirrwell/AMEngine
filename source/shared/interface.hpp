@@ -34,6 +34,7 @@ public:
     }
 
 	virtual bool Init() override { return true; }
+	virtual void Shutdown() override {}
 
     const std::string &GetInterfaceName() override { return m_strInterfaceName; }
     void *GetInterface() override { return static_cast< Interface* >( &s_Concrete ); }

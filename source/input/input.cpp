@@ -4,6 +4,9 @@
 #include "interface.hpp"
 #include "engine/iengine.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 IEngine *g_pEngine = nullptr;
 
 Input::Input()

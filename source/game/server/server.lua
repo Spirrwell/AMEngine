@@ -36,13 +36,17 @@ project "server"
 	
 	links {
 			"amlib", --Project
-			"factory" --Project
+			"factory", --Project
+			"memlib", --Project
+			"memory_system" --Project
 		}
 	
 	filter { "system:Windows" }
 		links {
 				"amlib.lib",
-				"factory.lib"
+				"factory.lib",
+				"memlib.lib",
+				"memory_system.lib"
 			}
 	
 	filter { "configurations:Debug"	}

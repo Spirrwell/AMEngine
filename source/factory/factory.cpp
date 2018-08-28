@@ -2,6 +2,9 @@
 
 #include "factory.hpp"
 
+// memoryoverride.hpp must be the last include file in a .cpp file!!!
+#include "memlib/memoryoverride.hpp"
+
 Module::Module( const string &strModulePath )
 {
 	m_hDLL = nullptr;
@@ -17,16 +20,46 @@ Module::Module( const string &strModulePath )
 Module::~Module()
 {
 	if ( IsValid() )
+	{
+		Shutdown();
 #ifdef _WIN32
 		::FreeLibrary( m_hDLL );
 #elif defined ( __linux__ )
         if ( dlclose( m_hDLL ) != 0 )
 			printf( "Error: %s\n", dlerror() );
 #endif
+	}
+}
+
+bool Module::Init()
+{
+	for ( auto &pInterface : m_pInterfaces )
+	{
+		if ( !pInterface->Init() )
+			return false;
+	}
+
+	return true;
+}
+
+void Module::Shutdown()
+{
+	for ( auto &pInterface : m_pInterfaces )
+		pInterface->Shutdown();
+
+	m_pInterfaces.clear();
 }
 
 Factory::~Factory()
 {
+	Shutdown();
+}
+
+void Factory::Shutdown()
+{
+	for ( auto &pModule : m_pModules )
+		pModule->Shutdown();
+
 	for ( auto &pModule : m_pModules )
 		delete pModule;
 
@@ -83,12 +116,14 @@ bool Factory::LoadModule( const string &strModule )
 	{
 		for ( size_t i = oldInterfaceCount; i < newInterfaceCount; i++ )
 		{
-			if ( !m_pInterfaces[ i ]->Init() )
-			{
-				delete pModule;
-				return false;
-			}
+			pModule->AddInterface( m_pInterfaces[ i ] );
 		}
+	}
+
+	if ( !pModule->Init() )
+	{
+		pModule->Shutdown();
+		delete pModule;
 	}
 
 	m_pModules.push_back( pModule );
