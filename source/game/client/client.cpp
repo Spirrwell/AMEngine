@@ -21,7 +21,7 @@ bool ClientDLL::Init()
 		return false;
 	}
 
-	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE_OPENGL );
+	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE );
 
 	if ( g_pRenderer == nullptr )
 	{

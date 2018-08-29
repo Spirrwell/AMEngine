@@ -10,7 +10,7 @@ IRenderer *g_pRenderer = nullptr;
 
 bool ShaderManagerGL::Init()
 {
-	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE_OPENGL );
+	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE );
 
 	if ( g_pRenderer == nullptr )
     {
@@ -51,4 +51,4 @@ void ShaderManagerGL::DeleteShaderObject( IShader *pShader )
 	delete pShader;
 }
 
-static DLLInterface < IShaderManager, ShaderManagerGL > s_ShaderManager( SHADERMANAGER_INTERFACE_GL );
+static DLLInterface < IShaderManager, ShaderManagerGL > s_ShaderManager( SHADERMANAGER_INTERFACE );

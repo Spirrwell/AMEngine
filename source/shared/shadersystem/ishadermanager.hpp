@@ -14,6 +14,6 @@ public:
 	virtual void DeleteShaderObject( IShader *pShader ) = 0;
 };
 
-#define SHADERMANAGER_INTERFACE_GL "SHADERMANAGER_GL_V001"
+#define SHADERMANAGER_INTERFACE "SHADERMANAGER_V001"
 
 #endif // ISHADERMANAGER_H

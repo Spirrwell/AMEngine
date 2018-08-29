@@ -72,11 +72,11 @@ int main( int argc, char *argv[] )
 		g_pEngine->RunMainLoop();
 		Shutdown();
 
-		string input;
+		/*string input;
 		std::cout << "Do you want to restart the engine? (Y or N)\n";
 		std::cin >> input;
 
-		if ( input == "N" || input == "n" )
+		if ( input == "N" || input == "n" )*/
 			bShouldRun = false;
 	}
 

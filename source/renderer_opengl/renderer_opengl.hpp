@@ -30,14 +30,14 @@ public:
 
 	virtual ITexture *CreateTexture( const string &textureName, bool bCubeMap = false ) override;
 
-	virtual unsigned int GetShaderCount();
+	virtual unsigned int GetShaderCount() override;
 	virtual IBaseShader *GetShader( unsigned int iShaderIndex ) override;
 	virtual IBaseShader *GetShader( const string &shaderName ) override;
 
 	unsigned int AddShader ( IBaseShader *pShader ) override;
 
-	virtual void AddViewPort( IViewPort *pViewPort );
-	virtual IViewPort *GetViewPort() { return m_pViewPorts[ 0 ]; }
+	virtual void AddViewPort( IViewPort *pViewPort ) override;
+	virtual IViewPort *GetViewPort() override { return m_pViewPorts[ 0 ]; }
 
 private:
 	

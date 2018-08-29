@@ -15,7 +15,7 @@ MaterialSystem::MaterialSystem()
 
 bool MaterialSystem::Init()
 {
-	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE_OPENGL );
+	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE );
 
 	if ( g_pRenderer == nullptr )
 	{

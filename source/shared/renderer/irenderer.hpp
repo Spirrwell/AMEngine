@@ -35,6 +35,6 @@ public:
 	virtual IViewPort *GetViewPort() = 0;
 };
 
-#define RENDERER_INTERFACE_OPENGL "AMRENDERER_OPENGLV01"
+#define RENDERER_INTERFACE "AMRENDERER_V01"
 
 #endif // IRENDERER_HPP

@@ -117,7 +117,7 @@ bool Engine::Init()
 		return false;
 	}
 
-	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE_OPENGL );
+	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE );
 
 	if ( g_pRenderer == nullptr )
 	{
@@ -250,7 +250,9 @@ int Engine::RunMainLoop()
 		if ( g_pInput->IsButtonJustPressed( "Quit" ) )
 			m_bDone = true;
 
-		g_pRenderer->GetViewPort()->UpdateViewPort();
+		IViewPort *pViewPort = g_pRenderer->GetViewPort();
+		if ( pViewPort )
+			pViewPort->UpdateViewPort();
 
 		g_pRenderer->Clear();
 		g_pRenderer->DrawScene();

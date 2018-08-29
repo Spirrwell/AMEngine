@@ -19,12 +19,12 @@ CShaderDLL::~CShaderDLL()
 
 bool CShaderDLL::Init()
 {
-	g_pShaderManager = ( IShaderManager* )GetFactory()->GetInterface( SHADERMANAGER_INTERFACE_GL );
+	g_pShaderManager = ( IShaderManager* )GetFactory()->GetInterface( SHADERMANAGER_INTERFACE );
 
 	if ( g_pShaderManager == nullptr )
 		return false;
 
-	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE_OPENGL );
+	g_pRenderer = ( IRenderer* )GetFactory()->GetInterface( RENDERER_INTERFACE );
 
 	if ( g_pRenderer == nullptr )
 		return false;

@@ -117,7 +117,7 @@ bool RendererGL::Init()
 		return false;
     }
 
-	g_pShaderManager = ( IShaderManager* )GetFactory()->GetInterface( SHADERMANAGER_INTERFACE_GL );
+	g_pShaderManager = ( IShaderManager* )GetFactory()->GetInterface( SHADERMANAGER_INTERFACE );
 
 	if ( !g_pShaderManager || !g_pShaderManager->Init() )
 		return false;
@@ -287,5 +287,5 @@ void RendererGL::AddViewPort( IViewPort *pViewPort )
 	m_pViewPorts.push_back( pViewPort );
 }
 
-static DLLInterface< IRenderer, RendererGL > s_Renderer( RENDERER_INTERFACE_OPENGL );
+static DLLInterface< IRenderer, RendererGL > s_Renderer( RENDERER_INTERFACE );
 RendererGL *GetGLRenderer_Internal() { return s_Renderer.GetInternal(); }
