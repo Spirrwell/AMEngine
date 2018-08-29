@@ -23,7 +23,7 @@ project "shadergl"
 				"../../thirdparty/glm/include",
 				"../../thirdparty/assimp-4.0.1/include",
 				"../../thirdparty/glew-2.1.0/include",
-				"../../thirdparty/SDL-2.0.5/include"
+				"../../thirdparty/SDL2-2.0.8/include"
 		}
 	
 	links {

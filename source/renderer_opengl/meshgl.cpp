@@ -4,8 +4,6 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-extern RendererGL *GetGLRenderer_Internal();
-
 MeshGL::MeshGL( std::vector < Vertex > Vertices, std::vector < unsigned int > Indices, IMaterial *pMaterial )
 {
 	m_pMaterial = pMaterial;
@@ -96,7 +94,7 @@ void MeshGL::Draw()
 	pShader->BindUBO( "UBO" );
 
 	pShader->SetMatrix4f( "model", m_mat4Model );
-	pShader->SetMatrix4f( "normalMatrix", glm::transpose( glm::inverse( GetGLRenderer_Internal()->GetViewPort()->GetViewMatrix() * m_mat4Model ) ) );
+	pShader->SetMatrix4f( "normalMatrix", glm::transpose( glm::inverse( GetGLRenderer_Internal().GetViewPort()->GetViewMatrix() * m_mat4Model ) ) );
 
 	pShader->UnbindUBO();
 

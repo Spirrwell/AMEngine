@@ -42,7 +42,7 @@ project "engine"
 				"../shared/engine",
 				"../thirdparty/enet-1.3.13/include",
 				"../thirdparty/glm/include",
-				"../thirdparty/SDL-2.0.5/include"
+				"../thirdparty/SDL2-2.0.8/include"
 		}
 	
 	links {

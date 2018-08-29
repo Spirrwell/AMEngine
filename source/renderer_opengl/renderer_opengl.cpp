@@ -203,7 +203,16 @@ void RendererGL::Shutdown()
 		//delete m_pFloorMesh;
 
 	if ( m_hGLContext != nullptr )
+	{
 		SDL_GL_DeleteContext( m_hGLContext );
+		m_hGLContext = nullptr;
+	}
+
+	if ( m_pMainWindow != nullptr )
+	{
+		SDL_DestroyWindow( m_pMainWindow );
+		m_pMainWindow = nullptr;
+	}
 }
 
 void RendererGL::DrawScene()
@@ -288,4 +297,4 @@ void RendererGL::AddViewPort( IViewPort *pViewPort )
 }
 
 static DLLInterface< IRenderer, RendererGL > s_Renderer( RENDERER_INTERFACE );
-RendererGL *GetGLRenderer_Internal() { return s_Renderer.GetInternal(); }
+RendererGL &GetGLRenderer_Internal() { return *s_Renderer.GetInternal(); }

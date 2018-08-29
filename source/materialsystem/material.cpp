@@ -5,7 +5,7 @@
 #include "materialsystem.hpp"
 
 #include <algorithm>
-#include <stdlib.h>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 

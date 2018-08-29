@@ -1,6 +1,6 @@
 #include "memorywriter.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <cstring>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!

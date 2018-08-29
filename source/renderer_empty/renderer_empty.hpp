@@ -5,6 +5,7 @@
 
 class RendererEmpty : public IRenderer
 {
+public:
 	bool Init() override { return true; }
 	void PostInit() override {}
 

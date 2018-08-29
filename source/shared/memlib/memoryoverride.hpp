@@ -1,7 +1,6 @@
 #ifndef MEMORYOVERRIDE_HPP
 #define MEMORYOVERRIDE_HPP
 
-#include <stdlib.h>
 #include <cstdlib>
 
 #define MEM_DEBUGGING 1

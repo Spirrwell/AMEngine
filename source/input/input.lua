@@ -18,7 +18,7 @@ project "input"
 	includedirs {
 				"../shared",
 				"../shared/input",
-				"../thirdparty/SDL-2.0.5/include"
+				"../thirdparty/SDL2-2.0.8/include"
 		}
 	
 	links {

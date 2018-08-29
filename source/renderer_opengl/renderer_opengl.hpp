@@ -54,6 +54,10 @@ private:
 	//MeshGL *m_pFloorMesh;
 
 	Skybox *m_pSkybox;
+
+	RendererGL( const RendererGL& ) = delete;
 };
+
+extern RendererGL &GetGLRenderer_Internal();
 
 #endif // RENDERER_OPENGL_HPP

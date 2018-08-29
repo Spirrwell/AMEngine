@@ -105,13 +105,13 @@ bool Engine::Init()
 		}
 	}
 
-	printf( "Width: %d\nHeight: %d\n", m_Config.windowConfig.resolution_width, m_Config.windowConfig.resolution_height );
-	printf( "Fullscreen: %d\n", m_Config.windowConfig.fullscreen );
+	//printf( "Width: %d\nHeight: %d\n", m_Config.windowConfig.resolution_width, m_Config.windowConfig.resolution_height );
+	//printf( "Fullscreen: %d\n", m_Config.windowConfig.fullscreen );
 
 	m_flAspectRatio = ( ( float )m_Config.windowConfig.resolution_width / ( float )m_Config.windowConfig.resolution_height );
 
-	// Use OpenGL explicitly for now
-	if ( !GetFactory()->LoadModule( "bin/renderer_opengl" + string( DLL_EXTENSION ) ) )
+	// Use Vulkan explicitly for now
+	if ( !GetFactory()->LoadModule( "bin/renderer_vulkan" + string( DLL_EXTENSION ) ) )
 	{
 		printf( "Failed to load renderer module!\n" );
 		return false;

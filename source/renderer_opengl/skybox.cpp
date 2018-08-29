@@ -8,7 +8,6 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-extern RendererGL *GetGLRenderer_Internal();
 extern IMaterialSystem *g_pMaterialSystem;
 
 static float skyboxVertices[] = {
@@ -59,7 +58,7 @@ static float skyboxVertices[] = {
 Skybox::Skybox()
 {
 	m_pMaterial = nullptr;
-	m_pShader = GetGLRenderer_Internal()->GetShader( "skyShader" );
+	m_pShader = GetGLRenderer_Internal().GetShader( "skyShader" );
 
 	if ( m_pShader )
 	{

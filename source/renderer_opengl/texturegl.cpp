@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <map>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!

@@ -1,5 +1,6 @@
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <limits>
 
 #include "platform.hpp"
 #include "engine/iengine.hpp"
@@ -72,15 +73,18 @@ int main( int argc, char *argv[] )
 		g_pEngine->RunMainLoop();
 		Shutdown();
 
-		/*string input;
+		string input;
 		std::cout << "Do you want to restart the engine? (Y or N)\n";
 		std::cin >> input;
 
-		if ( input == "N" || input == "n" )*/
+		if ( input == "N" || input == "n" )
 			bShouldRun = false;
 	}
 
 	GetMemTracker()->PrintAllocations();
+
+	// Yuck
+	std::cin.ignore( std::numeric_limits< std::streamsize >::max(), '\n' );
 	std::cin.get();
 
 	return 0;
