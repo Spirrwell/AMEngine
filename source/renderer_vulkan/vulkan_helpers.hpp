@@ -25,8 +25,35 @@ namespace vkApp
 			VKAPP_ERROR_CREATE_INSTANCE,
 #if VULKAN_VALIDATION_LAYERS
 			VKAPP_ERROR_VALIDATION_LAYERS,
-			VKAPP_ERROR_DEBUG_CALLBACK_CREATION
+			VKAPP_ERROR_DEBUG_CALLBACK_CREATION,
 #endif
+			VKAPP_ERROR_FAILED_SURFACE_CREATION,
+			VKAPP_ERROR_NO_PHYSICAL_DEVICE,
+			VKAPP_ERROR_LOGICAL_DEVICE_CREATION
+		};
+
+		struct QueueFamilyIndex
+		{
+			QueueFamilyIndex() { index = 0; }
+
+			explicit operator bool() { return bSet; }
+			operator uint32_t() { return index; }
+			QueueFamilyIndex &operator=( const uint32_t &index ) { this->index = index; bSet = true; return *this; }
+
+		private:
+			uint32_t index;
+			bool bSet = false;
+		};
+
+		struct QueueFamilyIndices
+		{
+			QueueFamilyIndex graphicsFamily;
+			QueueFamilyIndex presentFamily;
+
+			bool isComplete()
+			{
+				return ( ( bool )graphicsFamily && ( bool )presentFamily );
+			}
 		};
 
 		// Our Vulkan variables\info will be stored here
@@ -43,6 +70,11 @@ namespace vkApp
 				"VK_LAYER_LUNARG_standard_validation"
 			};
 #endif
+			VkSurfaceKHR surface = VK_NULL_HANDLE;
+			VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+			VkDevice device = VK_NULL_HANDLE;
+			VkQueue graphicsQueue = VK_NULL_HANDLE;
+			VkQueue presentQueue = VK_NULL_HANDLE;
 		};
 
 	public:
@@ -57,6 +89,7 @@ namespace vkApp
 
 	private:
 		vkAppError m_Error = VKAPP_ERROR_NONE;
+		QueueFamilyIndices m_QueueFamilyIndices;
 
 		// Required extensions loaded from SDL
 		const char **m_ppszReqExtensionNames = nullptr;
@@ -78,6 +111,12 @@ namespace vkApp
 #if VULKAN_VALIDATION_LAYERS
 		bool setupDebugCallback();
 #endif
+		bool createSurface();
+		bool pickPhysicalDevice();
+		bool isDeviceSuitable( VkPhysicalDevice &device );
+		bool createLogicalDevice();
+
+		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
 
 		std::vector< const char * > getRequiredExtensions();
 		

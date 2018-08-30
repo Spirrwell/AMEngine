@@ -82,7 +82,11 @@ bool RendererVulkan::Init()
 	if ( !g_pMaterialSystem || !g_pMaterialSystem->Init() )
 		return false;
 
-	return m_vkApp.initVulkan();
+	if ( !m_vkApp.initVulkan() )
+	{
+		m_vkApp.printError();
+		return false;
+	}
 
 	/*uint32_t extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties( nullptr, &extensionCount, nullptr );

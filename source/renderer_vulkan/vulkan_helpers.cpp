@@ -3,6 +3,8 @@
 #include "SDL_vulkan.h"
 
 #include <memory>
+#include <map>
+#include <set>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
@@ -16,8 +18,11 @@ namespace vkApp
 		"Failed to create instance.",
 #if VULKAN_VALIDATION_LAYERS
 		"Failed to get validation layers.",
-		"Failed to set up debug callback."
+		"Failed to set up debug callback.",
 #endif
+		"Failed to create window surface.",
+		"No physical device found.",
+		"Failed to create logical device."
 	};
 
 	VulkanApp::VulkanApp()
@@ -32,36 +37,43 @@ namespace vkApp
 	bool VulkanApp::initVulkan()
 	{
 		if ( !loadExtensionsFromSDL() )
-		{
-			printError();
 			return false;
-		}
+
 #if VULKAN_VALIDATION_LAYERS
 		if ( !checkValidationLayerSupport() )
-		{
-			printError();
 			return false;
-		}
 #endif
 		if ( !createInstance() )
-		{
-			printError();
 			return false;
-		}
 
 #if VULKAN_VALIDATION_LAYERS
 		if ( !setupDebugCallback() )
-		{
-			printError();
 			return false;
-		}
 #endif
+
+		if ( !createSurface() )
+			return false;
+
+		if ( !pickPhysicalDevice() )
+			return false;
+
+		if ( !createLogicalDevice() )
+			return false;
 
 		return true;
 	}
 
 	void VulkanApp::cleanup()
 	{
+		if ( m_Vulkan.device != VK_NULL_HANDLE )
+		{
+			vkDestroyDevice( m_Vulkan.device, nullptr );
+			m_Vulkan.device = VK_NULL_HANDLE;
+
+			m_Vulkan.graphicsQueue = VK_NULL_HANDLE; // This is cleaned up when the device is destroyed
+			m_Vulkan.presentQueue = VK_NULL_HANDLE; // This is cleaned up when the device is destroyed
+		}
+
 #if VULKAN_VALIDATION_LAYERS
 		if ( m_Vulkan.debugCallback != VK_NULL_HANDLE )
 		{
@@ -70,10 +82,17 @@ namespace vkApp
 		}
 #endif
 
+		if ( m_Vulkan.surface != VK_NULL_HANDLE )
+		{
+			vkDestroySurfaceKHR( m_Vulkan.instance, m_Vulkan.surface, nullptr );
+			m_Vulkan.surface = VK_NULL_HANDLE;
+		}
+
 		if ( m_Vulkan.instance != VK_NULL_HANDLE )
 		{
 			vkDestroyInstance( m_Vulkan.instance, nullptr );
 			m_Vulkan.instance = VK_NULL_HANDLE;
+			m_Vulkan.physicalDevice = VK_NULL_HANDLE; // This is cleaned up when the instance is destroyed
 		}
 
 		if ( m_ppszReqExtensionNames )
@@ -234,5 +253,158 @@ namespace vkApp
 #endif
 
 		return extensions;
+	}
+
+	bool VulkanApp::createSurface()
+	{
+		if ( SDL_Vulkan_CreateSurface( GetVkRenderer_Internal().GetWindow(), m_Vulkan.instance, &m_Vulkan.surface ) != SDL_TRUE )
+		{
+			setError( VKAPP_ERROR_FAILED_SURFACE_CREATION );
+			return false;
+		}
+
+		return true;
+	}
+
+	bool VulkanApp::pickPhysicalDevice()
+	{
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices( m_Vulkan.instance, &deviceCount, nullptr );
+
+		if ( deviceCount == 0 )
+		{
+			setError( VKAPP_ERROR_NO_PHYSICAL_DEVICE );
+			return false;
+		}
+
+		std::vector< VkPhysicalDevice > devices( static_cast< size_t >( deviceCount ) );
+		vkEnumeratePhysicalDevices( m_Vulkan.instance, &deviceCount, devices.data() );
+
+		auto rateSuitability = []( VkPhysicalDevice &device )
+		{
+			uint32_t iScore = 1;
+			VkPhysicalDeviceProperties deviceProperties;
+			vkGetPhysicalDeviceProperties( device, &deviceProperties );
+
+			VkPhysicalDeviceFeatures deviceFeatures;
+			vkGetPhysicalDeviceFeatures( device, &deviceFeatures );
+
+			if ( deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
+				iScore += 1000;
+
+			iScore += deviceProperties.limits.maxImageDimension2D;
+
+			if ( !deviceFeatures.geometryShader )
+				return static_cast< uint32_t >( 0 );
+
+			return iScore;
+		};
+
+		// Ordered map that automatically sorts device candidates by increasing score
+		std::multimap< uint32_t, VkPhysicalDevice > candidates;
+
+		for ( auto &device : devices )
+		{
+			if ( !isDeviceSuitable( device ) )
+				continue;
+
+			uint32_t score = rateSuitability( device );
+			candidates.insert( std::make_pair( score, device ) );
+		}
+
+		if ( !candidates.empty() && candidates.rbegin()->first > 0 )
+			m_Vulkan.physicalDevice = candidates.rbegin()->second;
+
+		if ( m_Vulkan.physicalDevice == VK_NULL_HANDLE )
+		{
+			setError( VKAPP_ERROR_NO_PHYSICAL_DEVICE );
+			return false;
+		}
+
+		return true;
+	}
+
+	bool VulkanApp::isDeviceSuitable( VkPhysicalDevice &device )
+	{
+		return findQueueFamilies( device ).isComplete();
+	}
+
+	VulkanApp::QueueFamilyIndices VulkanApp::findQueueFamilies( VkPhysicalDevice &device )
+	{
+		QueueFamilyIndices indices;
+
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties( device, &queueFamilyCount, nullptr );
+
+		std::vector< VkQueueFamilyProperties > queueFamilies( static_cast< size_t >( queueFamilyCount ) );
+		vkGetPhysicalDeviceQueueFamilyProperties( device, &queueFamilyCount, queueFamilies.data() );
+
+		for ( size_t index = 0; index < queueFamilies.size(); ++index )
+		{
+			if ( queueFamilies[ index ].queueCount > 0 )
+			{
+				if ( queueFamilies[ index ].queueFlags & VK_QUEUE_GRAPHICS_BIT )
+					indices.graphicsFamily = static_cast< uint32_t >( index );
+
+				VkBool32 presentSupport = VK_FALSE;
+				vkGetPhysicalDeviceSurfaceSupportKHR( device, static_cast< uint32_t >( index ), m_Vulkan.surface, &presentSupport );
+
+				if ( presentSupport == VK_TRUE )
+					indices.presentFamily = static_cast< uint32_t >( index );
+
+				if ( indices.isComplete() )
+					break;
+			}
+		}
+
+		return indices;
+	}
+
+	bool VulkanApp::createLogicalDevice()
+	{
+		// TODO: Cache this
+		auto indices = findQueueFamilies( m_Vulkan.physicalDevice );
+
+		std::vector< VkDeviceQueueCreateInfo > queueCreateInfos;
+		std::set< uint32_t > uniqueQueueFamilies = { indices.graphicsFamily, indices.presentFamily };
+
+		float queuePriority = 1.0f;
+		for ( auto queueFamily : uniqueQueueFamilies )
+		{
+			VkDeviceQueueCreateInfo queueCreateInfo = {};
+			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueCreateInfo.queueFamilyIndex = queueFamily;
+			queueCreateInfo.queueCount = 1;
+			queueCreateInfo.pQueuePriorities = &queuePriority;
+
+			queueCreateInfos.push_back( queueCreateInfo );
+		}
+
+		VkPhysicalDeviceFeatures deviceFeatures = {};
+
+		VkDeviceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		createInfo.queueCreateInfoCount = static_cast< uint32_t >( queueCreateInfos.size() );
+		createInfo.pQueueCreateInfos = queueCreateInfos.data();
+		createInfo.pEnabledFeatures = &deviceFeatures;
+		createInfo.enabledExtensionCount = 0;
+
+#if VULKAN_VALIDATION_LAYERS
+		createInfo.enabledLayerCount = static_cast< uint32_t >( m_Vulkan.validationLayers.size() );
+		createInfo.ppEnabledLayerNames = m_Vulkan.validationLayers.data();
+#else
+		createInfo.enabledLayerCount = 0;
+#endif
+
+		if ( vkCreateDevice( m_Vulkan.physicalDevice, &createInfo, nullptr, &m_Vulkan.device ) != VK_SUCCESS )
+		{
+			setError( VKAPP_ERROR_LOGICAL_DEVICE_CREATION );
+			return false;
+		}
+
+		vkGetDeviceQueue( m_Vulkan.device, indices.graphicsFamily, 0, &m_Vulkan.graphicsQueue );
+		vkGetDeviceQueue( m_Vulkan.device, indices.presentFamily, 0, &m_Vulkan.presentQueue );
+
+		return true;
 	}
 }
