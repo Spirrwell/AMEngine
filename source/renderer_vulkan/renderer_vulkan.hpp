@@ -1,6 +1,7 @@
 #ifndef RENDERER_VULKAN_HPP
 #define RENDERER_VULKAN_HPP
 
+#include "engine/iengine.hpp"
 #include "irenderer.hpp"
 
 #include "SDL.h"
@@ -8,6 +9,8 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vulkan_helpers.hpp"
+
+extern IEngine *g_pEngine;
 
 class RendererVulkan : public IRenderer
 {

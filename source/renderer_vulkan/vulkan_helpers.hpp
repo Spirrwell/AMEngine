@@ -5,6 +5,7 @@
 #include "string.hpp"
 
 #include <vector>
+#include <memory>
 
 class RendererVulkan;
 
@@ -29,7 +30,8 @@ namespace vkApp
 #endif
 			VKAPP_ERROR_FAILED_SURFACE_CREATION,
 			VKAPP_ERROR_NO_PHYSICAL_DEVICE,
-			VKAPP_ERROR_LOGICAL_DEVICE_CREATION
+			VKAPP_ERROR_LOGICAL_DEVICE_CREATION,
+			VKAPP_ERROR_SWAP_CHAIN_CREATION
 		};
 
 		struct QueueFamilyIndex
@@ -56,10 +58,22 @@ namespace vkApp
 			}
 		};
 
+		struct SwapChainSupportDetails
+		{
+			VkSurfaceCapabilitiesKHR capabilities;
+			std::vector< VkSurfaceFormatKHR > formats;
+			std::vector< VkPresentModeKHR > presentModes;
+		};
+
 		// Our Vulkan variables\info will be stored here
 		struct vulkanContainer
 		{
 			std::vector< VkExtensionProperties > extensions;
+			const std::vector< const char * > deviceExtensions =
+			{
+				VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			};
+
 			VkInstance instance = VK_NULL_HANDLE;
 
 #if VULKAN_VALIDATION_LAYERS
@@ -75,19 +89,27 @@ namespace vkApp
 			VkDevice device = VK_NULL_HANDLE;
 			VkQueue graphicsQueue = VK_NULL_HANDLE;
 			VkQueue presentQueue = VK_NULL_HANDLE;
+			VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+			std::vector< VkImage > swapChainImages;
+			VkFormat swapChainImageFormat;
+			VkExtent2D swapChainExtent;
 		};
 
 	public:
 		VulkanApp();
 		virtual ~VulkanApp();
 
+		const vulkanContainer &vulkan() const { return m_Vulkan; }
+
 	protected:
+		vulkanContainer &vulkan() { return m_Vulkan; }
+
 		bool initVulkan();
 		void cleanup();
-		
-		vulkanContainer m_Vulkan;
 
 	private:
+		vulkanContainer m_Vulkan;
+
 		vkAppError m_Error = VKAPP_ERROR_NONE;
 		QueueFamilyIndices m_QueueFamilyIndices;
 
@@ -115,11 +137,14 @@ namespace vkApp
 		bool pickPhysicalDevice();
 		bool isDeviceSuitable( VkPhysicalDevice &device );
 		bool createLogicalDevice();
-
-		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
+		bool createSwapChain();
 
 		std::vector< const char * > getRequiredExtensions();
-		
+		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
+		std::shared_ptr< SwapChainSupportDetails > querySwapChainSupport( VkPhysicalDevice &device );
+		VkSurfaceFormatKHR chooseSwapSurfaceFormat( const std::vector< VkSurfaceFormatKHR > &availableFormats );
+		VkPresentModeKHR chooseSwapPresentMode( const std::vector< VkPresentModeKHR > availablePresentModes );
+		VkExtent2D chooseSwapExtent( const VkSurfaceCapabilitiesKHR &capabilities );
 	};
 }
 
