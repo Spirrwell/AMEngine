@@ -31,7 +31,10 @@ namespace vkApp
 			VKAPP_ERROR_FAILED_SURFACE_CREATION,
 			VKAPP_ERROR_NO_PHYSICAL_DEVICE,
 			VKAPP_ERROR_LOGICAL_DEVICE_CREATION,
-			VKAPP_ERROR_SWAP_CHAIN_CREATION
+			VKAPP_ERROR_SWAP_CHAIN_CREATION,
+			VKAPP_ERROR_IMAGE_VIEW_CREATION,
+			VKAPP_ERROR_RENDER_PASS_CREATION,
+			VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION
 		};
 
 		struct QueueFamilyIndex
@@ -93,6 +96,10 @@ namespace vkApp
 			std::vector< VkImage > swapChainImages;
 			VkFormat swapChainImageFormat;
 			VkExtent2D swapChainExtent;
+			std::vector< VkImageView > swapChainImageViews;
+			VkRenderPass renderPass = VK_NULL_HANDLE;
+			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+			VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 		};
 
 	public:
@@ -138,6 +145,9 @@ namespace vkApp
 		bool isDeviceSuitable( VkPhysicalDevice &device );
 		bool createLogicalDevice();
 		bool createSwapChain();
+		bool createImageViews();
+		bool createRenderPass();
+		bool createGraphicsPipeline();
 
 		std::vector< const char * > getRequiredExtensions();
 		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
@@ -145,6 +155,7 @@ namespace vkApp
 		VkSurfaceFormatKHR chooseSwapSurfaceFormat( const std::vector< VkSurfaceFormatKHR > &availableFormats );
 		VkPresentModeKHR chooseSwapPresentMode( const std::vector< VkPresentModeKHR > availablePresentModes );
 		VkExtent2D chooseSwapExtent( const VkSurfaceCapabilitiesKHR &capabilities );
+		VkShaderModule createShaderModule( const std::vector< std::byte > &code );
 	};
 }
 
