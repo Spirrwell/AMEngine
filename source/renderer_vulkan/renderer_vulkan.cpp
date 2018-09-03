@@ -111,5 +111,44 @@ void RendererVulkan::Shutdown()
 	}
 }
 
+void RendererVulkan::DrawScene()
+{
+	static uint32_t imageIndex = 0;
+	vkAcquireNextImageKHR( m_vkApp.vulkan().device, m_vkApp.vulkan().swapChain, std::numeric_limits< uint64_t >::max(), m_vkApp.vulkan().imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex );
+
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &m_vkApp.vulkan().imageAvailableSemaphore;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &m_vkApp.vulkan().commandBuffers[ imageIndex ];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &m_vkApp.vulkan().renderFinishedSemaphore;
+
+	if ( vkQueueSubmit( m_vkApp.vulkan().graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE ) != VK_SUCCESS )
+	{
+		stprintf( "[Vulkan]Queue submit failed!\n" );
+		return;
+	}
+
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &m_vkApp.vulkan().renderFinishedSemaphore;
+
+	VkSwapchainKHR swapChains[] = { m_vkApp.vulkan().swapChain };
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pResults = nullptr; // Optional
+
+	vkQueuePresentKHR( m_vkApp.vulkan().presentQueue, &presentInfo );
+	vkQueueWaitIdle( m_vkApp.vulkan().presentQueue );
+}
+
 static DLLInterface< IRenderer, RendererVulkan > s_Renderer( RENDERER_INTERFACE );
 RendererVulkan &GetVkRenderer_Internal() { return *s_Renderer.GetInternal(); }

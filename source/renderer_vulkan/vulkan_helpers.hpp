@@ -34,7 +34,13 @@ namespace vkApp
 			VKAPP_ERROR_SWAP_CHAIN_CREATION,
 			VKAPP_ERROR_IMAGE_VIEW_CREATION,
 			VKAPP_ERROR_RENDER_PASS_CREATION,
-			VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION
+			VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION,
+			VKAPP_ERROR_FRAMEBUFFER_CREATION,
+			VKAPP_ERROR_COMMAND_POOL_CREATION,
+			VKAPP_ERROR_COMMAND_BUFFER_CREATION,
+			VKAPP_ERROR_SEMAPHORE_CREATION,
+			
+			VKAPP_ERROR_COUNT
 		};
 
 		struct QueueFamilyIndex
@@ -100,6 +106,11 @@ namespace vkApp
 			VkRenderPass renderPass = VK_NULL_HANDLE;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 			VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+			std::vector< VkFramebuffer > swapChainFramebuffers;
+			VkCommandPool commandPool = VK_NULL_HANDLE;
+			std::vector< VkCommandBuffer > commandBuffers;
+			VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
+			VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
 		};
 
 	public:
@@ -148,6 +159,10 @@ namespace vkApp
 		bool createImageViews();
 		bool createRenderPass();
 		bool createGraphicsPipeline();
+		bool createFramebuffers();
+		bool createCommandPool();
+		bool createCommandBuffers();
+		bool createSemaphores();
 
 		std::vector< const char * > getRequiredExtensions();
 		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );

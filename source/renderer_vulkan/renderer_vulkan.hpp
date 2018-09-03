@@ -23,7 +23,7 @@ public:
 
 	void Shutdown() override;
 
-	void DrawScene() override {}
+	void DrawScene() override;
 	void Clear() override {}
 	void Swap() override {}
 

@@ -33,7 +33,7 @@ namespace vkApp
 		return buffer;
 	}
 
-	const char *VulkanApp::s_pszErrors[] =
+	const char *VulkanApp::s_pszErrors[ VKAPP_ERROR_COUNT ] =
 	{
 		"None",
 		"Failed to load required extensions from SDL.",
@@ -48,7 +48,10 @@ namespace vkApp
 		"Failed to create swap chain.",
 		"Failed to create image views.",
 		"Failed to create render pass.",
-		"Failed to create graphics pipeline."
+		"Failed to create graphics pipeline.",
+		"Failed to create framebuffers.",
+		"Failed to create command pool.",
+		"Failed to create semaphores."
 	};
 
 	VulkanApp::VulkanApp()
@@ -89,10 +92,25 @@ namespace vkApp
 		if ( !createSwapChain() )
 			return false;
 
+		if ( !createImageViews() )
+			return false;
+
 		if ( !createRenderPass() )
 			return false;
 
 		if ( !createGraphicsPipeline() )
+			return false;
+
+		if ( !createFramebuffers() )
+			return false;
+
+		if ( !createCommandPool() )
+			return false;
+
+		if ( !createCommandBuffers() )
+			return false;
+
+		if ( !createSemaphores() )
 			return false;
 
 		return true;
@@ -100,6 +118,35 @@ namespace vkApp
 
 	void VulkanApp::cleanup()
 	{
+		if ( vulkan().device != VK_NULL_HANDLE )
+			vkDeviceWaitIdle( vulkan().device );
+
+		if ( vulkan().renderFinishedSemaphore != VK_NULL_HANDLE )
+		{
+			vkDestroySemaphore( vulkan().device, vulkan().renderFinishedSemaphore, nullptr );
+			vulkan().renderFinishedSemaphore = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().imageAvailableSemaphore != VK_NULL_HANDLE )
+		{
+			vkDestroySemaphore( vulkan().device, vulkan().imageAvailableSemaphore, nullptr );
+			vulkan().imageAvailableSemaphore = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().commandPool != VK_NULL_HANDLE )
+		{
+			vkDestroyCommandPool( vulkan().device, vulkan().commandPool, nullptr );
+			vulkan().commandPool = VK_NULL_HANDLE;
+		}
+
+		for ( auto &framebuffer : vulkan().swapChainFramebuffers )
+		{
+			if ( framebuffer != VK_NULL_HANDLE )
+				vkDestroyFramebuffer( vulkan().device, framebuffer, nullptr );
+		}
+
+		vulkan().swapChainFramebuffers.clear();
+
 		if ( vulkan().graphicsPipeline != VK_NULL_HANDLE )
 		{
 			vkDestroyPipeline( vulkan().device, vulkan().graphicsPipeline, nullptr );
@@ -514,7 +561,7 @@ namespace vkApp
 		}
 
 		vkGetSwapchainImagesKHR( vulkan().device, vulkan().swapChain, &imageCount, nullptr );
-		vulkan().swapChainImages.resize( imageCount );
+		vulkan().swapChainImages.resize( imageCount, VK_NULL_HANDLE );
 		vkGetSwapchainImagesKHR( vulkan().device, vulkan().swapChain, &imageCount, vulkan().swapChainImages.data() );
 
 		vulkan().swapChainImageFormat = surfaceFormat.format;
@@ -582,6 +629,17 @@ namespace vkApp
 		renderPassInfo.pAttachments = &colorAttachment;
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
+
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
 
 		if ( vkCreateRenderPass( vulkan().device, &renderPassInfo, nullptr, &vulkan().renderPass ) != VK_SUCCESS )
 		{
@@ -774,6 +832,119 @@ namespace vkApp
 		}
 
 		destroyShaderModules();
+
+		return true;
+	}
+
+	bool VulkanApp::createFramebuffers()
+	{
+		vulkan().swapChainFramebuffers.resize( vulkan().swapChainImageViews.size(), VK_NULL_HANDLE );
+
+		for ( size_t i = 0; i < vulkan().swapChainFramebuffers.size(); ++i )
+		{
+			VkFramebufferCreateInfo framebufferInfo = {};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = vulkan().renderPass;
+			framebufferInfo.attachmentCount = 1;
+			framebufferInfo.pAttachments = &vulkan().swapChainImageViews[ i ];
+			framebufferInfo.width = vulkan().swapChainExtent.width;
+			framebufferInfo.height = vulkan().swapChainExtent.height;
+			framebufferInfo.layers = 1;
+
+			if ( vkCreateFramebuffer( vulkan().device, &framebufferInfo, nullptr, &vulkan().swapChainFramebuffers[ i ] ) != VK_SUCCESS )
+			{
+				setError( VKAPP_ERROR_FRAMEBUFFER_CREATION );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool VulkanApp::createCommandPool()
+	{
+		auto queueFamilyIndices = findQueueFamilies( vulkan().physicalDevice );
+
+		VkCommandPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
+		poolInfo.flags = 0; // Optional
+
+		if ( vkCreateCommandPool( vulkan().device, &poolInfo, nullptr, &vulkan().commandPool ) != VK_SUCCESS )
+		{
+			setError( VKAPP_ERROR_COMMAND_POOL_CREATION );
+			return false;
+		}
+
+		return true;
+	}
+
+	bool VulkanApp::createCommandBuffers()
+	{
+		vulkan().commandBuffers.resize( vulkan().swapChainFramebuffers.size(), VK_NULL_HANDLE );
+
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = vulkan().commandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = static_cast< uint32_t >( vulkan().commandBuffers.size() );
+
+		if ( vkAllocateCommandBuffers( vulkan().device, &allocInfo, vulkan().commandBuffers.data() ) != VK_SUCCESS )
+		{
+			setError( VKAPP_ERROR_COMMAND_BUFFER_CREATION );
+			return false;
+		}
+
+		for ( size_t i = 0; i < vulkan().commandBuffers.size(); ++i )
+		{
+			VkCommandBufferBeginInfo beginInfo = {};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+			beginInfo.pInheritanceInfo = nullptr; // Optional
+
+			if ( vkBeginCommandBuffer( vulkan().commandBuffers[ i ], &beginInfo ) != VK_SUCCESS )
+			{
+				setError( VKAPP_ERROR_COMMAND_BUFFER_CREATION );
+				return false;
+			}
+
+			VkRenderPassBeginInfo renderPassInfo = {};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassInfo.renderPass = vulkan().renderPass;
+			renderPassInfo.framebuffer = vulkan().swapChainFramebuffers[ i ];
+			renderPassInfo.renderArea.offset = { 0, 0 };
+			renderPassInfo.renderArea.extent = vulkan().swapChainExtent;
+
+			VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 0.5f };
+			renderPassInfo.clearValueCount = 1;
+			renderPassInfo.pClearValues = &clearColor;
+
+			vkCmdBeginRenderPass( vulkan().commandBuffers[ i ], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+				vkCmdBindPipeline( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().graphicsPipeline );
+				vkCmdDraw( vulkan().commandBuffers[ i ], 3, 1, 0, 0 );
+			vkCmdEndRenderPass( vulkan().commandBuffers[ i ] );
+
+			if ( vkEndCommandBuffer( vulkan().commandBuffers[ i ] ) != VK_SUCCESS )
+			{
+				setError( VKAPP_ERROR_COMMAND_BUFFER_CREATION );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool VulkanApp::createSemaphores()
+	{
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		
+		if ( vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().imageAvailableSemaphore ) != VK_SUCCESS ||
+			vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().renderFinishedSemaphore ) != VK_SUCCESS )
+		{
+			setError( VKAPP_ERROR_SEMAPHORE_CREATION );
+			return false;
+		}
 
 		return true;
 	}
