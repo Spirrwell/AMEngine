@@ -1,5 +1,4 @@
 #version 460
-#extension GL_ARB_separate_shader_objects : enable
 
 // Index of the framebuffer to output to
 layout( location = 0 ) out vec4 outColor;

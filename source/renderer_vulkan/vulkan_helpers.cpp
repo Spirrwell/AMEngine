@@ -3,10 +3,12 @@
 #include "engine/config.hpp"
 
 #include "SDL_vulkan.h"
+#include "mathdefs.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <memory>
+#include <array>
 #include <map>
 #include <set>
 
@@ -15,6 +17,46 @@
 
 namespace vkApp
 {
+	struct Vertex
+	{
+		Vector2f pos;
+		Vector3f color;
+
+		static VkVertexInputBindingDescription getBindingDescription()
+		{
+			VkVertexInputBindingDescription bindingDescription = {};
+			bindingDescription.binding = 0;
+			bindingDescription.stride = sizeof( Vertex );
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return bindingDescription;
+		}
+
+		static std::array< VkVertexInputAttributeDescription, 2 > getAttributeDescriptions()
+		{
+			std::array< VkVertexInputAttributeDescription, 2 > attributeDescriptions = {};
+
+			attributeDescriptions[ 0 ].binding = 0;
+			attributeDescriptions[ 0 ].location = 0;
+			attributeDescriptions[ 0 ].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
+
+			attributeDescriptions[ 1 ].binding = 0;
+			attributeDescriptions[ 1 ].location = 1;
+			attributeDescriptions[ 1 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[ 1 ].offset = offsetof( Vertex, color );
+
+			return attributeDescriptions;
+		}
+	};
+
+	std::vector< Vertex > vertices =
+	{
+		{ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } }
+	};
+
 	static std::vector< std::byte > readFile( const string &fileName )
 	{
 		std::ifstream file( fileName, std::ios::ate | std::ios::binary );
@@ -51,7 +93,7 @@ namespace vkApp
 		"Failed to create graphics pipeline.",
 		"Failed to create framebuffers.",
 		"Failed to create command pool.",
-		"Failed to create semaphores."
+		"Failed to create sync objects."
 	};
 
 	VulkanApp::VulkanApp()
@@ -110,7 +152,7 @@ namespace vkApp
 		if ( !createCommandBuffers() )
 			return false;
 
-		if ( !createSemaphores() )
+		if ( !createSyncObjects() )
 			return false;
 
 		return true;
@@ -121,63 +163,37 @@ namespace vkApp
 		if ( vulkan().device != VK_NULL_HANDLE )
 			vkDeviceWaitIdle( vulkan().device );
 
-		if ( vulkan().renderFinishedSemaphore != VK_NULL_HANDLE )
+		cleanupSwapChain();
+
+		for ( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
 		{
-			vkDestroySemaphore( vulkan().device, vulkan().renderFinishedSemaphore, nullptr );
-			vulkan().renderFinishedSemaphore = VK_NULL_HANDLE;
+			if ( vulkan().renderFinishedSemaphores.size() > 0 )
+			{
+				if ( vulkan().renderFinishedSemaphores[ i ] != VK_NULL_HANDLE )
+					vkDestroySemaphore( vulkan().device, vulkan().renderFinishedSemaphores[ i ], nullptr );
+			}
+
+			if ( vulkan().imageAvailableSemaphores.size() > 0 )
+			{
+				if ( vulkan().imageAvailableSemaphores[ i ] != VK_NULL_HANDLE )
+					vkDestroySemaphore( vulkan().device, vulkan().imageAvailableSemaphores[ i ], nullptr );
+			}
+
+			if ( vulkan().inFlightFences.size() > 0 )
+			{
+				if ( vulkan().inFlightFences[ i ] != VK_NULL_HANDLE )
+					vkDestroyFence( vulkan().device, vulkan().inFlightFences[ i ], nullptr );
+			}
 		}
 
-		if ( vulkan().imageAvailableSemaphore != VK_NULL_HANDLE )
-		{
-			vkDestroySemaphore( vulkan().device, vulkan().imageAvailableSemaphore, nullptr );
-			vulkan().imageAvailableSemaphore = VK_NULL_HANDLE;
-		}
+		vulkan().renderFinishedSemaphores.clear();
+		vulkan().imageAvailableSemaphores.clear();
+		vulkan().inFlightFences.clear();
 
 		if ( vulkan().commandPool != VK_NULL_HANDLE )
 		{
 			vkDestroyCommandPool( vulkan().device, vulkan().commandPool, nullptr );
 			vulkan().commandPool = VK_NULL_HANDLE;
-		}
-
-		for ( auto &framebuffer : vulkan().swapChainFramebuffers )
-		{
-			if ( framebuffer != VK_NULL_HANDLE )
-				vkDestroyFramebuffer( vulkan().device, framebuffer, nullptr );
-		}
-
-		vulkan().swapChainFramebuffers.clear();
-
-		if ( vulkan().graphicsPipeline != VK_NULL_HANDLE )
-		{
-			vkDestroyPipeline( vulkan().device, vulkan().graphicsPipeline, nullptr );
-			vulkan().graphicsPipeline = VK_NULL_HANDLE;
-		}
-
-		if ( vulkan().pipelineLayout != VK_NULL_HANDLE )
-		{
-			vkDestroyPipelineLayout( vulkan().device, vulkan().pipelineLayout, nullptr );
-			vulkan().pipelineLayout = VK_NULL_HANDLE;
-		}
-
-		if ( vulkan().renderPass != VK_NULL_HANDLE )
-		{
-			vkDestroyRenderPass( vulkan().device, vulkan().renderPass, nullptr );
-			vulkan().renderPass = VK_NULL_HANDLE;
-		}
-
-		for ( auto &imageView : vulkan().swapChainImageViews )
-		{
-			if ( imageView != VK_NULL_HANDLE )
-				vkDestroyImageView( vulkan().device, imageView, nullptr );
-		}
-
-		vulkan().swapChainImageViews.clear();
-		vulkan().swapChainImages.clear();
-
-		if ( vulkan().swapChain != VK_NULL_HANDLE )
-		{
-			vkDestroySwapchainKHR( vulkan().device, vulkan().swapChain, nullptr );
-			vulkan().swapChain = VK_NULL_HANDLE;
 		}
 
 		if ( vulkan().device != VK_NULL_HANDLE )
@@ -215,6 +231,131 @@ namespace vkApp
 			delete[] m_ppszReqExtensionNames;
 			m_ppszReqExtensionNames = nullptr;
 		}
+	}
+
+	void VulkanApp::cleanupSwapChain()
+	{
+		for ( auto &framebuffer : vulkan().swapChainFramebuffers )
+		{
+			if ( framebuffer != VK_NULL_HANDLE )
+				vkDestroyFramebuffer( vulkan().device, framebuffer, nullptr );
+		}
+
+		vulkan().swapChainFramebuffers.clear();
+
+		if ( vulkan().commandBuffers.size() > 0 )
+			vkFreeCommandBuffers( vulkan().device, vulkan().commandPool, static_cast< uint32_t >( vulkan().commandBuffers.size() ), vulkan().commandBuffers.data() );
+
+		vulkan().commandBuffers.clear();
+
+		if ( vulkan().graphicsPipeline != VK_NULL_HANDLE )
+		{
+			vkDestroyPipeline( vulkan().device, vulkan().graphicsPipeline, nullptr );
+			vulkan().graphicsPipeline = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().pipelineLayout != VK_NULL_HANDLE )
+		{
+			vkDestroyPipelineLayout( vulkan().device, vulkan().pipelineLayout, nullptr );
+			vulkan().pipelineLayout = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().renderPass != VK_NULL_HANDLE )
+		{
+			vkDestroyRenderPass( vulkan().device, vulkan().renderPass, nullptr );
+			vulkan().renderPass = VK_NULL_HANDLE;
+		}
+
+		for ( auto &imageView : vulkan().swapChainImageViews )
+		{
+			if ( imageView != VK_NULL_HANDLE )
+				vkDestroyImageView( vulkan().device, imageView, nullptr );
+		}
+
+		vulkan().swapChainImageViews.clear();
+		vulkan().swapChainImages.clear();
+
+		if ( vulkan().swapChain != VK_NULL_HANDLE )
+		{
+			vkDestroySwapchainKHR( vulkan().device, vulkan().swapChain, nullptr );
+			vulkan().swapChain = VK_NULL_HANDLE;
+		}
+	}
+
+	void VulkanApp::drawFrame()
+	{
+		static uint32_t imageIndex = 0;
+		static size_t currentFrame = 0;
+
+		if ( vulkan().bMinimized )
+			return;
+
+		vkWaitForFences( vulkan().device, 1, &vulkan().inFlightFences[ currentFrame ], VK_TRUE, std::numeric_limits< uint64_t >::max() );
+
+		VkResult result = vkAcquireNextImageKHR( vulkan().device, vulkan().swapChain, std::numeric_limits< uint64_t >::max(), vulkan().imageAvailableSemaphores[ currentFrame ], VK_NULL_HANDLE, &imageIndex );
+
+		if ( result == VK_ERROR_OUT_OF_DATE_KHR )
+		{
+			recreateSwapChain();
+			return;
+		}
+		else if ( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
+		{
+			stprintf( "[Vulkan]Failed to acquire swap chain image.\n" );
+			return;
+		}
+
+		VkSemaphore waitSemaphores[] = { vulkan().imageAvailableSemaphores[ currentFrame ] };
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &vulkan().commandBuffers[ imageIndex ];
+
+		VkSemaphore signalSemaphores[] = { vulkan().renderFinishedSemaphores[ currentFrame ] };
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemaphores;
+
+		vkResetFences( vulkan().device, 1, &vulkan().inFlightFences[ currentFrame ] );
+
+		if ( vkQueueSubmit( vulkan().graphicsQueue, 1, &submitInfo, vulkan().inFlightFences[ currentFrame ] ) != VK_SUCCESS )
+		{
+			stprintf( "[Vulkan]Queue submit failed!\n" );
+			return;
+		}
+
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = signalSemaphores;
+
+		VkSwapchainKHR swapChains[] = { vulkan().swapChain };
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapChains;
+		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pResults = nullptr; // Optional
+
+		result = vkQueuePresentKHR( vulkan().presentQueue, &presentInfo );
+
+		if ( result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || vulkan().bFrameBufferResized )
+		{
+			vulkan().bFrameBufferResized = false;
+			recreateSwapChain();
+			return;
+		}
+		else if ( result != VK_SUCCESS )
+		{
+			stprintf( "[Vulkan]Failed to present swap chain image.\n" );
+			return;
+		}
+		
+		currentFrame = ( currentFrame + 1 ) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 #if VULKAN_VALIDATION_LAYERS
@@ -274,6 +415,34 @@ namespace vkApp
 		return true;
 	}
 #endif
+
+	void VulkanApp::ProcessEvent( const SDL_Event &event )
+	{
+		if ( event.type == SDL_WINDOWEVENT )
+		{
+			config &cfg = g_pEngine->GetConfig();
+
+			switch( event.window.event )
+			{
+			case SDL_WINDOWEVENT_SIZE_CHANGED:
+				vulkan().bFrameBufferResized = true;
+
+				cfg.windowConfig.resolution_width = event.window.data1;
+				cfg.windowConfig.resolution_height = event.window.data2;
+				break;
+			case SDL_WINDOWEVENT_MINIMIZED:
+				vulkan().bMinimized = true;
+
+				break;
+			case SDL_WINDOWEVENT_MAXIMIZED:
+			case SDL_WINDOWEVENT_RESTORED:
+				vulkan().bMinimized = false;
+				break;
+			default:
+				break;
+			}
+		}
+	}
 
 	bool VulkanApp::loadExtensionsFromSDL()
 	{
@@ -572,7 +741,7 @@ namespace vkApp
 
 	bool VulkanApp::createImageViews()
 	{
-		vulkan().swapChainImageViews.resize( vulkan().swapChainImages.size() );
+		vulkan().swapChainImageViews.resize( vulkan().swapChainImages.size(), VK_NULL_HANDLE );
 
 		for ( size_t i = 0; i < vulkan().swapChainImages.size(); i++ )
 		{
@@ -934,19 +1103,40 @@ namespace vkApp
 		return true;
 	}
 
-	bool VulkanApp::createSemaphores()
+	bool VulkanApp::createSyncObjects()
 	{
+		vulkan().imageAvailableSemaphores.resize( MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE );
+		vulkan().renderFinishedSemaphores.resize( MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE );
+		vulkan().inFlightFences.resize( MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE );
+
 		VkSemaphoreCreateInfo semaphoreInfo = {};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-		
-		if ( vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().imageAvailableSemaphore ) != VK_SUCCESS ||
-			vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().renderFinishedSemaphore ) != VK_SUCCESS )
+
+		VkFenceCreateInfo fenceInfo = {};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		for ( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
 		{
-			setError( VKAPP_ERROR_SEMAPHORE_CREATION );
-			return false;
+			if ( vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().imageAvailableSemaphores[ i ] ) != VK_SUCCESS ||
+				vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().renderFinishedSemaphores[ i ] ) != VK_SUCCESS ||
+				vkCreateFence( vulkan().device, &fenceInfo, nullptr, &vulkan().inFlightFences[ i ] ) != VK_SUCCESS )
+			{
+				setError( VKAPP_ERROR_SYNC_OBJECT_CREATION );
+				return false;
+			}
 		}
 
 		return true;
+	}
+
+	bool VulkanApp::recreateSwapChain()
+	{
+		vkDeviceWaitIdle( vulkan().device );
+
+		cleanupSwapChain();
+
+		return createSwapChain() && createImageViews() && createRenderPass() && createGraphicsPipeline() && createFramebuffers() && createCommandBuffers();
 	}
 
 	std::vector< const char * > VulkanApp::getRequiredExtensions()

@@ -49,7 +49,8 @@ project "engine"
 			"amlib", --Project
 			"factory", --Project
 			"memlib", --Project
-			"memory_system" --Project
+			"memory_system", --Project
+			"sdl_core" --Project
 		}
 	
 	filter { "system:Windows" }
@@ -60,6 +61,7 @@ project "engine"
 				"memory_system.lib",
 				"SDL2main.lib",
 				"SDL2.lib",
+				"sdl_core.lib",
 				"ws2_32.lib",
 				"winmm.lib"
 			}

@@ -1,23 +1,20 @@
-project "input"
+project "sdl_core"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++17"
 	location "./"
-	targetname "input"
+	targetname "sdl_core"
 	
-	vpaths {
-		[ "Header Files" ] = { "**.hpp", "../shared/**.hpp", "../shared/input/**.hpp" },
-		[ "Source Files" ] = { "**.cpp" }
-	}
+	defines { "SDL_CORE_DLL_EXPORT" }
 	
 	files {
-			"%{cfg.location}/input.hpp",
-			"%{cfg.location}/input.cpp"
+			"%{cfg.location}/sdl_core.hpp",
+			"%{cfg.location}/sdl_core.cpp",
 		}
 		
 	includedirs {
 				"../shared",
-				"../shared/input",
+				"../shared/sdl_core",
 				"../thirdparty/SDL2-2.0.8/include"
 		}
 	
@@ -25,8 +22,7 @@ project "input"
 			"amlib", --Project
 			"factory", --Project
 			"memlib", --Project
-			"memory_system", --Project
-			"sdl_core" --Project
+			"memory_system" --Project
 		}
 	
 	filter { "system:Windows" }
@@ -36,8 +32,7 @@ project "input"
 				"memlib.lib",
 				"memory_system.lib",
 				"SDL2main.lib",
-				"SDL2.lib",
-				"sdl_core.lib"
+				"SDL2.lib"
 			}
 	
 	filter { "configurations:Debug"	}
@@ -62,20 +57,22 @@ project "input"
 	filter { "platforms:Win64", "configurations:Debug" }
 		libdirs {
 				"../lib/shared/win64/debug",
-				"../lib/thirdparty/win64/debug"
+				"../lib/thirdparty/win64/debug",
+				"../lib/thirdparty/win64"
 			}
 		
 	filter { "platforms:Win64", "configurations:Release" }
 		libdirs {
 				"../lib/shared/win64/release",
-				"../lib/thirdparty/win64/release"
+				"../lib/thirdparty/win64/release",
+				"../lib/thirdparty/win64"
 			}
 
 	filter { "system:Windows" }
 		defines { "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS" }
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Debug" }
-		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/debug/bin\" /s /i /y" }
+		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/debug\" /s /i /y", "xcopy \"$(TargetDir)$(TargetName).lib\" \"../lib/shared/win64/debug\" /s /i /y" }
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
-		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release/bin\" /s /i /y" }
+		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release\" /s /i /y", "xcopy \"$(TargetDir)$(TargetName).lib\" \"../lib/shared/win64/release\" /s /i /y" }

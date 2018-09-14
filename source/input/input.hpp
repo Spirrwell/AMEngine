@@ -7,23 +7,26 @@
 #include "iinput.hpp"
 #include "SDL.h"
 
-class Input : public IInput
+#include "sdl_core/sdleventlistener.hpp"
+
+class Input : public IInput, public SDLEventListener
 {
 public:
 	Input();
 	virtual ~Input();
 
-	virtual bool Init();
+	bool Init() override;
 
-	virtual bool IsButtonPressed( const string &strButtonName );
-	virtual bool IsButtonReleased( const string &strButtonName );
-	virtual bool IsButtonJustPressed( const string &strButtonName );
-	virtual bool IsButtonJustReleased( const string &strButtonName );
+	bool IsButtonPressed( const string &strButtonName ) override;
+	bool IsButtonReleased( const string &strButtonName ) override;
+	bool IsButtonJustPressed( const string &strButtonName ) override;
+	bool IsButtonJustReleased( const string &strButtonName ) override;
 
-	virtual void Update();
+	void Update() override;
+	void ProcessEvent( const SDL_Event &event ) override;
 
-	virtual float GetMouseDeltaX() { return m_flMouseDeltaX; }
-	virtual float GetMouseDeltaY() { return m_flMouseDeltaY; }
+	float GetMouseDeltaX() override { return m_flMouseDeltaX; }
+	float GetMouseDeltaY() override { return m_flMouseDeltaY; }
 
 private:
 	std::map< string, Uint8 > m_mapButtons;

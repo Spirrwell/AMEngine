@@ -30,7 +30,8 @@ project "shadergl"
 			"amlib", --Project
 			"factory", --Project
 			"memlib", --Project
-			"memory_system" --Project
+			"memory_system", --Project
+			"sdl_core" --Project
 		}
 	
 	filter { "system:Windows" }
@@ -41,6 +42,7 @@ project "shadergl"
 				"memory_system.lib",
 				"SDL2main.lib",
 				"SDL2.lib",
+				"sdl_core.lib",
 				"opengl32.lib"
 			}
 

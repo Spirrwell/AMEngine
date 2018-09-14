@@ -11,6 +11,7 @@
 #include "game/server/iserver.hpp"
 #include "enet/enet.h"
 #include "engineserver.hpp"
+#include "sdl_core/isdl_core.hpp"
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
@@ -246,6 +247,7 @@ int Engine::RunMainLoop()
 		}
 
 		g_pInput->Update();
+		GetSDL_Core()->ProcessEvents();
 
 		if ( g_pInput->IsButtonJustPressed( "Quit" ) )
 			m_bDone = true;

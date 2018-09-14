@@ -1,6 +1,7 @@
 #ifndef VULKAN_HELPERS_HPP
 #define VULKAN_HELPERS_HPP
 
+#include "sdl_core/sdleventlistener.hpp"
 #include "vulkan/vulkan.hpp"
 #include "string.hpp"
 
@@ -13,7 +14,7 @@ class RendererVulkan;
 
 namespace vkApp
 {
-	class VulkanApp
+	class VulkanApp : public SDLEventListener
 	{
 		friend class RendererVulkan;
 
@@ -38,7 +39,7 @@ namespace vkApp
 			VKAPP_ERROR_FRAMEBUFFER_CREATION,
 			VKAPP_ERROR_COMMAND_POOL_CREATION,
 			VKAPP_ERROR_COMMAND_BUFFER_CREATION,
-			VKAPP_ERROR_SEMAPHORE_CREATION,
+			VKAPP_ERROR_SYNC_OBJECT_CREATION,
 			
 			VKAPP_ERROR_COUNT
 		};
@@ -109,8 +110,12 @@ namespace vkApp
 			std::vector< VkFramebuffer > swapChainFramebuffers;
 			VkCommandPool commandPool = VK_NULL_HANDLE;
 			std::vector< VkCommandBuffer > commandBuffers;
-			VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
-			VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
+			std::vector< VkSemaphore > imageAvailableSemaphores;
+			std::vector< VkSemaphore > renderFinishedSemaphores;
+			std::vector< VkFence > inFlightFences;
+
+			bool bFrameBufferResized = false;
+			bool bMinimized = false;
 		};
 
 	public:
@@ -119,11 +124,16 @@ namespace vkApp
 
 		const vulkanContainer &vulkan() const { return m_Vulkan; }
 
+		static constexpr const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+
 	protected:
 		vulkanContainer &vulkan() { return m_Vulkan; }
 
 		bool initVulkan();
 		void cleanup();
+		void cleanupSwapChain();
+
+		void drawFrame();
 
 	private:
 		vulkanContainer m_Vulkan;
@@ -145,6 +155,8 @@ namespace vkApp
 		bool checkValidationLayerSupport();
 #endif
 
+		void ProcessEvent( const SDL_Event &event ) override;
+
 		bool loadExtensionsFromSDL();
 		bool createInstance();
 
@@ -162,7 +174,9 @@ namespace vkApp
 		bool createFramebuffers();
 		bool createCommandPool();
 		bool createCommandBuffers();
-		bool createSemaphores();
+		bool createSyncObjects();
+
+		bool recreateSwapChain();
 
 		std::vector< const char * > getRequiredExtensions();
 		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );

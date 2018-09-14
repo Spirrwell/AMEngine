@@ -14,7 +14,9 @@ project "renderer_vulkan"
 	
 	files {
 			"%{cfg.location}/renderer_vulkan.hpp",
-			"%{cfg.location}/renderer_vulkan.cpp"
+			"%{cfg.location}/renderer_vulkan.cpp",
+			"%{cfg.location}/vulkan_helpers.hpp",
+			"%{cfg.location}/vulkan_helpers.cpp"
 		}
 		
 	includedirs {
@@ -31,7 +33,8 @@ project "renderer_vulkan"
 			"amlib", --Project
 			"factory", --Project
 			"memlib", --Project
-			"memory_system" --Project
+			"memory_system", --Project
+			"sdl_core" --Project
 		}
 	
 	filter { "system:Windows" }
@@ -42,6 +45,7 @@ project "renderer_vulkan"
 				"memory_system.lib",
 				"SDL2main.lib",
 				"SDL2.lib",
+				"sdl_core",
 				"vulkan-1.lib"
 			}
 	

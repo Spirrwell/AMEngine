@@ -27,7 +27,7 @@ bool RendererVulkan::Init()
 	}
 
 	config cfg = g_pEngine->GetConfig();
-	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN;
+	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
 
 	if ( cfg.windowConfig.fullscreen )
 		windowFlags |= SDL_WINDOW_FULLSCREEN;
@@ -48,8 +48,8 @@ bool RendererVulkan::Init()
 		return false;
 	}
 
-	SDL_SetWindowGrab( m_pMainWindow, SDL_TRUE );
-	SDL_SetRelativeMouseMode( SDL_TRUE );
+	//SDL_SetWindowGrab( m_pMainWindow, SDL_TRUE );
+	//SDL_SetRelativeMouseMode( SDL_TRUE );
 
 	g_pInput = ( IInput* )GetFactory()->GetInterface( INPUT_INTERFACE_VERSION );
 
@@ -113,41 +113,7 @@ void RendererVulkan::Shutdown()
 
 void RendererVulkan::DrawScene()
 {
-	static uint32_t imageIndex = 0;
-	vkAcquireNextImageKHR( m_vkApp.vulkan().device, m_vkApp.vulkan().swapChain, std::numeric_limits< uint64_t >::max(), m_vkApp.vulkan().imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex );
-
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &m_vkApp.vulkan().imageAvailableSemaphore;
-	submitInfo.pWaitDstStageMask = waitStages;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &m_vkApp.vulkan().commandBuffers[ imageIndex ];
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &m_vkApp.vulkan().renderFinishedSemaphore;
-
-	if ( vkQueueSubmit( m_vkApp.vulkan().graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE ) != VK_SUCCESS )
-	{
-		stprintf( "[Vulkan]Queue submit failed!\n" );
-		return;
-	}
-
-	VkPresentInfoKHR presentInfo = {};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &m_vkApp.vulkan().renderFinishedSemaphore;
-
-	VkSwapchainKHR swapChains[] = { m_vkApp.vulkan().swapChain };
-	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = swapChains;
-	presentInfo.pImageIndices = &imageIndex;
-	presentInfo.pResults = nullptr; // Optional
-
-	vkQueuePresentKHR( m_vkApp.vulkan().presentQueue, &presentInfo );
-	vkQueueWaitIdle( m_vkApp.vulkan().presentQueue );
+	m_vkApp.drawFrame();
 }
 
 static DLLInterface< IRenderer, RendererVulkan > s_Renderer( RENDERER_INTERFACE );

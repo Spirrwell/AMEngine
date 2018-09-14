@@ -77,28 +77,27 @@ void Input::Update()
 	// Note: We allocate the old keyboard state in the Init function
 	// Also no need to call SDL_GetKeyboardState as the state ponter is updated when events are processed, hence SDL_PumpEvents()
 	std::memcpy( m_pOldKeyboardState, m_pCurrentKeyboardState, sizeof( Uint8 ) * m_iNumKeys );
-	SDL_PumpEvents();
 
 	//SDL_GetRelativeMouseState( &m_iCurMouseX, &m_iCurMouseY );
 	//m_flMouseDeltaX = ( float )m_iCurMouseX;
 	//m_flMouseDeltaY = ( float )m_iCurMouseY;
 
-	while ( SDL_PollEvent( &m_event ) )
-	{
-		switch ( m_event.type )
-		{
-		case SDL_QUIT:
-			g_pEngine->SignalTerminate();
-			break;
-		case SDL_MOUSEMOTION:
-			m_flMouseDeltaX = ( float ) m_event.motion.xrel;
-			m_flMouseDeltaY = ( float ) m_event.motion.yrel;
-			break;
-		}
-	}
-
 	//printf( "X: %f Y: %f\n", m_flMouseDeltaX, m_flMouseDeltaY );
 	//printf( "X: %d Y: %d\n", m_iCurMouseX, m_iCurMouseY );
+}
+
+void Input::ProcessEvent( const SDL_Event &event )
+{
+	switch ( m_event.type )
+	{
+	case SDL_QUIT:
+		g_pEngine->SignalTerminate();
+		break;
+	case SDL_MOUSEMOTION:
+		m_flMouseDeltaX = ( float ) m_event.motion.xrel;
+		m_flMouseDeltaY = ( float ) m_event.motion.yrel;
+		break;
+	}
 }
 
 static DLLInterface < IInput, Input > s_Input( INPUT_INTERFACE_VERSION );

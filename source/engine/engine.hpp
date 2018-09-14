@@ -19,20 +19,20 @@ public:
 	Engine();
 	virtual ~Engine();
 
-	virtual bool Init();
-	virtual void PostInit();
+	bool Init() override;
+	void PostInit() override;
 
 	virtual void Shutdown();
 
-	virtual int RunMainLoop();
+	int RunMainLoop() override;
 
-	virtual const float &GetAspectRatio() { return m_flAspectRatio; }
+	const float &GetAspectRatio() override { return m_flAspectRatio; }
 
-	virtual float GetDeltaTime() { return m_flDeltaTime; };
+	float GetDeltaTime() override { return m_flDeltaTime; };
 
-	virtual void SignalTerminate() { m_bDone = true; }
+	void SignalTerminate() override { m_bDone = true; }
 
-	virtual config &GetConfig() { return m_Config; }
+	config &GetConfig() override { return m_Config; }
 
 	void LoadMap( const string &mapname );
 
