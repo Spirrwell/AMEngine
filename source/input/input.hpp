@@ -35,8 +35,6 @@ private:
 
 	int m_iNumKeys;
 
-	SDL_Event m_event;
-
 	float m_flMouseDeltaX;
 	float m_flMouseDeltaY;
 };

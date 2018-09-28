@@ -1,6 +1,8 @@
 #ifndef MEMORYREADER_HPP
 #define MEMORYREADER_HPP
 
+#include <cstdlib>
+
 class MemoryReader
 {
 public:

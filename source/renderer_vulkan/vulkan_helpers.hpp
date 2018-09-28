@@ -16,7 +16,7 @@ namespace vkApp
 {
 	class VulkanApp : public SDLEventListener
 	{
-		friend class RendererVulkan;
+		friend class ::RendererVulkan;
 
 		static const char *s_pszErrors[];
 

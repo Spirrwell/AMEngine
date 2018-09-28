@@ -24,6 +24,9 @@ project "launcher"
 			"memlib", --Project
 			"memory_system" --Project
 		}
+
+	--filter { "toolset:gcc" }
+		--linkoptions { "-Wl,-rpath,." }
 	
 	filter { "system:Windows" }
 		links {
@@ -33,6 +36,11 @@ project "launcher"
 				"memory_system.lib"
 			}
 	
+	filter { "system:Linux" }
+		links {
+				"dl"
+		}
+
 	filter { "configurations:Debug"	}
 		symbols "On"
 		
@@ -51,6 +59,14 @@ project "launcher"
 		debugcommand "../../game/win64/release/launcher.exe"
 		debugdir "../../game/win64/release"
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		targetdir "debug_linux64"
+		architecture "x64"
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		architecture "x64"
+		targetdir "release_linux64"
+
 	--Library Directories
 	filter { "platforms:Win64", "configurations:Debug" }
 		libdirs {
@@ -62,6 +78,16 @@ project "launcher"
 				"../lib/shared/win64/release"
 			}
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		libdirs {
+				"../lib/shared/linux64/debug"
+		}
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		libdirs {
+				"../lib/shared/linux64/release"
+		}
+
 	filter { "system:Windows" }
 		defines { "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS" }
 
@@ -70,3 +96,10 @@ project "launcher"
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
 		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release\" /s /i /y" }
+
+	--Bin
+	filter { "platforms:Linux64", "configurations:Debug" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../game/linux64/debug\"" }
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../game/linux64/release\"" }

@@ -1,6 +1,8 @@
 #ifndef INETWORKVAR_HPP
 #define INETWORKVAR_HPP
 
+#include <cstdlib>
+
 class INetworkVar
 {
 	friend class NetworkTable;

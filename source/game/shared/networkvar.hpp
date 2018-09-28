@@ -3,6 +3,7 @@
 
 #include "engine/inetworkvar.hpp"
 
+#include <cstring>
 #include <algorithm>
 
 template < typename T >

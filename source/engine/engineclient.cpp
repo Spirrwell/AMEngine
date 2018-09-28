@@ -4,6 +4,7 @@
 #include "igameobjectfactory.hpp"
 
 #include <iostream>
+#include <cstring>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"

@@ -88,14 +88,14 @@ void Input::Update()
 
 void Input::ProcessEvent( const SDL_Event &event )
 {
-	switch ( m_event.type )
+	switch ( event.type )
 	{
 	case SDL_QUIT:
 		g_pEngine->SignalTerminate();
 		break;
 	case SDL_MOUSEMOTION:
-		m_flMouseDeltaX = ( float ) m_event.motion.xrel;
-		m_flMouseDeltaY = ( float ) m_event.motion.yrel;
+		m_flMouseDeltaX = ( float ) event.motion.xrel;
+		m_flMouseDeltaY = ( float ) event.motion.yrel;
 		break;
 	}
 }

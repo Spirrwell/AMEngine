@@ -4,6 +4,7 @@ project "server"
 	cppdialect "C++17"
 	location "./"
 	targetname "server"
+	targetprefix ""
 	
 	defines { "SERVER_DLL" }
 	
@@ -67,6 +68,14 @@ project "server"
 		debugcommand "../../../game/win64/release/launcher.exe"
 		debugdir "../../../game/win64/release"
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		targetdir "debug_linux64"
+		architecture "x64"
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		architecture "x64"
+		targetdir "release_linux64"
+
 	filter { "platforms:Win64", "configurations:Debug" }
 		libdirs {
 				"../../lib/shared/win64/debug"
@@ -77,6 +86,16 @@ project "server"
 				"../../lib/shared/win64/release"
 			}
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		libdirs {
+				"../lib/shared/linux64/debug"
+		}
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		libdirs {
+				"../lib/shared/linux64/release"
+		}
+
 	filter { "system:Windows" }
 		defines { "_CRT_SECURE_NO_WARNINGS" }
 
@@ -85,3 +104,10 @@ project "server"
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
 		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../../game/win64/release/bin\" /s /i /y" }
+
+	--Bin
+	filter { "platforms:Linux64", "configurations:Debug" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../../game/linux64/debug/bin\"" }
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../../game/linux64/release/bin\"" }

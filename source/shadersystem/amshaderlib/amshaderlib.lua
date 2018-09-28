@@ -4,6 +4,8 @@ project "amshaderlib"
 	cppdialect "C++17"
 	location "./"
 	targetname "amshaderlib"
+
+	pic "On"
 	
 	files { 
 			"%{cfg.location}/shaderdll.cpp",
@@ -28,12 +30,22 @@ project "amshaderlib"
 	filter { "platforms:Win64" }
 		system "Windows"
 		architecture "x64"
+
+	filter { "platforms:Linux64" }
+		system "Linux"
+		architecture "x64"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"
 	
 	filter { "platforms:Win64", "configurations:Release" }
 		targetdir "release_win64"
+
+	filter { "platforms:Linux64", "configurations:Debug" }
+		targetdir "debug_linux64"
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		targetdir "release_linux64"
 	
 	filter { "system:Windows" }
 		defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -46,3 +58,9 @@ project "amshaderlib"
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
 		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../lib/shared/win64/release\" /s /i /y" }
+
+	filter { "platforms:Linux64", "configurations:Debug" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../lib/shared/linux64/debug\"" }
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../lib/shared/linux64/release\"" }

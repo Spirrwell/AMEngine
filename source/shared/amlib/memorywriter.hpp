@@ -1,6 +1,8 @@
 #ifndef MEMORYWRITER_HPP
 #define MEMORYWRITER_HPP
 
+#include <cstdlib>
+
 class MemoryWriter
 {
 public:

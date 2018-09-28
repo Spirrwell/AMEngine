@@ -1,0 +1,1 @@
+../tools/devtools/bin/premake/linux/premake5 --file=AMEnginePremake.lua gmake

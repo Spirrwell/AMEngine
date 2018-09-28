@@ -6,6 +6,7 @@ project "renderer_vulkan"
 	cppdialect "C++17"
 	location "./"
 	targetname "renderer_vulkan"
+	targetprefix ""
 	
 	vpaths {
 		[ "Header Files" ] = { "**.hpp", "../shared/**.hpp", "../shared/renderer/**.hpp" },
@@ -24,9 +25,7 @@ project "renderer_vulkan"
 				"../shared/renderer",
 				"../thirdparty/glm/include",
 				"../thirdparty/stb_image/include",
-				"../thirdparty/assimp-4.0.1/include",
-				"../thirdparty/SDL2-2.0.8/include",
-				"../thirdparty/vulkan-1.1.82.1/include"
+				--"../thirdparty/assimp-4.0.1/include",
 		}
 	
 	links {
@@ -38,6 +37,10 @@ project "renderer_vulkan"
 		}
 	
 	filter { "system:Windows" }
+		includedirs {
+					"../thirdparty/SDL2-2.0.8/include",
+					"../thirdparty/vulkan-1.1.82.1/win/include"
+		}
 		links {
 				"amlib.lib",
 				"factory.lib",
@@ -48,6 +51,17 @@ project "renderer_vulkan"
 				"sdl_core",
 				"vulkan-1.lib"
 			}
+
+	filter { "system:Linux" }
+		includedirs {
+					"/usr/include/SDL2", --Yuck
+					"../thirdparty/vulkan-1.1.82.1/linux/include"
+		}
+		links {
+				"SDL2main",
+				"SDL2",
+				"vulkan"
+		}
 	
 	filter { "configurations:Debug"	}
 		symbols "On"
@@ -67,6 +81,14 @@ project "renderer_vulkan"
 		debugcommand "../../game/win64/release/launcher.exe"
 		debugdir "../../game/win64/release"
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		targetdir "debug_linux64"
+		architecture "x64"
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		architecture "x64"
+		targetdir "release_linux64"
+
 	--Library Directories
 	filter { "platforms:Win64", "configurations:Debug" }
 		libdirs {
@@ -80,6 +102,18 @@ project "renderer_vulkan"
 				"../lib/thirdparty/win64/release"
 			}
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		libdirs {
+				"../lib/shared/linux64/debug",
+				"../lib/thirdparty/linux64/debug"
+		}
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		libdirs {
+				"../lib/shared/linux64/release",
+				"../lib/thirdparty/linux64/release"
+		}
+
 	filter { "system:Windows" }
 		defines { "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS" }
 
@@ -88,5 +122,12 @@ project "renderer_vulkan"
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
 		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release/bin\" /s /i /y" }
+
+	--Bin
+	filter { "platforms:Linux64", "configurations:Debug" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../game/linux64/debug/bin\"" }
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../game/linux64/release/bin\"" }
 
 group ""

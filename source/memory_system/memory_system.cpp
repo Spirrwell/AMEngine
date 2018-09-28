@@ -1,5 +1,10 @@
 #include "memory_system.hpp"
 
+#ifndef _WIN32
+#define _aligned_malloc aligned_alloc
+#define _aligned_free free
+#endif
+
 CMemTracker::CMemTracker()
 {
 	allocations = 0;

@@ -3,8 +3,14 @@ workspace "AMEngine"
 	startproject "client"
 	filter { "system:Windows" }
 		platforms { "Win64" }
+    filter { "system:Linux" }
+        platforms { "Linux64" }
 	filter { "action:vs" }
 		toolset "v141"
+    filter { "action:codelite" }
+		toolset "gcc"
+	filter { "toolset:gcc" }
+		buildoptions{ "-fno-gnu-unique" } --Hack: Makes dlclose unload .so files
 
 include "amlib/amlib.lua"
 include "shadersystem/amshaderlib/amshaderlib.lua"

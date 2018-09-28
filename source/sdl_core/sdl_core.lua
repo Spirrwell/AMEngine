@@ -4,6 +4,7 @@ project "sdl_core"
 	cppdialect "C++17"
 	location "./"
 	targetname "sdl_core"
+	targetprefix ""
 	
 	defines { "SDL_CORE_DLL_EXPORT" }
 	
@@ -14,8 +15,7 @@ project "sdl_core"
 		
 	includedirs {
 				"../shared",
-				"../shared/sdl_core",
-				"../thirdparty/SDL2-2.0.8/include"
+				"../shared/sdl_core"
 		}
 	
 	links {
@@ -26,6 +26,9 @@ project "sdl_core"
 		}
 	
 	filter { "system:Windows" }
+		includedirs {
+					"../thirdparty/SDL2-2.0.8/include"
+		}
 		links {
 				"amlib.lib",
 				"factory.lib",
@@ -34,6 +37,15 @@ project "sdl_core"
 				"SDL2main.lib",
 				"SDL2.lib"
 			}
+
+	filter { "system:Linux" }
+		includedirs {
+					"/usr/include/SDL2" --Yuck
+		}
+		links {
+				"SDL2main",
+				"SDL2"
+		}
 	
 	filter { "configurations:Debug"	}
 		symbols "On"
@@ -53,20 +65,36 @@ project "sdl_core"
 		debugcommand "../../game/win64/release/launcher.exe"
 		debugdir "../../game/win64/release"
 
+	filter { "platforms:Linux64", "configurations:Debug" }
+		targetdir "debug_linux64"
+		architecture "x64"
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		architecture "x64"
+		targetdir "release_linux64"
+
 	--Library Directories
 	filter { "platforms:Win64", "configurations:Debug" }
 		libdirs {
 				"../lib/shared/win64/debug",
 				"../lib/thirdparty/win64/debug",
-				"../lib/thirdparty/win64"
 			}
 		
 	filter { "platforms:Win64", "configurations:Release" }
 		libdirs {
 				"../lib/shared/win64/release",
 				"../lib/thirdparty/win64/release",
-				"../lib/thirdparty/win64"
 			}
+
+	filter { "platforms:Linux64", "configurations:Debug" }
+		libdirs {
+				"../lib/shared/linux64/debug"
+		}
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		libdirs {
+				"../lib/shared/linux64/release"
+		}
 
 	filter { "system:Windows" }
 		defines { "_CRT_SECURE_NO_WARNINGS", "_SCL_SECURE_NO_WARNINGS" }
@@ -76,3 +104,17 @@ project "sdl_core"
 
 	filter { "action:vs*", "platforms:Win64", "configurations:Release" }
 		postbuildcommands { "xcopy \"$(TargetDir)$(TargetFileName)\" \"../../game/win64/release\" /s /i /y", "xcopy \"$(TargetDir)$(TargetName).lib\" \"../lib/shared/win64/release\" /s /i /y" }
+
+	--Lib
+	filter { "platforms:Linux64", "configurations:Debug" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../lib/shared/linux64/debug\"" }
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../lib/shared/linux64/release\"" }
+
+	--Bin
+	filter { "platforms:Linux64", "configurations:Debug" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../game/linux64/debug\"" }
+
+	filter { "platforms:Linux64", "configurations:Release" }
+		postbuildcommands { "cp \"%{cfg.targetdir}/%{cfg.targetprefix}%{cfg.targetname}%{cfg.targetextension}\" \"../../game/linux64/release\"" }
