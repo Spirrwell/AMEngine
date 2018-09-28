@@ -10,7 +10,7 @@ The code used should be mostly cross platform friendly, and so there shouldn't b
 Projects will be generated using Premake. Simply execute the "createprojects.bat" to generate a VS2017 solution & projects.
 
 # (Linux) Project File Generation
-Projects will be generated using Premake. You may execut "createprojects.sh" to generate makefile projects. If you would like to generate projects for an IDE like CodeLite, simply edit "createprojects.sh" and replace "gmake" with "codelite"
+Projects will be generated using Premake. You may execute "createprojects.sh" to generate makefile projects. If you would like to generate projects for an IDE like CodeLite, simply edit "createprojects.sh" and replace "gmake" with "codelite"
 
 # Other Notes
 This engine will not be supporting 32 bit systems.
