@@ -36,7 +36,7 @@ project "shadergl"
 	
 	filter { "system:Windows" }
 		includedirs {
-					"../thirdparty/SDL2-2.0.8/include"
+					"../../thirdparty/SDL2-2.0.8/include"
 		}
 		links {
 				"amlib.lib",
