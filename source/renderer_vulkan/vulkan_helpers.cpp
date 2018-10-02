@@ -50,11 +50,24 @@ namespace vkApp
 		}
 	};
 
-	std::vector< Vertex > vertices =
+	/*std::vector< Vertex > vertices =
 	{
 		{ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
 		{ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } },
 		{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } }
+	};*/
+
+	const std::vector< Vertex > vertices =
+	{
+		{ { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } },
+		{ { 0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f } }
+	};
+
+	const std::vector< uint16_t > indices =
+	{
+		0, 1, 2, 2, 3, 0
 	};
 
 	static std::vector< std::byte > readFile( const string &fileName )
@@ -75,27 +88,6 @@ namespace vkApp
 		return buffer;
 	}
 
-	const char *VulkanApp::s_pszErrors[ VKAPP_ERROR_COUNT ] =
-	{
-		"None",
-		"Failed to load required extensions from SDL.",
-		"Failed to create instance.",
-#if VULKAN_VALIDATION_LAYERS
-		"Failed to get validation layers.",
-		"Failed to set up debug callback.",
-#endif
-		"Failed to create window surface.",
-		"No physical device found.",
-		"Failed to create logical device.",
-		"Failed to create swap chain.",
-		"Failed to create image views.",
-		"Failed to create render pass.",
-		"Failed to create graphics pipeline.",
-		"Failed to create framebuffers.",
-		"Failed to create command pool.",
-		"Failed to create sync objects."
-	};
-
 	VulkanApp::VulkanApp()
 	{
 	}
@@ -107,53 +99,29 @@ namespace vkApp
 
 	bool VulkanApp::initVulkan()
 	{
-		if ( !loadExtensionsFromSDL() )
-			return false;
-
+		loadExtensionsFromSDL();
 #if VULKAN_VALIDATION_LAYERS
-		if ( !checkValidationLayerSupport() )
-			return false;
+		checkValidationLayerSupport();
 #endif
-		if ( !createInstance() )
-			return false;
-
+		createInstance();
 #if VULKAN_VALIDATION_LAYERS
-		if ( !setupDebugCallback() )
-			return false;
+		setupDebugCallback();
 #endif
+		createSurface();
+		pickPhysicalDevice();
+		createLogicalDevice();
+		createSwapChain();
+		createImageViews();
+		createRenderPass();
+		createGraphicsPipeline();
+		createFramebuffers();
+		createCommandPool();
 
-		if ( !createSurface() )
-			return false;
+		createVertexBuffer();
+		createIndexBuffer();
 
-		if ( !pickPhysicalDevice() )
-			return false;
-
-		if ( !createLogicalDevice() )
-			return false;
-
-		if ( !createSwapChain() )
-			return false;
-
-		if ( !createImageViews() )
-			return false;
-
-		if ( !createRenderPass() )
-			return false;
-
-		if ( !createGraphicsPipeline() )
-			return false;
-
-		if ( !createFramebuffers() )
-			return false;
-
-		if ( !createCommandPool() )
-			return false;
-
-		if ( !createCommandBuffers() )
-			return false;
-
-		if ( !createSyncObjects() )
-			return false;
+		createCommandBuffers();
+		createSyncObjects();
 
 		return true;
 	}
@@ -164,6 +132,30 @@ namespace vkApp
 			vkDeviceWaitIdle( vulkan().device );
 
 		cleanupSwapChain();
+
+		if ( vulkan().indexBuffer != VK_NULL_HANDLE )
+		{
+			vkDestroyBuffer( vulkan().device, vulkan().indexBuffer, nullptr );
+			vulkan().indexBuffer = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().indexBufferMemory != VK_NULL_HANDLE )
+		{
+			vkFreeMemory( vulkan().device, vulkan().indexBufferMemory, nullptr );
+			vulkan().indexBufferMemory = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().vertexBuffer != VK_NULL_HANDLE )
+		{
+			vkDestroyBuffer( vulkan().device, vulkan().vertexBuffer, nullptr );
+			vulkan().vertexBuffer = VK_NULL_HANDLE;
+		}
+
+		if ( vulkan().vertexBufferMemory != VK_NULL_HANDLE )
+		{
+			vkFreeMemory( vulkan().device, vulkan().vertexBufferMemory, nullptr );
+			vulkan().vertexBufferMemory = VK_NULL_HANDLE;
+		}
 
 		for ( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
 		{
@@ -384,7 +376,7 @@ namespace vkApp
 			func( instance, callback, pAllocator );
 	}
 
-	bool VulkanApp::checkValidationLayerSupport()
+	void VulkanApp::checkValidationLayerSupport()
 	{
 		uint32_t layerCount = 0;
 		vkEnumerateInstanceLayerProperties( &layerCount, nullptr );
@@ -406,13 +398,8 @@ namespace vkApp
 			}
 
 			if ( !bLayerFound )
-			{
-				setError( VKAPP_ERROR_VALIDATION_LAYERS );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to get validation layers." );
 		}
-
-		return true;
 	}
 #endif
 
@@ -444,23 +431,21 @@ namespace vkApp
 		}
 	}
 
-	bool VulkanApp::loadExtensionsFromSDL()
+	void VulkanApp::loadExtensionsFromSDL()
 	{
 		unsigned int extensionCount = 0;
 		SDL_Vulkan_GetInstanceExtensions( GetVkRenderer_Internal().GetWindow(), &extensionCount, nullptr );
 
-		if ( extensionCount == 0)
-			return false;
+		if ( extensionCount == 0 )
+			throw std::runtime_error( "[Vulkan]Failed to load required extensions from SDL." );
 
 		m_ppszReqExtensionNames = new const char *[ extensionCount ];
 		SDL_Vulkan_GetInstanceExtensions( GetVkRenderer_Internal().GetWindow(), &extensionCount, m_ppszReqExtensionNames );
 
 		m_iReqExtCount = static_cast< uint32_t >( extensionCount );
-
-		return true;
 	}
 
-	bool VulkanApp::createInstance()
+	void VulkanApp::createInstance()
 	{
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -486,10 +471,7 @@ namespace vkApp
 #endif
 
 		if ( vkCreateInstance( &createInfo, nullptr, &vulkan().instance ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_CREATE_INSTANCE );
-			return false;
-		}
+			throw std::runtime_error( "[Vulkan]Failed to create instance." );
 
 		// Query available extensions
 		uint32_t extensionCount = 0;
@@ -504,12 +486,10 @@ namespace vkApp
 			stprintf( "\t%s\n", extension.extensionName );
 
 		stprintf( "\n" );
-
-		return true;
 	}
 
 #if VULKAN_VALIDATION_LAYERS
-	bool VulkanApp::setupDebugCallback()
+	void VulkanApp::setupDebugCallback()
 	{
 		VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -519,36 +499,23 @@ namespace vkApp
 		createInfo.pUserData = nullptr;
 
 		if ( CreateDebugUtilsMessengerEXT( vulkan().instance, &createInfo, nullptr, &vulkan().debugCallback ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_DEBUG_CALLBACK_CREATION );
-			return false;
-		}
-
-		return true;
+			throw std::runtime_error( "[Vulkan]Failed to setup debug callback." );
 	}
 #endif
 
-	bool VulkanApp::createSurface()
+	void VulkanApp::createSurface()
 	{
 		if ( SDL_Vulkan_CreateSurface( GetVkRenderer_Internal().GetWindow(), vulkan().instance, &vulkan().surface ) != SDL_TRUE )
-		{
-			setError( VKAPP_ERROR_FAILED_SURFACE_CREATION );
-			return false;
-		}
-
-		return true;
+			throw std::runtime_error( "[Vulkan]Failed to create window surface." );
 	}
 
-	bool VulkanApp::pickPhysicalDevice()
+	void VulkanApp::pickPhysicalDevice()
 	{
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices( vulkan().instance, &deviceCount, nullptr );
 
 		if ( deviceCount == 0 )
-		{
-			setError( VKAPP_ERROR_NO_PHYSICAL_DEVICE );
-			return false;
-		}
+			throw std::runtime_error( "[Vulkan]No physical device found." );
 
 		std::vector< VkPhysicalDevice > devices( static_cast< size_t >( deviceCount ) );
 		vkEnumeratePhysicalDevices( vulkan().instance, &deviceCount, devices.data() );
@@ -589,12 +556,7 @@ namespace vkApp
 			vulkan().physicalDevice = candidates.rbegin()->second;
 
 		if ( vulkan().physicalDevice == VK_NULL_HANDLE )
-		{
-			setError( VKAPP_ERROR_NO_PHYSICAL_DEVICE );
-			return false;
-		}
-
-		return true;
+			throw std::runtime_error( "[Vulkan]No physical device found." );
 	}
 
 	bool VulkanApp::isDeviceSuitable( VkPhysicalDevice &device )
@@ -624,7 +586,7 @@ namespace vkApp
 		return ( findQueueFamilies( device ).isComplete() && checkDeviceExtensionSupport() && checkSwapChainSupport( querySwapChainSupport( device ) ) ) ;
 	}
 
-	bool VulkanApp::createLogicalDevice()
+	void VulkanApp::createLogicalDevice()
 	{
 		// TODO: Cache this
 		auto indices = findQueueFamilies( vulkan().physicalDevice );
@@ -663,18 +625,13 @@ namespace vkApp
 #endif
 
 		if ( vkCreateDevice( vulkan().physicalDevice, &createInfo, nullptr, &vulkan().device ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_LOGICAL_DEVICE_CREATION );
-			return false;
-		}
+			throw std::runtime_error( "[Vulkan]Failed to create logical device." );
 
 		vkGetDeviceQueue( vulkan().device, indices.graphicsFamily, 0, &vulkan().graphicsQueue );
 		vkGetDeviceQueue( vulkan().device, indices.presentFamily, 0, &vulkan().presentQueue );
-
-		return true;
 	}
 
-	bool VulkanApp::createSwapChain()
+	void VulkanApp::createSwapChain()
 	{
 		auto swapChainSupport = querySwapChainSupport( vulkan().physicalDevice );
 
@@ -724,10 +681,7 @@ namespace vkApp
 		createInfo.oldSwapchain = VK_NULL_HANDLE;
 
 		if ( vkCreateSwapchainKHR( vulkan().device, &createInfo, nullptr, &vulkan().swapChain ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_SWAP_CHAIN_CREATION );
-			return false;
-		}
+			throw std::runtime_error( "[Vulkan]Failed to create swap chain." );
 
 		vkGetSwapchainImagesKHR( vulkan().device, vulkan().swapChain, &imageCount, nullptr );
 		vulkan().swapChainImages.resize( imageCount, VK_NULL_HANDLE );
@@ -735,11 +689,9 @@ namespace vkApp
 
 		vulkan().swapChainImageFormat = surfaceFormat.format;
 		vulkan().swapChainExtent = extent;
-
-		return true;
 	}
 
-	bool VulkanApp::createImageViews()
+	void VulkanApp::createImageViews()
 	{
 		vulkan().swapChainImageViews.resize( vulkan().swapChainImages.size(), VK_NULL_HANDLE );
 
@@ -762,16 +714,11 @@ namespace vkApp
 			createInfo.subresourceRange.layerCount = 1;
 
 			if ( vkCreateImageView( vulkan().device, &createInfo, nullptr, &vulkan().swapChainImageViews[ i ] ) != VK_SUCCESS )
-			{
-				setError( VKAPP_ERROR_IMAGE_VIEW_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create image views." );
 		}
-
-		return true;
 	}
 
-	bool VulkanApp::createRenderPass()
+	void VulkanApp::createRenderPass()
 	{
 		VkAttachmentDescription colorAttachment = {};
 		colorAttachment.format = vulkan().swapChainImageFormat;
@@ -811,15 +758,10 @@ namespace vkApp
 		renderPassInfo.pDependencies = &dependency;
 
 		if ( vkCreateRenderPass( vulkan().device, &renderPassInfo, nullptr, &vulkan().renderPass ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_RENDER_PASS_CREATION );
-			return false;
-		}
-
-		return true;
+			throw std::runtime_error( "[Vulkan]Failed to create render pass." );
 	}
 
-	bool VulkanApp::createGraphicsPipeline()
+	void VulkanApp::createGraphicsPipeline()
 	{
 		enum shaderType : size_t
 		{
@@ -837,10 +779,7 @@ namespace vkApp
 		for ( const auto &shader : shaderCode )
 		{
 			if ( shader.empty() )
-			{
-				setError( VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 		}
 
 		VkShaderModule shaderModules[ SHADER_COUNT ] = { VK_NULL_HANDLE, VK_NULL_HANDLE };
@@ -850,10 +789,7 @@ namespace vkApp
 			shaderModules[ i ] = createShaderModule( shaderCode[ i ] );
 
 			if ( shaderModules[ i ] == VK_NULL_HANDLE )
-			{
-				setError( VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 		}
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
@@ -876,6 +812,14 @@ namespace vkApp
 		vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
 		vertexInputInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+
+		auto bindingDescription = Vertex::getBindingDescription();
+		auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast< uint32_t >( attributeDescriptions.size() );
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -969,9 +913,7 @@ namespace vkApp
 		if ( vkCreatePipelineLayout( vulkan().device, &pipelineLayoutInfo, nullptr, &vulkan().pipelineLayout ) != VK_SUCCESS )
 		{
 			destroyShaderModules();
-			setError( VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION );
-
-			return false;
+			throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 		}
 
 		VkGraphicsPipelineCreateInfo pipelineInfo = {};
@@ -995,17 +937,13 @@ namespace vkApp
 		if ( vkCreateGraphicsPipelines( vulkan().device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &vulkan().graphicsPipeline ) != VK_SUCCESS )
 		{
 			destroyShaderModules();
-			setError( VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION );
-
-			return false;
+			throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 		}
 
 		destroyShaderModules();
-
-		return true;
 	}
 
-	bool VulkanApp::createFramebuffers()
+	void VulkanApp::createFramebuffers()
 	{
 		vulkan().swapChainFramebuffers.resize( vulkan().swapChainImageViews.size(), VK_NULL_HANDLE );
 
@@ -1021,16 +959,11 @@ namespace vkApp
 			framebufferInfo.layers = 1;
 
 			if ( vkCreateFramebuffer( vulkan().device, &framebufferInfo, nullptr, &vulkan().swapChainFramebuffers[ i ] ) != VK_SUCCESS )
-			{
-				setError( VKAPP_ERROR_FRAMEBUFFER_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create framebuffers." );
 		}
-
-		return true;
 	}
 
-	bool VulkanApp::createCommandPool()
+	void VulkanApp::createCommandPool()
 	{
 		auto queueFamilyIndices = findQueueFamilies( vulkan().physicalDevice );
 
@@ -1040,15 +973,52 @@ namespace vkApp
 		poolInfo.flags = 0; // Optional
 
 		if ( vkCreateCommandPool( vulkan().device, &poolInfo, nullptr, &vulkan().commandPool ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_COMMAND_POOL_CREATION );
-			return false;
-		}
-
-		return true;
+			throw std::runtime_error( "[Vulkan]Failed to create command pool." );
 	}
 
-	bool VulkanApp::createCommandBuffers()
+	void VulkanApp::createVertexBuffer()
+	{
+		VkDeviceSize bufferSize = sizeof( vertices[ 0 ] ) * vertices.size();
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
+
+		void *pData = nullptr;
+
+		vkMapMemory( vulkan().device, stagingBufferMemory, 0, bufferSize, 0, &pData );
+			std::memcpy( pData, vertices.data(), static_cast< size_t >( bufferSize ) );
+		vkUnmapMemory( vulkan().device, stagingBufferMemory );
+
+		createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vulkan().vertexBuffer, vulkan().vertexBufferMemory );
+		copyBuffer( stagingBuffer, vulkan().vertexBuffer, bufferSize );
+
+		vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
+		vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
+	}
+
+	void VulkanApp::createIndexBuffer()
+	{
+		VkDeviceSize bufferSize = sizeof( indices[ 0 ] ) * indices.size();
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
+
+		void *pData = nullptr;
+
+		vkMapMemory( vulkan().device, stagingBufferMemory, 0, bufferSize, 0, &pData );
+			std::memcpy( pData, indices.data(), static_cast< size_t >( bufferSize ) );
+		vkUnmapMemory( vulkan().device, stagingBufferMemory );
+
+		createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vulkan().indexBuffer, vulkan().indexBufferMemory );
+		copyBuffer( stagingBuffer, vulkan().indexBuffer, bufferSize );
+
+		vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
+		vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
+	}
+
+	void VulkanApp::createCommandBuffers()
 	{
 		vulkan().commandBuffers.resize( vulkan().swapChainFramebuffers.size(), VK_NULL_HANDLE );
 
@@ -1059,10 +1029,7 @@ namespace vkApp
 		allocInfo.commandBufferCount = static_cast< uint32_t >( vulkan().commandBuffers.size() );
 
 		if ( vkAllocateCommandBuffers( vulkan().device, &allocInfo, vulkan().commandBuffers.data() ) != VK_SUCCESS )
-		{
-			setError( VKAPP_ERROR_COMMAND_BUFFER_CREATION );
-			return false;
-		}
+			throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
 
 		for ( size_t i = 0; i < vulkan().commandBuffers.size(); ++i )
 		{
@@ -1072,10 +1039,7 @@ namespace vkApp
 			beginInfo.pInheritanceInfo = nullptr; // Optional
 
 			if ( vkBeginCommandBuffer( vulkan().commandBuffers[ i ], &beginInfo ) != VK_SUCCESS )
-			{
-				setError( VKAPP_ERROR_COMMAND_BUFFER_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
 
 			VkRenderPassBeginInfo renderPassInfo = {};
 			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1090,20 +1054,20 @@ namespace vkApp
 
 			vkCmdBeginRenderPass( vulkan().commandBuffers[ i ], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
 				vkCmdBindPipeline( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().graphicsPipeline );
-				vkCmdDraw( vulkan().commandBuffers[ i ], 3, 1, 0, 0 );
+				VkBuffer vertexBuffers[] = { vulkan().vertexBuffer };
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers( vulkan().commandBuffers[ i ], 0, 1, vertexBuffers, offsets );
+				vkCmdBindIndexBuffer( vulkan().commandBuffers[ i ], vulkan().indexBuffer, 0, VK_INDEX_TYPE_UINT16 );
+				vkCmdDrawIndexed( vulkan().commandBuffers[ i ], static_cast< uint32_t >( indices.size() ), 1, 0, 0, 0 );
+				//vkCmdDraw( vulkan().commandBuffers[ i ], static_cast< uint32_t >( vertices.size() ), 1, 0, 0 );
 			vkCmdEndRenderPass( vulkan().commandBuffers[ i ] );
 
 			if ( vkEndCommandBuffer( vulkan().commandBuffers[ i ] ) != VK_SUCCESS )
-			{
-				setError( VKAPP_ERROR_COMMAND_BUFFER_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
 		}
-
-		return true;
 	}
 
-	bool VulkanApp::createSyncObjects()
+	void VulkanApp::createSyncObjects()
 	{
 		vulkan().imageAvailableSemaphores.resize( MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE );
 		vulkan().renderFinishedSemaphores.resize( MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE );
@@ -1121,22 +1085,98 @@ namespace vkApp
 			if ( vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().imageAvailableSemaphores[ i ] ) != VK_SUCCESS ||
 				vkCreateSemaphore( vulkan().device, &semaphoreInfo, nullptr, &vulkan().renderFinishedSemaphores[ i ] ) != VK_SUCCESS ||
 				vkCreateFence( vulkan().device, &fenceInfo, nullptr, &vulkan().inFlightFences[ i ] ) != VK_SUCCESS )
-			{
-				setError( VKAPP_ERROR_SYNC_OBJECT_CREATION );
-				return false;
-			}
+				throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
 		}
 
-		return true;
 	}
 
-	bool VulkanApp::recreateSwapChain()
+	void VulkanApp::createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory )
+	{
+		VkBufferCreateInfo bufferInfo = {};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if ( vkCreateBuffer( vulkan().device, &bufferInfo, nullptr, &buffer ) != VK_SUCCESS )
+			throw std::runtime_error( "[Vulkan]Failed to create buffer." );
+
+		auto findMemoryType = [ this ]( uint32_t typeFilter, VkMemoryPropertyFlags properties )
+		{
+			VkPhysicalDeviceMemoryProperties memProperties;
+			vkGetPhysicalDeviceMemoryProperties( vulkan().physicalDevice, &memProperties );
+
+			for ( uint32_t i = 0; i < memProperties.memoryTypeCount; ++i )
+			{
+				if ( typeFilter & ( 1 << i ) && ( memProperties.memoryTypes[ i ].propertyFlags & properties ) == properties )
+					return i;
+			}
+
+			throw std::runtime_error( "[Vulkan]Failed to find suitable memory type!" );
+
+			// Should never get here
+			return 0U;
+		};
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements( vulkan().device, buffer, &memRequirements );
+
+		VkMemoryAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = findMemoryType( memRequirements.memoryTypeBits, properties);
+
+		if ( vkAllocateMemory( vulkan().device, &allocInfo, nullptr, &bufferMemory ) != VK_SUCCESS )
+			throw std::runtime_error( "[Vulkan]Failed to allocate vertex buffer memory!" );
+
+		vkBindBufferMemory( vulkan().device, buffer, bufferMemory, 0 );
+	}
+
+	void VulkanApp::copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size )
+	{
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = vulkan().commandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers( vulkan().device, &allocInfo, &commandBuffer );
+
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer( commandBuffer, &beginInfo );
+			VkBufferCopy copyRegion = {};
+			copyRegion.srcOffset = 0; // Optional
+			copyRegion.dstOffset = 0; // Optional
+			copyRegion.size = size;
+			vkCmdCopyBuffer( commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion );
+		vkEndCommandBuffer( commandBuffer );
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		vkQueueSubmit( vulkan().graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE );
+		vkQueueWaitIdle( vulkan().graphicsQueue );
+
+		vkFreeCommandBuffers( vulkan().device, vulkan().commandPool, 1, &commandBuffer );
+	}
+
+	void VulkanApp::recreateSwapChain()
 	{
 		vkDeviceWaitIdle( vulkan().device );
 
 		cleanupSwapChain();
-
-		return createSwapChain() && createImageViews() && createRenderPass() && createGraphicsPipeline() && createFramebuffers() && createCommandBuffers();
+		createSwapChain();
+		createImageViews();
+		createRenderPass();
+		createGraphicsPipeline();
+		createFramebuffers();
+		createCommandBuffers();
 	}
 
 	std::vector< const char * > VulkanApp::getRequiredExtensions()

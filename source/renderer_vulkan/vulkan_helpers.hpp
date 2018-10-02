@@ -18,32 +18,6 @@ namespace vkApp
 	{
 		friend class ::RendererVulkan;
 
-		static const char *s_pszErrors[];
-
-		enum vkAppError
-		{
-			VKAPP_ERROR_NONE,
-			VKAPP_ERROR_REQUIRED_EXTENSIONS,
-			VKAPP_ERROR_CREATE_INSTANCE,
-#if VULKAN_VALIDATION_LAYERS
-			VKAPP_ERROR_VALIDATION_LAYERS,
-			VKAPP_ERROR_DEBUG_CALLBACK_CREATION,
-#endif
-			VKAPP_ERROR_FAILED_SURFACE_CREATION,
-			VKAPP_ERROR_NO_PHYSICAL_DEVICE,
-			VKAPP_ERROR_LOGICAL_DEVICE_CREATION,
-			VKAPP_ERROR_SWAP_CHAIN_CREATION,
-			VKAPP_ERROR_IMAGE_VIEW_CREATION,
-			VKAPP_ERROR_RENDER_PASS_CREATION,
-			VKAPP_ERROR_GRAPIHCS_PIPELINE_CREATION,
-			VKAPP_ERROR_FRAMEBUFFER_CREATION,
-			VKAPP_ERROR_COMMAND_POOL_CREATION,
-			VKAPP_ERROR_COMMAND_BUFFER_CREATION,
-			VKAPP_ERROR_SYNC_OBJECT_CREATION,
-			
-			VKAPP_ERROR_COUNT
-		};
-
 		struct QueueFamilyIndex
 		{
 			QueueFamilyIndex() { index = 0; }
@@ -109,6 +83,12 @@ namespace vkApp
 			VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 			std::vector< VkFramebuffer > swapChainFramebuffers;
 			VkCommandPool commandPool = VK_NULL_HANDLE;
+
+			VkBuffer vertexBuffer = VK_NULL_HANDLE;
+			VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+			VkBuffer indexBuffer = VK_NULL_HANDLE;
+			VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+
 			std::vector< VkCommandBuffer > commandBuffers;
 			std::vector< VkSemaphore > imageAvailableSemaphores;
 			std::vector< VkSemaphore > renderFinishedSemaphores;
@@ -137,46 +117,47 @@ namespace vkApp
 
 	private:
 		vulkanContainer m_Vulkan;
-
-		vkAppError m_Error = VKAPP_ERROR_NONE;
 		QueueFamilyIndices m_QueueFamilyIndices;
 
 		// Required extensions loaded from SDL
 		const char **m_ppszReqExtensionNames = nullptr;
 		uint32_t m_iReqExtCount = 0;
 
-		inline void setError( vkAppError error ) { m_Error = error; }
-		inline void printError() { stprintf( "[Vulkan]%s\n", s_pszErrors[ m_Error ] ); }
-
 #if VULKAN_VALIDATION_LAYERS
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData );
 		static VkResult CreateDebugUtilsMessengerEXT( VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pCallback );
 		static void DestroyDebugUtilsMessengerEXT( VkInstance instance, VkDebugUtilsMessengerEXT callback, const VkAllocationCallbacks *pAllocator );
-		bool checkValidationLayerSupport();
+		void checkValidationLayerSupport();
 #endif
 
 		void ProcessEvent( const SDL_Event &event ) override;
 
-		bool loadExtensionsFromSDL();
-		bool createInstance();
+		void loadExtensionsFromSDL();
+		void createInstance();
 
 #if VULKAN_VALIDATION_LAYERS
-		bool setupDebugCallback();
+		void setupDebugCallback();
 #endif
-		bool createSurface();
-		bool pickPhysicalDevice();
+		void createSurface();
+		void pickPhysicalDevice();
 		bool isDeviceSuitable( VkPhysicalDevice &device );
-		bool createLogicalDevice();
-		bool createSwapChain();
-		bool createImageViews();
-		bool createRenderPass();
-		bool createGraphicsPipeline();
-		bool createFramebuffers();
-		bool createCommandPool();
-		bool createCommandBuffers();
-		bool createSyncObjects();
+		void createLogicalDevice();
+		void createSwapChain();
+		void createImageViews();
+		void createRenderPass();
+		void createGraphicsPipeline();
+		void createFramebuffers();
+		void createCommandPool();
 
-		bool recreateSwapChain();
+		void createVertexBuffer();
+		void createIndexBuffer();
+
+		void createCommandBuffers();
+		void createSyncObjects();
+
+		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
+		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
+		void recreateSwapChain();
 
 		std::vector< const char * > getRequiredExtensions();
 		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );

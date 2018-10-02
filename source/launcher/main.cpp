@@ -61,6 +61,7 @@ void Shutdown()
 int main( int argc, char *argv[] )
 {
 	bool bShouldRun = true;
+
 	while ( bShouldRun )
 	{
 		if ( !LoadDependencies() )

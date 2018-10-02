@@ -41,6 +41,8 @@ public:
 	SDL_Window *GetWindow() { return m_pMainWindow; }
 
 private:
+	vkApp::VulkanApp &VulkanApp() { return m_vkApp; }
+
 	SDL_Window *m_pMainWindow = nullptr;
 	vkApp::VulkanApp m_vkApp;
 

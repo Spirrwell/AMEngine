@@ -81,9 +81,14 @@ bool RendererVulkan::Init()
 	if ( !g_pMaterialSystem || !g_pMaterialSystem->Init() )
 		return false;
 
-	if ( !m_vkApp.initVulkan() )
+	try
 	{
-		m_vkApp.printError();
+		if ( !VulkanApp().initVulkan() )
+			return false;
+	}
+	catch ( const std::exception &e )
+	{
+		printf( "%s\n", e.what() );
 		return false;
 	}
 
