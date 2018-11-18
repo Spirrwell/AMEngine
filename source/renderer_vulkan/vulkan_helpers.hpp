@@ -79,6 +79,9 @@ namespace vkApp
 			VkExtent2D swapChainExtent;
 			std::vector< VkImageView > swapChainImageViews;
 			VkRenderPass renderPass = VK_NULL_HANDLE;
+			VkDescriptorSetLayout descripterSetLayout = VK_NULL_HANDLE;
+			VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+			std::vector< VkDescriptorSet > descriptorSets;
 			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 			VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 			std::vector< VkFramebuffer > swapChainFramebuffers;
@@ -88,6 +91,9 @@ namespace vkApp
 			VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
 			VkBuffer indexBuffer = VK_NULL_HANDLE;
 			VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+
+			std::vector< VkBuffer > uniformBuffers;
+			std::vector< VkDeviceMemory > uniformBuffersMemory;
 
 			std::vector< VkCommandBuffer > commandBuffers;
 			std::vector< VkSemaphore > imageAvailableSemaphores;
@@ -114,6 +120,7 @@ namespace vkApp
 		void cleanupSwapChain();
 
 		void drawFrame();
+		void updateUniformBuffer( const uint32_t &currentImage );
 
 	private:
 		vulkanContainer m_Vulkan;
@@ -145,12 +152,16 @@ namespace vkApp
 		void createSwapChain();
 		void createImageViews();
 		void createRenderPass();
+		void createDescriptorSetLayout(); // UBOs
 		void createGraphicsPipeline();
 		void createFramebuffers();
 		void createCommandPool();
 
 		void createVertexBuffer();
 		void createIndexBuffer();
+		void createUniformBuffer();
+		void createDescriptorPool();
+		void createDescriptorSets();
 
 		void createCommandBuffers();
 		void createSyncObjects();
