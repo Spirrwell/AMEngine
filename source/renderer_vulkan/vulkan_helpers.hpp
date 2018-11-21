@@ -86,6 +86,8 @@ namespace vkApp
 			VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 			std::vector< VkFramebuffer > swapChainFramebuffers;
 			VkCommandPool commandPool = VK_NULL_HANDLE;
+			VkImage textureImage = VK_NULL_HANDLE;
+			VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
 
 			VkBuffer vertexBuffer = VK_NULL_HANDLE;
 			VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
@@ -156,6 +158,7 @@ namespace vkApp
 		void createGraphicsPipeline();
 		void createFramebuffers();
 		void createCommandPool();
+		void createTextureImage();
 
 		void createVertexBuffer();
 		void createIndexBuffer();
@@ -167,16 +170,22 @@ namespace vkApp
 		void createSyncObjects();
 
 		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
+		void createImage( uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory );
 		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
+		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
 		void recreateSwapChain();
 
 		std::vector< const char * > getRequiredExtensions();
 		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
+		uint32_t findMemoryType( uint32_t typeFilter, VkMemoryPropertyFlags properties );
 		std::shared_ptr< SwapChainSupportDetails > querySwapChainSupport( VkPhysicalDevice &device );
 		VkSurfaceFormatKHR chooseSwapSurfaceFormat( const std::vector< VkSurfaceFormatKHR > &availableFormats );
 		VkPresentModeKHR chooseSwapPresentMode( const std::vector< VkPresentModeKHR > availablePresentModes );
 		VkExtent2D chooseSwapExtent( const VkSurfaceCapabilitiesKHR &capabilities );
 		VkShaderModule createShaderModule( const std::vector< std::byte > &code );
+		VkCommandBuffer beginSingleTimeCommands();
+		void endSingleTimeCommands( VkCommandBuffer commandBuffer );
+		void transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout );
 	};
 }
 
