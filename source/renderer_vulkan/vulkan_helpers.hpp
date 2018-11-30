@@ -90,6 +90,9 @@ namespace vkApp
 			VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
 			VkImageView textureImageView = VK_NULL_HANDLE;
 			VkSampler textureSampler = VK_NULL_HANDLE;
+			VkImage depthImage = VK_NULL_HANDLE;
+			VkDeviceMemory depthImageMemory = VK_NULL_HANDLE;
+			VkImageView depthImageView = VK_NULL_HANDLE;
 
 			VkBuffer vertexBuffer = VK_NULL_HANDLE;
 			VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
@@ -160,6 +163,7 @@ namespace vkApp
 		void createGraphicsPipeline();
 		void createFramebuffers();
 		void createCommandPool();
+		void createDepthResources();
 		void createTextureImage();
 		void createTextureImageView();
 		void createTextureSampler();
@@ -175,7 +179,7 @@ namespace vkApp
 
 		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
 		void createImage( uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory );
-		VkImageView createImageView( VkImage image, VkFormat format );
+		VkImageView createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags );
 		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
 		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
 		void recreateSwapChain();
@@ -191,6 +195,9 @@ namespace vkApp
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands( VkCommandBuffer commandBuffer );
 		void transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout );
+		VkFormat findSupportedFormat( const std::vector< VkFormat > &candidates, VkImageTiling tiling, VkFormatFeatureFlags features );
+		VkFormat findDepthFormat();
+		bool hasStencilComponent( VkFormat format );
 	};
 }
 
