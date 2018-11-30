@@ -88,6 +88,8 @@ namespace vkApp
 			VkCommandPool commandPool = VK_NULL_HANDLE;
 			VkImage textureImage = VK_NULL_HANDLE;
 			VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+			VkImageView textureImageView = VK_NULL_HANDLE;
+			VkSampler textureSampler = VK_NULL_HANDLE;
 
 			VkBuffer vertexBuffer = VK_NULL_HANDLE;
 			VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
@@ -159,6 +161,8 @@ namespace vkApp
 		void createFramebuffers();
 		void createCommandPool();
 		void createTextureImage();
+		void createTextureImageView();
+		void createTextureSampler();
 
 		void createVertexBuffer();
 		void createIndexBuffer();
@@ -171,6 +175,7 @@ namespace vkApp
 
 		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
 		void createImage( uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory );
+		VkImageView createImageView( VkImage image, VkFormat format );
 		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
 		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
 		void recreateSwapChain();
