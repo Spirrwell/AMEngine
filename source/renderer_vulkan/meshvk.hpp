@@ -3,13 +3,13 @@
 
 #include "imesh.hpp"
 #include "vertex.hpp"
-#include "vulkan_helpers.hpp"
 
 #include <vector>
 
 #include "vulkan/vulkan.hpp"
+#include "vulkan_interface.hpp"
 
-class MeshVK : public IMesh
+class MeshVK : public IMesh, vkApp::CVulkanInterface
 {
 	typedef std::vector< Vertex > Vertices;
 	typedef std::vector< uint32_t > Indices;
@@ -17,6 +17,8 @@ class MeshVK : public IMesh
 public:
 	MeshVK( Vertices vertices, Indices indices );
 	virtual ~MeshVK();
+
+	void Shutdown();
 
 	void Draw() override;
 	void SetModelMatrix( Matrix4f modelMatrix ) override {}
@@ -31,8 +33,6 @@ private:
 		DT_DrawElements
 	};
 
-	vkApp::VulkanApp &VulkanApp() { return m_vkApp; }
-
 	void createVertexBuffer();
 	void createIndexBuffer();
 
@@ -40,8 +40,6 @@ private:
 
 	Vertices m_Vertices;
 	Indices m_Indices;
-
-	vkApp::VulkanApp &m_vkApp;
 
 	VkBuffer vertexBuffer = VK_NULL_HANDLE;
 	VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;

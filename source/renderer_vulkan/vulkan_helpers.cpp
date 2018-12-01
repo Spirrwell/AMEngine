@@ -15,9 +15,6 @@
 #include <set>
 #include <chrono>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
@@ -142,9 +139,7 @@ namespace vkApp
 		createCommandPool();
 		createDepthResources();
 		createFramebuffers();
-		createTextureImage();
-		createTextureImageView();
-		createTextureSampler();
+		vulkan().texture.Load( GAME_DIR "textures/chalet.jpg" );
 
 		AMDL::ModelData modelData;
 		AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/chalet_mat.amdl", modelData );
@@ -177,29 +172,7 @@ namespace vkApp
 
 		cleanupSwapChain();
 
-		if ( vulkan().textureSampler != VK_NULL_HANDLE )
-		{
-			vkDestroySampler( vulkan().device, vulkan().textureSampler, nullptr );
-			vulkan().textureSampler = VK_NULL_HANDLE;
-		}
-
-		if ( vulkan().textureImageView != VK_NULL_HANDLE )
-		{
-			vkDestroyImageView( vulkan().device, vulkan().textureImageView, nullptr );
-			vulkan().textureImageView = VK_NULL_HANDLE;
-		}
-
-		if ( vulkan().textureImage != VK_NULL_HANDLE )
-		{
-			vkDestroyImage( vulkan().device, vulkan().textureImage, nullptr );
-			vulkan().textureImage = VK_NULL_HANDLE;
-		}
-
-		if ( vulkan().textureImageMemory != VK_NULL_HANDLE )
-		{
-			vkFreeMemory( vulkan().device, vulkan().textureImageMemory, nullptr );
-			vulkan().textureImageMemory = VK_NULL_HANDLE;
-		}
+		vulkan().texture.Shutdown();
 
 		if ( vulkan().descriptorPool != VK_NULL_HANDLE )
 		{
@@ -1161,73 +1134,6 @@ namespace vkApp
 		transitionImageLayout( vulkan().depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL );
 	}
 
-	void VulkanApp::createTextureImage()
-	{
-		int texWidth = 0, texHeight = 0, numComponents = 0;
-		stbi_uc *pPixels = stbi_load( GAME_DIR "textures/chalet.jpg", &texWidth, &texHeight, &numComponents, STBI_rgb_alpha );
-
-		if ( !pPixels )
-			throw std::runtime_error( "[Vulkan]Failed to load texture image!" );
-
-		VkDeviceSize imageSize = texWidth * texHeight * STBI_rgb_alpha;
-		VkBuffer stagingBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory stagingBufferMemory = VK_NULL_HANDLE;
-
-		createBuffer( imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
-
-		void *pData = nullptr;
-		vkMapMemory( vulkan().device, stagingBufferMemory, 0, imageSize, 0, &pData );
-			std::memcpy( pData, pPixels, static_cast< size_t >( imageSize ) );
-		vkUnmapMemory( vulkan().device, stagingBufferMemory );
-
-		stbi_image_free( pPixels );
-
-		createImage( static_cast< uint32_t >( texWidth ),
-			static_cast< uint32_t >( texHeight ),
-			VK_FORMAT_R8G8B8A8_UNORM,
-			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			vulkan().textureImage,
-			vulkan().textureImageMemory );
-
-		transitionImageLayout( vulkan().textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL );
-		copyBufferToImage( stagingBuffer, vulkan().textureImage, static_cast< uint32_t >( texWidth ), static_cast< uint32_t >( texHeight ) );
-		transitionImageLayout( vulkan().textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL );
-
-		vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
-		vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
-	}
-
-	void VulkanApp::createTextureImageView()
-	{
-		vulkan().textureImageView = createImageView( vulkan().textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT );
-	}
-
-	void VulkanApp::createTextureSampler()
-	{
-		VkSamplerCreateInfo samplerInfo = {};
-		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.anisotropyEnable = VK_TRUE;
-		samplerInfo.maxAnisotropy = 16;
-		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-		samplerInfo.unnormalizedCoordinates = VK_FALSE;
-		samplerInfo.compareEnable = VK_FALSE;
-		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		samplerInfo.mipLodBias = 0.0f;
-		samplerInfo.minLod = 0.0f;
-		samplerInfo.maxLod = 0.0f;
-
-		if ( vkCreateSampler( vulkan().device, &samplerInfo, nullptr, &vulkan().textureSampler ) != VK_SUCCESS )
-			throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-	}
-
 	void VulkanApp::createVertexBuffer()
 	{
 		VkDeviceSize bufferSize = sizeof( vertices[ 0 ] ) * vertices.size();
@@ -1321,8 +1227,8 @@ namespace vkApp
 
 			VkDescriptorImageInfo imageInfo = {};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = vulkan().textureImageView;
-			imageInfo.sampler = vulkan().textureSampler;
+			imageInfo.imageView = vulkan().texture.ImageView();
+			imageInfo.sampler = vulkan().texture.Sampler();
 
 			//VkWriteDescriptorSet descriptorWrite = {};
 			std::array< VkWriteDescriptorSet, 2 > descriptorWrites = {};
@@ -1468,7 +1374,7 @@ namespace vkApp
 		imageInfo.flags = 0; // Optional
 
 		if ( vkCreateImage( vulkan().device, &imageInfo, nullptr, &image ) != VK_SUCCESS )
-			throw std::runtime_error( "[Vulkan]Failed to create texture image!" );
+			throw std::runtime_error( "[Vulkan]Failed to create image!" );
 
 		VkMemoryRequirements memRequirements;
 		vkGetImageMemoryRequirements( vulkan().device, image, &memRequirements );

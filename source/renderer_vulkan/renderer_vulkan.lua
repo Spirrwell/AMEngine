@@ -20,8 +20,12 @@ project "renderer_vulkan"
 			"%{cfg.location}/modelvk.cpp",
 			"%{cfg.location}/renderer_vulkan.hpp",
 			"%{cfg.location}/renderer_vulkan.cpp",
+			"%{cfg.location}/texturevk.hpp",
+			"%{cfg.location}/texturevk.cpp",
 			"%{cfg.location}/vulkan_helpers.hpp",
-			"%{cfg.location}/vulkan_helpers.cpp"
+			"%{cfg.location}/vulkan_helpers.cpp",
+			"%{cfg.location}/vulkan_interface.hpp",
+			"%{cfg.location}/vulkan_interface.cpp"
 		}
 		
 	includedirs {

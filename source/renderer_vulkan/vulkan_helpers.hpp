@@ -4,6 +4,7 @@
 #include "sdl_core/sdleventlistener.hpp"
 #include "vulkan/vulkan.hpp"
 #include "string.hpp"
+#include "texturevk.hpp"
 
 #include <vector>
 #include <memory>
@@ -14,9 +15,69 @@ class RendererVulkan;
 
 namespace vkApp
 {
+	// Our Vulkan variables\info will be stored here
+	struct vulkanContainer
+	{
+		std::vector< VkExtensionProperties > extensions;
+		const std::vector< const char * > deviceExtensions =
+		{
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		};
+
+		VkInstance instance = VK_NULL_HANDLE;
+
+#if VULKAN_VALIDATION_LAYERS
+		VkDebugUtilsMessengerEXT debugCallback = VK_NULL_HANDLE;
+
+		const std::vector< const char * > validationLayers =
+		{ 
+			"VK_LAYER_LUNARG_standard_validation"
+		};
+#endif
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
+		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+		VkDevice device = VK_NULL_HANDLE;
+		VkQueue graphicsQueue = VK_NULL_HANDLE;
+		VkQueue presentQueue = VK_NULL_HANDLE;
+		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+		std::vector< VkImage > swapChainImages;
+		VkFormat swapChainImageFormat;
+		VkExtent2D swapChainExtent;
+		std::vector< VkImageView > swapChainImageViews;
+		VkRenderPass renderPass = VK_NULL_HANDLE;
+		VkDescriptorSetLayout descripterSetLayout = VK_NULL_HANDLE;
+		VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+		std::vector< VkDescriptorSet > descriptorSets;
+		VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+		VkPipeline graphicsPipeline = VK_NULL_HANDLE;
+		std::vector< VkFramebuffer > swapChainFramebuffers;
+		VkCommandPool commandPool = VK_NULL_HANDLE;
+		TextureVK texture;
+		VkImage depthImage = VK_NULL_HANDLE;
+		VkDeviceMemory depthImageMemory = VK_NULL_HANDLE;
+		VkImageView depthImageView = VK_NULL_HANDLE;
+
+		VkBuffer vertexBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+		VkBuffer indexBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+
+		std::vector< VkBuffer > uniformBuffers;
+		std::vector< VkDeviceMemory > uniformBuffersMemory;
+
+		std::vector< VkCommandBuffer > commandBuffers;
+		std::vector< VkSemaphore > imageAvailableSemaphores;
+		std::vector< VkSemaphore > renderFinishedSemaphores;
+		std::vector< VkFence > inFlightFences;
+
+		bool bFrameBufferResized = false;
+		bool bMinimized = false;
+	};
+
 	class VulkanApp : public SDLEventListener
 	{
 		friend class ::RendererVulkan;
+		friend class CVulkanInterface;
 
 		struct QueueFamilyIndex
 		{
@@ -47,68 +108,6 @@ namespace vkApp
 			VkSurfaceCapabilitiesKHR capabilities;
 			std::vector< VkSurfaceFormatKHR > formats;
 			std::vector< VkPresentModeKHR > presentModes;
-		};
-
-		// Our Vulkan variables\info will be stored here
-		struct vulkanContainer
-		{
-			std::vector< VkExtensionProperties > extensions;
-			const std::vector< const char * > deviceExtensions =
-			{
-				VK_KHR_SWAPCHAIN_EXTENSION_NAME
-			};
-
-			VkInstance instance = VK_NULL_HANDLE;
-
-#if VULKAN_VALIDATION_LAYERS
-			VkDebugUtilsMessengerEXT debugCallback = VK_NULL_HANDLE;
-
-			const std::vector< const char * > validationLayers =
-			{ 
-				"VK_LAYER_LUNARG_standard_validation"
-			};
-#endif
-			VkSurfaceKHR surface = VK_NULL_HANDLE;
-			VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-			VkDevice device = VK_NULL_HANDLE;
-			VkQueue graphicsQueue = VK_NULL_HANDLE;
-			VkQueue presentQueue = VK_NULL_HANDLE;
-			VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-			std::vector< VkImage > swapChainImages;
-			VkFormat swapChainImageFormat;
-			VkExtent2D swapChainExtent;
-			std::vector< VkImageView > swapChainImageViews;
-			VkRenderPass renderPass = VK_NULL_HANDLE;
-			VkDescriptorSetLayout descripterSetLayout = VK_NULL_HANDLE;
-			VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-			std::vector< VkDescriptorSet > descriptorSets;
-			VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-			VkPipeline graphicsPipeline = VK_NULL_HANDLE;
-			std::vector< VkFramebuffer > swapChainFramebuffers;
-			VkCommandPool commandPool = VK_NULL_HANDLE;
-			VkImage textureImage = VK_NULL_HANDLE;
-			VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
-			VkImageView textureImageView = VK_NULL_HANDLE;
-			VkSampler textureSampler = VK_NULL_HANDLE;
-			VkImage depthImage = VK_NULL_HANDLE;
-			VkDeviceMemory depthImageMemory = VK_NULL_HANDLE;
-			VkImageView depthImageView = VK_NULL_HANDLE;
-
-			VkBuffer vertexBuffer = VK_NULL_HANDLE;
-			VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-			VkBuffer indexBuffer = VK_NULL_HANDLE;
-			VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
-
-			std::vector< VkBuffer > uniformBuffers;
-			std::vector< VkDeviceMemory > uniformBuffersMemory;
-
-			std::vector< VkCommandBuffer > commandBuffers;
-			std::vector< VkSemaphore > imageAvailableSemaphores;
-			std::vector< VkSemaphore > renderFinishedSemaphores;
-			std::vector< VkFence > inFlightFences;
-
-			bool bFrameBufferResized = false;
-			bool bMinimized = false;
 		};
 
 	public:
@@ -163,9 +162,6 @@ namespace vkApp
 		void createFramebuffers();
 		void createCommandPool();
 		void createDepthResources();
-		void createTextureImage();
-		void createTextureImageView();
-		void createTextureSampler();
 
 		void createVertexBuffer();
 		void createIndexBuffer();
@@ -186,6 +182,7 @@ namespace vkApp
 	private:
 		void recreateSwapChain();
 
+	public:
 		std::vector< const char * > getRequiredExtensions();
 		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
 		uint32_t findMemoryType( uint32_t typeFilter, VkMemoryPropertyFlags properties );
