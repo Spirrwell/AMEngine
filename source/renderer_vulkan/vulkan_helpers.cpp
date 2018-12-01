@@ -147,7 +147,7 @@ namespace vkApp
 		createTextureSampler();
 
 		AMDL::ModelData modelData;
-		AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/monkey.amdl", modelData );
+		AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/chalet_mat.amdl", modelData );
 
 		if ( modelData.meshes.size() > 0 )
 		{
@@ -1164,7 +1164,7 @@ namespace vkApp
 	void VulkanApp::createTextureImage()
 	{
 		int texWidth = 0, texHeight = 0, numComponents = 0;
-		stbi_uc *pPixels = stbi_load( GAME_DIR "textures/cube/test2.png", &texWidth, &texHeight, &numComponents, STBI_rgb_alpha );
+		stbi_uc *pPixels = stbi_load( GAME_DIR "textures/chalet.jpg", &texWidth, &texHeight, &numComponents, STBI_rgb_alpha );
 
 		if ( !pPixels )
 			throw std::runtime_error( "[Vulkan]Failed to load texture image!" );

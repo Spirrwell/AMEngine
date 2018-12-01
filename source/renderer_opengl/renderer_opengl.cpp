@@ -161,7 +161,7 @@ bool RendererGL::Init()
 		2, 1, 3,
 	};
 
-	m_pModel = new ModelGL( string( GAME_DIR ) + "models/cube.amdl" );
+	m_pModel = new ModelGL( string( GAME_DIR ) + "models/chalet_mat.amdl" );
 	m_pSkybox = new Skybox;
 
 	//TextureGL *pTexture = new TextureGL( string( GAME_DIR ) + "models/cube.fbm/test2.png" );
