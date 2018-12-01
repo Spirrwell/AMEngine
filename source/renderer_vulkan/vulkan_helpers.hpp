@@ -115,12 +115,11 @@ namespace vkApp
 		VulkanApp();
 		virtual ~VulkanApp();
 
-		const vulkanContainer &vulkan() const { return m_Vulkan; }
+		vulkanContainer &vulkan() { return m_Vulkan; }
 
 		static constexpr const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 	protected:
-		vulkanContainer &vulkan() { return m_Vulkan; }
 
 		bool initVulkan();
 		void cleanup();
@@ -177,11 +176,14 @@ namespace vkApp
 		void createCommandBuffers();
 		void createSyncObjects();
 
+	public:
 		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
 		void createImage( uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory );
 		VkImageView createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags );
 		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
 		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
+		
+	private:
 		void recreateSwapChain();
 
 		std::vector< const char * > getRequiredExtensions();

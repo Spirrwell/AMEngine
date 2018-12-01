@@ -14,6 +14,10 @@ project "renderer_vulkan"
 	}
 	
 	files {
+			"%{cfg.location}/meshvk.hpp",
+			"%{cfg.location}/meshvk.cpp",
+			"%{cfg.location}/modelvk.hpp",
+			"%{cfg.location}/modelvk.cpp",
 			"%{cfg.location}/renderer_vulkan.hpp",
 			"%{cfg.location}/renderer_vulkan.cpp",
 			"%{cfg.location}/vulkan_helpers.hpp",

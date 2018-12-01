@@ -1,9 +1,11 @@
 #include "vulkan_helpers.hpp"
 #include "renderer_vulkan.hpp"
 #include "engine/config.hpp"
+#include "vertex.hpp"
 
 #include "SDL_vulkan.h"
 #include "mathdefs.hpp"
+#include "amdl.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -29,44 +31,42 @@ namespace vkApp
 		glm::mat4 mvp;
 	};
 
-	struct Vertex
+	static VkVertexInputBindingDescription getVertexBindingDescription()
 	{
-		Vector3f pos;
-		Vector3f color;
-		Vector2f texCoord;
+		VkVertexInputBindingDescription bindingDescription = {};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof( Vertex );
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-		static VkVertexInputBindingDescription getBindingDescription()
-		{
-			VkVertexInputBindingDescription bindingDescription = {};
-			bindingDescription.binding = 0;
-			bindingDescription.stride = sizeof( Vertex );
-			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		return bindingDescription;
+	}
 
-			return bindingDescription;
-		}
+	static std::array< VkVertexInputAttributeDescription, 4 > getVertexAttributeDescriptions()
+	{
+		std::array< VkVertexInputAttributeDescription, 4 > attributeDescriptions = {};
 
-		static std::array< VkVertexInputAttributeDescription, 3 > getAttributeDescriptions()
-		{
-			std::array< VkVertexInputAttributeDescription, 3 > attributeDescriptions = {};
+		attributeDescriptions[ 0 ].binding = 0;
+		attributeDescriptions[ 0 ].location = 0;
+		attributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
 
-			attributeDescriptions[ 0 ].binding = 0;
-			attributeDescriptions[ 0 ].location = 0;
-			attributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
+		attributeDescriptions[ 1 ].binding = 0;
+		attributeDescriptions[ 1 ].location = 1;
+		attributeDescriptions[ 1 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[ 1 ].offset = offsetof( Vertex, color );
 
-			attributeDescriptions[ 1 ].binding = 0;
-			attributeDescriptions[ 1 ].location = 1;
-			attributeDescriptions[ 1 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-			attributeDescriptions[ 1 ].offset = offsetof( Vertex, color );
+		attributeDescriptions[ 2 ].binding = 0;
+		attributeDescriptions[ 2 ].location = 2;
+		attributeDescriptions[ 2 ].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[ 2 ].offset = offsetof( Vertex, texCoord );
 
-			attributeDescriptions[ 2 ].binding = 0;
-			attributeDescriptions[ 2 ].location = 2;
-			attributeDescriptions[ 2 ].format = VK_FORMAT_R32G32_SFLOAT;
-			attributeDescriptions[ 2 ].offset = offsetof( Vertex, texCoord );
+		attributeDescriptions[ 3 ].binding = 0;
+		attributeDescriptions[ 3 ].location = 3;
+		attributeDescriptions[ 3 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[ 3 ].offset = offsetof( Vertex, normal );
 
-			return attributeDescriptions;
-		}
-	};
+		return attributeDescriptions;
+	}
 
 	/*std::vector< Vertex > vertices =
 	{
@@ -75,7 +75,7 @@ namespace vkApp
 		{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } }
 	};*/
 
-	const std::vector< Vertex > vertices =
+	std::vector< Vertex > vertices =
 	{
 		{ { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },
 		{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } },
@@ -88,7 +88,7 @@ namespace vkApp
 		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } }
 	};
 
-	const std::vector< uint16_t > indices =
+	std::vector< uint32_t > indexBuffer =
 	{
 		0, 1, 2, 2, 3, 0,
 		4, 5, 6, 6, 7, 4
@@ -145,6 +145,18 @@ namespace vkApp
 		createTextureImage();
 		createTextureImageView();
 		createTextureSampler();
+
+		AMDL::ModelData modelData;
+		AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/monkey.amdl", modelData );
+
+		if ( modelData.meshes.size() > 0 )
+		{
+			vertices.clear();
+			indexBuffer.clear();
+
+			vertices = modelData.meshes[ 0 ].vertices;
+			indexBuffer = modelData.meshes[ 0 ].indices;
+		}
 
 		createVertexBuffer();
 		createIndexBuffer();
@@ -964,8 +976,8 @@ namespace vkApp
 		vertexInputInfo.vertexAttributeDescriptionCount = 0;
 		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
 
-		auto bindingDescription = Vertex::getBindingDescription();
-		auto attributeDescriptions = Vertex::getAttributeDescriptions();
+		auto bindingDescription = getVertexBindingDescription();
+		auto attributeDescriptions = getVertexAttributeDescriptions();
 
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast< uint32_t >( attributeDescriptions.size() );
@@ -1002,8 +1014,8 @@ namespace vkApp
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // TODO: Revisit this
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE; // TODO: Revisit this
+		rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT; // TODO: Revisit this
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // TODO: Revisit this
 		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
 		rasterizer.depthBiasClamp = 0.0f; // Optioanl
@@ -1239,7 +1251,7 @@ namespace vkApp
 
 	void VulkanApp::createIndexBuffer()
 	{
-		VkDeviceSize bufferSize = sizeof( indices[ 0 ] ) * indices.size();
+		VkDeviceSize bufferSize = sizeof( indexBuffer[ 0 ] ) * indexBuffer.size();
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -1248,7 +1260,7 @@ namespace vkApp
 		void *pData = nullptr;
 
 		vkMapMemory( vulkan().device, stagingBufferMemory, 0, bufferSize, 0, &pData );
-			std::memcpy( pData, indices.data(), static_cast< size_t >( bufferSize ) );
+			std::memcpy( pData, indexBuffer.data(), static_cast< size_t >( bufferSize ) );
 		vkUnmapMemory( vulkan().device, stagingBufferMemory );
 
 		createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vulkan().indexBuffer, vulkan().indexBufferMemory );
@@ -1378,9 +1390,9 @@ namespace vkApp
 				VkBuffer vertexBuffers[] = { vulkan().vertexBuffer };
 				VkDeviceSize offsets[] = { 0 };
 				vkCmdBindVertexBuffers( vulkan().commandBuffers[ i ], 0, 1, vertexBuffers, offsets );
-				vkCmdBindIndexBuffer( vulkan().commandBuffers[ i ], vulkan().indexBuffer, 0, VK_INDEX_TYPE_UINT16 );
+				vkCmdBindIndexBuffer( vulkan().commandBuffers[ i ], vulkan().indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
 				vkCmdBindDescriptorSets( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().pipelineLayout, 0, 1, &vulkan().descriptorSets[ i ], 0, nullptr );
-				vkCmdDrawIndexed( vulkan().commandBuffers[ i ], static_cast< uint32_t >( indices.size() ), 1, 0, 0, 0 );
+				vkCmdDrawIndexed( vulkan().commandBuffers[ i ], static_cast< uint32_t >( indexBuffer.size() ), 1, 0, 0, 0 );
 				//vkCmdDraw( vulkan().commandBuffers[ i ], static_cast< uint32_t >( vertices.size() ), 1, 0, 0 );
 			vkCmdEndRenderPass( vulkan().commandBuffers[ i ] );
 
@@ -1432,7 +1444,7 @@ namespace vkApp
 		allocInfo.memoryTypeIndex = findMemoryType( memRequirements.memoryTypeBits, properties);
 
 		if ( vkAllocateMemory( vulkan().device, &allocInfo, nullptr, &bufferMemory ) != VK_SUCCESS )
-			throw std::runtime_error( "[Vulkan]Failed to allocate vertex buffer memory!" );
+			throw std::runtime_error( "[Vulkan]Failed to allocate buffer memory!" );
 
 		vkBindBufferMemory( vulkan().device, buffer, bufferMemory, 0 );
 	}

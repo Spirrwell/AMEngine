@@ -12,6 +12,7 @@ workspace "AMEngine"
 	filter { "toolset:gcc" }
 		buildoptions{ "-fno-gnu-unique" } --Hack: Makes dlclose unload .so files
 
+include "amdlbuild/amdlbuild.lua"
 include "amlib/amlib.lua"
 include "shadersystem/amshaderlib/amshaderlib.lua"
 include "game/client/client.lua"
