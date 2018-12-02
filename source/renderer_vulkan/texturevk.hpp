@@ -5,6 +5,8 @@
 #include "vulkan_interface.hpp"
 #include "string.hpp"
 
+#include <stdint.h>
+
 class TextureVK : vkApp::CVulkanInterface
 {
 public:
@@ -20,6 +22,8 @@ private:
 	VkDeviceMemory m_vkTextureImageMemory = VK_NULL_HANDLE;
 	VkImageView m_vkTextureImageView = VK_NULL_HANDLE;
 	VkSampler m_vkTextureSampler = VK_NULL_HANDLE;
+
+	uint32_t m_nMipLevels = 0;
 };
 
 #endif // TEXTUREVK_HPP
