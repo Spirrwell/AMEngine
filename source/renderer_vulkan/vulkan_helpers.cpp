@@ -2,6 +2,7 @@
 #include "renderer_vulkan.hpp"
 #include "engine/config.hpp"
 #include "vertex.hpp"
+#include "shadervk.hpp"
 
 #include "SDL_vulkan.h"
 #include "mathdefs.hpp"
@@ -159,6 +160,9 @@ namespace vkApp
 		createDescriptorPool();
 		createDescriptorSets();
 
+		for ( const auto &pShader : m_pShaders )
+			pShader->Init();
+
 		createCommandBuffers();
 		createSyncObjects();
 
@@ -169,6 +173,9 @@ namespace vkApp
 	{
 		if ( vulkan().device != VK_NULL_HANDLE )
 			vkDeviceWaitIdle( vulkan().device );
+
+		for ( const auto &pShader : m_pShaders )
+			pShader->Shutdown();
 
 		cleanupSwapChain();
 
@@ -1451,6 +1458,9 @@ namespace vkApp
 		createDepthResources();
 		createFramebuffers();
 		createCommandBuffers();
+
+		for ( const auto &pShader : m_pShaders )
+			pShader->recreateSwapChainElements();
 	}
 
 	std::vector< const char * > VulkanApp::getRequiredExtensions()

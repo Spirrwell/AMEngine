@@ -10,6 +10,7 @@
 #include <memory>
 
 class RendererVulkan;
+class ShaderVK;
 
 #define VULKAN_VALIDATION_LAYERS 1
 
@@ -116,6 +117,9 @@ namespace vkApp
 
 		vulkanContainer &vulkan() { return m_Vulkan; }
 
+		void AddShader( ShaderVK *pShader ) { m_pShaders.push_back( pShader ); }
+		void RemoveShader( ShaderVK *pShader ) { for ( auto it = m_pShaders.begin(); it != m_pShaders.end(); ++it ) if ( *it == pShader ) { m_pShaders.erase( it ); return; } }
+
 		static constexpr const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 	protected:
@@ -130,6 +134,8 @@ namespace vkApp
 	private:
 		vulkanContainer m_Vulkan;
 		QueueFamilyIndices m_QueueFamilyIndices;
+
+		std::vector< ShaderVK* > m_pShaders;
 
 		// Required extensions loaded from SDL
 		const char **m_ppszReqExtensionNames = nullptr;

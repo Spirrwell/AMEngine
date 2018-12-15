@@ -23,7 +23,7 @@ private:
 	VkImageView m_vkTextureImageView = VK_NULL_HANDLE;
 	VkSampler m_vkTextureSampler = VK_NULL_HANDLE;
 
-	uint32_t m_nMipLevels = 0;
+	uint32_t m_nMipLevels = 1;
 };
 
 #endif // TEXTUREVK_HPP
