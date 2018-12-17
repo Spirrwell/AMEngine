@@ -25,7 +25,7 @@ project "amshaderlib"
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64" }
 		system "Windows"

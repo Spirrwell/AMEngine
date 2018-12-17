@@ -43,6 +43,9 @@ project "input"
 				"sdl_core.lib"
 			}
 
+	filter { "system:Linux", "toolset:gcc" }
+		linkoptions { "-Wl,-rpath=." }
+
 	filter { "system:Linux" }
 		includedirs {
 					"/usr/include/SDL2" --Yuck
@@ -56,7 +59,7 @@ project "input"
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"

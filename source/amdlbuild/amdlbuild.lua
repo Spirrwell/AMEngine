@@ -41,14 +41,15 @@ project "amdlbuild"
 	
 	filter { "system:Linux" }
 		links {
-				"dl"
+				"dl",
+                "assimp"
 		}
 
 	filter { "configurations:Debug"	}
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"
@@ -85,12 +86,14 @@ project "amdlbuild"
 
 	filter { "platforms:Linux64", "configurations:Debug" }
 		libdirs {
-				"../lib/shared/linux64/debug"
+				"../lib/shared/linux64/debug",
+				"../lib/thirdparty/linux64/debug"
 		}
 
 	filter { "platforms:Linux64", "configurations:Release" }
 		libdirs {
-				"../lib/shared/linux64/release"
+				"../lib/shared/linux64/release",
+				"../lib/thirdparty/linux64/release"
 		}
 
 	filter { "system:Windows" }

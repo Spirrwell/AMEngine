@@ -12,6 +12,8 @@
 
 extern IEngine *g_pEngine;
 
+class ShaderVK;
+
 class RendererVulkan : public IRenderer
 {
 public:
@@ -32,6 +34,8 @@ public:
 	unsigned int GetShaderCount() override { return 0; }
 	IBaseShader *GetShader( unsigned int iShaderIndex ) override { return nullptr; }
 	IBaseShader *GetShader( const string &shaderName ) override { return nullptr; }
+
+	ShaderVK *FindShader( const string &shaderName );
 
 	unsigned int AddShader( IBaseShader *pShader ) override { return 0; }
 

@@ -14,14 +14,20 @@ project "renderer_vulkan"
 	}
 	
 	files {
+			"%{cfg.location}/materialvk.hpp",
+			"%{cfg.location}/materialvk.cpp",
 			"%{cfg.location}/meshvk.hpp",
 			"%{cfg.location}/meshvk.cpp",
 			"%{cfg.location}/modelvk.hpp",
 			"%{cfg.location}/modelvk.cpp",
 			"%{cfg.location}/renderer_vulkan.hpp",
 			"%{cfg.location}/renderer_vulkan.cpp",
+			"%{cfg.location}/testshader.hpp",
+			"%{cfg.location}/testshader.cpp",
 			"%{cfg.location}/texturevk.hpp",
 			"%{cfg.location}/texturevk.cpp",
+			"%{cfg.location}/shadervk.hpp",
+			"%{cfg.location}/shadervk.cpp",
 			"%{cfg.location}/vulkan_helpers.hpp",
 			"%{cfg.location}/vulkan_helpers.cpp",
 			"%{cfg.location}/vulkan_interface.hpp",
@@ -43,6 +49,9 @@ project "renderer_vulkan"
 			"memory_system", --Project
 			"sdl_core" --Project
 		}
+
+	filter { "system:Linux", "toolset:gcc" }
+		linkoptions { "-Wl,-rpath=." }
 	
 	filter { "system:Windows" }
 		includedirs {
@@ -75,7 +84,7 @@ project "renderer_vulkan"
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"

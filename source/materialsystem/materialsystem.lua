@@ -42,7 +42,7 @@ project "materialsystem"
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"

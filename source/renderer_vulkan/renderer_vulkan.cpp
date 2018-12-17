@@ -3,6 +3,7 @@
 #include "interface.hpp"
 #include "factory/ifactory.hpp"
 #include "materialsystem/imaterialsystem.hpp"
+#include "shadervk.hpp"
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
@@ -119,6 +120,19 @@ void RendererVulkan::Shutdown()
 void RendererVulkan::DrawScene()
 {
 	m_vkApp.drawFrame();
+}
+
+ShaderVK *RendererVulkan::FindShader( const string &shaderName )
+{
+	const auto &shaders = VulkanApp().GetShaders();
+
+	for ( auto &pShader : shaders )
+	{
+		if ( pShader->GetShaderName() == shaderName )
+			return pShader;
+	}
+
+	return nullptr;
 }
 
 static DLLInterface< IRenderer, RendererVulkan > s_Renderer( RENDERER_INTERFACE );

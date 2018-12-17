@@ -193,6 +193,8 @@ namespace vkApp
 			vulkan().descripterSetLayout = VK_NULL_HANDLE;
 		}
 
+		vulkan().descriptorSets.clear();
+
 		for ( size_t i = 0; i < vulkan().uniformBuffers.size(); ++i )
 		{
 			vkDestroyBuffer( vulkan().device, vulkan().uniformBuffers[ i ], nullptr );

@@ -25,8 +25,8 @@ project "launcher"
 			"memory_system" --Project
 		}
 
-	--filter { "toolset:gcc" }
-		--linkoptions { "-Wl,-rpath,." }
+	filter { "system:Linux", "toolset:gcc" }
+		linkoptions { "-Wl,-rpath=." }
 	
 	filter { "system:Windows" }
 		links {
@@ -45,7 +45,7 @@ project "launcher"
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"

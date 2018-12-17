@@ -5,8 +5,11 @@
 #include "vulkan/vulkan.hpp"
 #include "string.hpp"
 #include "mathdefs.hpp"
+#include "shadersystem/ishader.hpp"
 
 #include <vector>
+
+class MaterialVK;
 
 struct DefaultUBO
 {
@@ -16,7 +19,7 @@ struct DefaultUBO
 	Matrix4f mvp;
 };
 
-class ShaderVK : vkApp::CVulkanInterface
+class ShaderVK : public vkApp::CVulkanInterface
 {
 	enum ShaderType : size_t
 	{
@@ -41,13 +44,20 @@ public:
 
 	void createUniformBuffer();
 	void createDescriptorPool();
-	void createDescriptorSets();
+	void createDescriptorSets( MaterialVK &material );
 
+	inline const string &GetShaderName() { return m_ShaderName; }
+
+	virtual void InitShaderParams() = 0;
 	virtual const std::vector< VkDescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() = 0;
 	virtual VkVertexInputBindingDescription GetVertexBindingDescription() = 0;
 	virtual const std::vector< VkVertexInputAttributeDescription > &GetVertexAttributeDescriptions() = 0;
+	virtual const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) = 0; // TODO: Make reference
 
-private:
+	const std::vector< MaterialParameter_t > &GetMaterialParams() { return m_MaterialParams; }
+
+protected:
+	std::vector< MaterialParameter_t > m_MaterialParams;
 	VkRenderPass m_vkRenderPass = VK_NULL_HANDLE;
 	VkDescriptorSetLayout m_vkDescriptorSetLayout = VK_NULL_HANDLE;
 	VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
@@ -55,7 +65,7 @@ private:
 	VkPipeline m_vkGraphicsPipeline = VK_NULL_HANDLE;
 	std::vector< VkBuffer > m_vkUniformBuffers;
 	std::vector< VkDeviceMemory > m_vkUniformBuffersMemory;
-	std::vector< VkDescriptorSet > m_vkDescriptorSets;
+	//std::vector< VkDescriptorSet > m_vkDescriptorSets;
 
 	string m_ShaderName;
 };

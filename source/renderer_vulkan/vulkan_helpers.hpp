@@ -12,7 +12,7 @@
 class RendererVulkan;
 class ShaderVK;
 
-#define VULKAN_VALIDATION_LAYERS 1
+#define VULKAN_VALIDATION_LAYERS 0
 
 namespace vkApp
 {
@@ -119,6 +119,8 @@ namespace vkApp
 
 		void AddShader( ShaderVK *pShader ) { m_pShaders.push_back( pShader ); }
 		void RemoveShader( ShaderVK *pShader ) { for ( auto it = m_pShaders.begin(); it != m_pShaders.end(); ++it ) if ( *it == pShader ) { m_pShaders.erase( it ); return; } }
+
+		const std::vector< ShaderVK* > &GetShaders() { return m_pShaders; }
 
 		static constexpr const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 

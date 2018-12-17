@@ -52,6 +52,9 @@ project "engine"
 			"memory_system", --Project
 			"sdl_core" --Project
 		}
+
+	filter { "system:Linux", "toolset:gcc" }
+		linkoptions { "-Wl,-rpath=." }
 	
 	filter { "system:Windows" }
 		includedirs {
@@ -88,7 +91,7 @@ project "engine"
 		symbols "On"
 		
 	filter { "configurations:Release" }
-		optimize "On"
+		optimize "Full"
 	
 	filter { "platforms:Win64", "configurations:Debug" }
 		targetdir "debug_win64"

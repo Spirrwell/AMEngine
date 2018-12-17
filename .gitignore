@@ -124,3 +124,7 @@ game/linux64/release/launcher
 game/linux64/release/sdl_core\.so
 
 game/linux64/release/memory_system\.so
+
+game/linux64/debug/amdlbuild
+
+game/linux64/release/amdlbuild

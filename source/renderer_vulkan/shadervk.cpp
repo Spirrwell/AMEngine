@@ -1,6 +1,7 @@
 #include "shadervk.hpp"
 #include "platform.hpp"
 #include "vulkan_helpers.hpp"
+#include "materialvk.hpp"
 
 #include <fstream>
 
@@ -37,13 +38,15 @@ ShaderVK::~ShaderVK()
 
 void ShaderVK::Init()
 {
+	InitShaderParams();
+
 	createRenderPass();
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
 
 	createUniformBuffer();
 	createDescriptorPool();
-	createDescriptorSets();
+	//createDescriptorSets( nullptr );
 }
 
 void ShaderVK::Shutdown()
@@ -384,7 +387,7 @@ void ShaderVK::createDescriptorPool()
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
 }
 
-void ShaderVK::createDescriptorSets()
+void ShaderVK::createDescriptorSets( MaterialVK &material )
 {
 	std::vector< VkDescriptorSetLayout > layouts( vulkan().swapChainImages.size(), m_vkDescriptorSetLayout );
 
@@ -394,41 +397,13 @@ void ShaderVK::createDescriptorSets()
 	allocInfo.descriptorSetCount = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 	allocInfo.pSetLayouts = layouts.data();
 
-	m_vkDescriptorSets.resize( vulkan().swapChainImages.size() );
-	if ( vkAllocateDescriptorSets( vulkan().device, &allocInfo, m_vkDescriptorSets.data() ) != VK_SUCCESS )
+	material.m_vkDescriptorSets.resize( vulkan().swapChainImages.size() );
+	if ( vkAllocateDescriptorSets( vulkan().device, &allocInfo, material.m_vkDescriptorSets.data() ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to allocate descriptor sets!" );
 
 	for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
 	{
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = vulkan().uniformBuffers[ i ];
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof( DefaultUBO );
-
-		VkDescriptorImageInfo imageInfo = {};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = vulkan().texture.ImageView();
-		imageInfo.sampler = vulkan().texture.Sampler();
-
-		std::array< VkWriteDescriptorSet, 2 > descriptorWrites = {};
-
-		descriptorWrites[ 0 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[ 0 ].dstSet = vulkan().descriptorSets[ i ];
-		descriptorWrites[ 0 ].dstBinding = 0;
-		descriptorWrites[ 0 ].dstArrayElement = 0;
-		descriptorWrites[ 0 ].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[ 0 ].descriptorCount = 1;
-		descriptorWrites[ 0 ].pBufferInfo = &bufferInfo;
-
-		descriptorWrites[ 1 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[ 1 ].dstSet = vulkan().descriptorSets[ i ];
-		descriptorWrites[ 1 ].dstBinding = 1;
-		descriptorWrites[ 1 ].dstArrayElement = 0;
-		descriptorWrites[ 1 ].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[ 1 ].descriptorCount = 1;
-		descriptorWrites[ 1 ].pImageInfo = &imageInfo;
-		descriptorWrites[ 1 ].pTexelBufferView = nullptr; // Optional
-
+		auto descriptorWrites = GetDescriptorWrites( material, i );
 		vkUpdateDescriptorSets( vulkan().device, static_cast< uint32_t >( descriptorWrites.size() ), descriptorWrites.data(), 0, nullptr );
 	}
 }
