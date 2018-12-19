@@ -44,7 +44,6 @@ void ShaderVK::Init()
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
 
-	createUniformBuffer();
 	createDescriptorPool();
 	//createDescriptorSets( nullptr );
 }
@@ -64,15 +63,6 @@ void ShaderVK::Shutdown()
 		vkDestroyDescriptorSetLayout( vulkan().device, m_vkDescriptorSetLayout, nullptr );
 		m_vkDescriptorSetLayout = VK_NULL_HANDLE;
 	}
-
-	for ( size_t i = 0; i < m_vkUniformBuffers.size(); ++i )
-	{
-		vkDestroyBuffer( vulkan().device, m_vkUniformBuffers[ i ], nullptr );
-		vkFreeMemory( vulkan().device, m_vkUniformBuffersMemory[ i ], nullptr );
-	}
-
-	m_vkUniformBuffers.clear();
-	m_vkUniformBuffersMemory.clear();
 }
 
 void ShaderVK::cleanupSwapChainElements()
@@ -300,12 +290,14 @@ void ShaderVK::createGraphicsPipeline()
 	colorBlending.blendConstants[ 2 ] = 0.0f; // Optional
 	colorBlending.blendConstants[ 3 ] = 0.0f; // Optional
 
+	auto pushConstantRanges = GetPushConstants();
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &m_vkDescriptorSetLayout;
-	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+	pipelineLayoutInfo.pushConstantRangeCount = static_cast< uint32_t >( pushConstantRanges.size() );
+	pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges.data();
 
 	auto destroyShaderModules = [ & ]()
 	{
@@ -356,17 +348,6 @@ void ShaderVK::createGraphicsPipeline()
 	}
 
 	destroyShaderModules();
-}
-
-void ShaderVK::createUniformBuffer()
-{
-	VkDeviceSize bufferSize = sizeof( DefaultUBO );
-
-	m_vkUniformBuffers.resize( vulkan().swapChainImages.size() );
-	m_vkUniformBuffersMemory.resize( vulkan().swapChainImages.size() );
-
-	for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
-		VulkanApp().createBuffer( bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_vkUniformBuffers[ i ], m_vkUniformBuffersMemory[ i ] );
 }
 
 void ShaderVK::createDescriptorPool()

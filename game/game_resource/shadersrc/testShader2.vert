@@ -2,11 +2,14 @@
 
 layout( binding = 0 ) uniform UniformBufferObject
 {
-	mat4 model;
 	mat4 view;
 	mat4 proj;
-	mat4 mvp;
 } ubo;
+
+layout( push_constant ) uniform PER_OBJECT
+{
+	mat4 mvp;
+} obj;
 
 layout ( location = 0 ) in vec3 inPosition;
 layout ( location = 1 ) in vec3 inColor;
@@ -23,7 +26,7 @@ out gl_PerVertex {
 void main()
 {
 	//gl_Position = vec4( inPosition, 0.0, 1.0 );
-	gl_Position = ubo.mvp * vec4( inPosition, 1.0 );
+	gl_Position = obj.mvp * vec4( inPosition, 1.0 );
 	fragColor = inColor;
 	fragTexCoord = inTexCoord;
 }

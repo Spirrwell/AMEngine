@@ -20,6 +20,7 @@ public:
     virtual ~MaterialVK();
 
     TextureVK *GetTexture( const string &matParamName );
+    ShaderVK *GetShader() const { return m_pShader; }
 
     std::vector< VkDescriptorSet > m_vkDescriptorSets;
 

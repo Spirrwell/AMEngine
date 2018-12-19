@@ -9,19 +9,20 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan_interface.hpp"
 
-class MeshVK : public IMesh, vkApp::CVulkanInterface
+class MaterialVK;
+
+class MeshVK : public vkApp::CVulkanInterface
 {
 	typedef std::vector< Vertex > Vertices;
 	typedef std::vector< uint32_t > Indices;
 
 public:
-	MeshVK( Vertices vertices, Indices indices );
+	MeshVK( Vertices vertices, Indices indices, MaterialVK *pMaterial );
 	virtual ~MeshVK();
 
 	void Shutdown();
 
-	void Draw() override;
-	void SetModelMatrix( Matrix4f modelMatrix ) override {}
+	void Draw( const uint32_t &imageIndex );
 
 	const Indices &GetIndices() { return m_Indices; }
 	const Vertices &GetVertices() { return m_Vertices; }
@@ -33,18 +34,26 @@ private:
 		DT_DrawElements
 	};
 
+	void createCommandPool();
 	void createVertexBuffer();
 	void createIndexBuffer();
+	void createCommandBuffers();
 
 	DrawType m_iDrawType;
 
 	Vertices m_Vertices;
 	Indices m_Indices;
 
-	VkBuffer vertexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-	VkBuffer indexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+	VkCommandPool m_vkCommandPool = VK_NULL_HANDLE;
+	std::vector< VkCommandBuffer > m_vkCommandBuffers;
+
+	VkBuffer m_vkVertexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_vkVertexBufferMemory = VK_NULL_HANDLE;
+
+	VkBuffer m_vkIndexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_vkIndexBufferMemory = VK_NULL_HANDLE;
+
+	MaterialVK *m_pMaterial = nullptr;
 };
 
 #endif // MESHVK_HPP

@@ -7,7 +7,19 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-static TestShader s_TestShader( "testShader" );
+static TestShader s_TestShader( "testShader2" );
+
+void TestShader::Init()
+{
+	ShaderVK::Init();
+	m_UBO.Init();
+}
+
+void TestShader::Shutdown()
+{
+	ShaderVK::Shutdown();
+	m_UBO.Shutdown();
+}
 
 void TestShader::InitShaderParams()
 {
@@ -87,9 +99,9 @@ const std::vector< VkVertexInputAttributeDescription > &TestShader::GetVertexAtt
 const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
 {
 	VkDescriptorBufferInfo bufferInfo = {};
-	bufferInfo.buffer = m_vkUniformBuffers[ imageIndex ];
+	bufferInfo.buffer = m_UBO.uniformBuffer[ imageIndex ];
 	bufferInfo.offset = 0;
-	bufferInfo.range = sizeof( DefaultUBO );
+	bufferInfo.range = sizeof( m_UBO.UBO );
 
 	VkDescriptorImageInfo imageInfo = {};
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -123,4 +135,15 @@ const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( Mater
 	descriptorWrites[ 1 ].pTexelBufferView = nullptr; // Optional
 
 	return descriptorWrites;
+}
+
+const std::vector< VkPushConstantRange > TestShader::GetPushConstants()
+{
+	VkPushConstantRange pushConstantRange = {};
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof( MVPUniform );
+	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	std::vector< VkPushConstantRange > pushRanges = { pushConstantRange };
+	return pushRanges;
 }
