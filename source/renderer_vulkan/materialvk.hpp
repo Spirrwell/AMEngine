@@ -3,26 +3,34 @@
 
 #include <vector>
 #include <map>
+#include <fstream>
 
 #include "vulkan/vulkan.hpp"
 #include "string.hpp"
 #include "shadersystem/ishader.hpp"
+#include "vulkan_interface.hpp"
 
 class ShaderVK;
 class TextureVK;
 
-class MaterialVK
+class MaterialVK : public vkApp::CVulkanInterface
 {
     friend class ShaderVK;
 
 public:
     MaterialVK( const string &materialPath );
+	MaterialVK( std::ifstream &material );
     virtual ~MaterialVK();
+
+	void Shutdown();
+
+	void LoadMaterial( std::ifstream &material );
 
     TextureVK *GetTexture( const string &matParamName );
     ShaderVK *GetShader() const { return m_pShader; }
 
     std::vector< VkDescriptorSet > m_vkDescriptorSets;
+	VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
 
 private:
     ShaderVK *m_pShader = nullptr;

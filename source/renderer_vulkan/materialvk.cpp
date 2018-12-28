@@ -2,9 +2,9 @@
 #include "shadervk.hpp"
 #include "renderer_vulkan.hpp"
 #include "texturevk.hpp"
+#include "vulkan_helpers.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <sstream>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
@@ -20,11 +20,41 @@ MaterialVK::MaterialVK( const string &materialPath )
         return;
     }
 
-    string line;
+    LoadMaterial( materialFile );
+}
 
-    while ( !materialFile.eof() )
+
+MaterialVK::MaterialVK( std::ifstream &material )
+{
+	LoadMaterial( material );
+}
+
+MaterialVK::~MaterialVK()
+{
+	Shutdown();
+}
+
+void MaterialVK::Shutdown()
+{
+	for ( auto &kv : m_mapTextures )
+        delete kv.second;
+
+	m_mapTextures.clear();
+
+	if ( m_vkDescriptorPool != VK_NULL_HANDLE )
+	{
+		vkDestroyDescriptorPool( vulkan().device, m_vkDescriptorPool, nullptr );
+		m_vkDescriptorPool = VK_NULL_HANDLE;
+	}
+}
+
+void MaterialVK::LoadMaterial( std::ifstream &material )
+{
+	string line;
+
+    while ( !material.eof() )
     {
-        std::getline( materialFile, line );
+        std::getline( material, line );
         std::vector< string > tokens;
         std::istringstream ss( line );
         string token;
@@ -46,20 +76,20 @@ MaterialVK::MaterialVK( const string &materialPath )
 
     if ( m_pShader == nullptr )
     {
-        materialFile.close();
-        stprintf( "Could not find shader for material %s\n", materialPath );
+		material.close();
+        stprintf( "Could not find shader for material.\n" );
         return;
     }
 
     // Copy material params from shader
     m_MaterialParams = m_pShader->GetMaterialParams();
 
-    materialFile.clear();
-    materialFile.seekg( 0, std::ios::beg );
+	material.clear();
+	material.seekg( 0, std::ios::beg );
 
-    while ( !materialFile.eof() )
+    while ( !material.eof() )
     {
-        std::getline( materialFile, line );
+        std::getline( material, line );
         std::vector< string > tokens;
         std::istringstream ss( line );
         string token;
@@ -103,14 +133,10 @@ MaterialVK::MaterialVK( const string &materialPath )
         }
     }
 
-    materialFile.close();
-    m_pShader->createDescriptorSets( *this );
-}
+	material.close();
 
-MaterialVK::~MaterialVK()
-{
-    for ( auto &kv : m_mapTextures )
-        delete kv.second;
+	m_pShader->createDescriptorPool( *this );
+    m_pShader->createDescriptorSets( *this );
 }
 
 TextureVK *MaterialVK::GetTexture( const string &matParamName )

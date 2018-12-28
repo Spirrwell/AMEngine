@@ -3,11 +3,20 @@
 #include "vulkan_helpers.hpp"
 #include "materialvk.hpp"
 #include "texturevk.hpp"
+#include "meshvk.hpp"
+#include "modelvk.hpp"
+#include "camera.hpp"
+#include "engine/iengine.hpp"
+
+#include <chrono>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
 static TestShader s_TestShader( "testShader2" );
+extern IEngine *g_pEngine;
+
+TestShaderPushConstants g_tspc;
 
 void TestShader::Init()
 {
@@ -98,12 +107,12 @@ const std::vector< VkVertexInputAttributeDescription > &TestShader::GetVertexAtt
 
 const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
 {
-	VkDescriptorBufferInfo bufferInfo = {};
+	static VkDescriptorBufferInfo bufferInfo = {};
 	bufferInfo.buffer = m_UBO.uniformBuffer[ imageIndex ];
 	bufferInfo.offset = 0;
 	bufferInfo.range = sizeof( m_UBO.UBO );
 
-	VkDescriptorImageInfo imageInfo = {};
+	static VkDescriptorImageInfo imageInfo = {};
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 	TextureVK *pTexture = material.GetTexture( "diffuse" );
@@ -146,4 +155,43 @@ const std::vector< VkPushConstantRange > TestShader::GetPushConstants()
 
 	std::vector< VkPushConstantRange > pushRanges = { pushConstantRange };
 	return pushRanges;
+}
+
+void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh )
+{
+	static auto startTime = std::chrono::high_resolution_clock::now();
+	static Camera cam( Vector3f( 0.0f, -5.0f, 0.0f ) );
+	cam.Update();
+	cam.UpdateView();
+
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration< float, std::chrono::seconds::period >( currentTime - startTime ).count();
+
+	//Matrix4f model = mesh.GetOwningModel() ? mesh.GetOwningModel()->GetModelMatrix() : Matrix4f( 1.0f );
+	Matrix4f model = glm::translate( Vector3f( 0.0f, -5.0f, 10.0f ) );
+
+	Matrix4f view = cam.GetViewMatrix();
+	//Matrix4f view = glm::translate( Vector3f( 5.0f, 0.0f, 0.0f ) );
+	Matrix4f proj = glm::perspective( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 1000.0f );
+
+	proj[ 1 ][ 1 ] *= -1.0f;
+
+	struct MatrixPrinter
+	{
+		MatrixPrinter( const Matrix4f &mat )
+		{
+			for ( int i = 0; i < 4; ++i )
+				stprintf( "%f %f %f %f\n", mat[ i ][ 0 ], mat[ i ][ 1 ], mat[ i ][ 2 ], mat[ i ][ 3 ] );
+
+			stprintf( "\n" );
+		}
+	};
+
+	static MatrixPrinter v( view );
+	static MatrixPrinter m( model );
+	static MatrixPrinter p( proj );
+
+	g_tspc.mvp = proj * view * model;
+
+	vkCmdPushConstants( commandBuffer, m_vkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( g_tspc ), &g_tspc );
 }

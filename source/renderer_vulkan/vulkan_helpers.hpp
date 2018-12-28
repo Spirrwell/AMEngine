@@ -11,8 +11,11 @@
 
 class RendererVulkan;
 class ShaderVK;
+class MeshVK;
+class MaterialVK;
+class ModelVK;
 
-#define VULKAN_VALIDATION_LAYERS 0
+#define VULKAN_VALIDATION_LAYERS 1
 
 namespace vkApp
 {
@@ -120,6 +123,9 @@ namespace vkApp
 		void AddShader( ShaderVK *pShader ) { m_pShaders.push_back( pShader ); }
 		void RemoveShader( ShaderVK *pShader ) { for ( auto it = m_pShaders.begin(); it != m_pShaders.end(); ++it ) if ( *it == pShader ) { m_pShaders.erase( it ); return; } }
 
+		void AddMesh( MeshVK &mesh ) { m_pMeshes.push_back( &mesh ); }
+		void RemoveMesh( MeshVK *pMesh ) { for ( auto it = m_pMeshes.begin(); it != m_pMeshes.end(); ++it ) if ( *it == pMesh ) { m_pMeshes.erase( it ); return; } }
+
 		const std::vector< ShaderVK* > &GetShaders() { return m_pShaders; }
 
 		static constexpr const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
@@ -138,6 +144,7 @@ namespace vkApp
 		QueueFamilyIndices m_QueueFamilyIndices;
 
 		std::vector< ShaderVK* > m_pShaders;
+		std::vector< MeshVK* > m_pMeshes;
 
 		// Required extensions loaded from SDL
 		const char **m_ppszReqExtensionNames = nullptr;
@@ -177,7 +184,9 @@ namespace vkApp
 		void createDescriptorPool();
 		void createDescriptorSets();
 
-		void createCommandBuffers();
+		void allocateCommandBuffers();
+		void recordCommandBuffer( const uint32_t &imageIndex );
+		void recordCommandBuffers();
 		void createSyncObjects();
 
 	public:
@@ -206,6 +215,12 @@ namespace vkApp
 		VkFormat findDepthFormat();
 		bool hasStencilComponent( VkFormat format );
 		void generateMipMaps( VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels );
+
+		//MeshVK *m_pTestMesh = nullptr;
+		//MaterialVK *m_pTestMaterial = nullptr;
+
+		ModelVK *m_pTestModel = nullptr;
+		ModelVK *m_pTestModel2 = nullptr;
 	};
 }
 

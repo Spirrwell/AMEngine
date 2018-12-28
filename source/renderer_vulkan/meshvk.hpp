@@ -10,6 +10,7 @@
 #include "vulkan_interface.hpp"
 
 class MaterialVK;
+class ModelVK;
 
 class MeshVK : public vkApp::CVulkanInterface
 {
@@ -17,15 +18,20 @@ class MeshVK : public vkApp::CVulkanInterface
 	typedef std::vector< uint32_t > Indices;
 
 public:
-	MeshVK( Vertices vertices, Indices indices, MaterialVK *pMaterial );
+	MeshVK( const Vertices &vertices, const Indices &indices, MaterialVK *pMaterial, ModelVK *pOwningModel = nullptr );
 	virtual ~MeshVK();
 
 	void Shutdown();
 
-	void Draw( const uint32_t &imageIndex );
+	void Draw( VkCommandBuffer commandBuffer, const uint32_t &imageIndex );
+	const VkCommandBuffer &RecordSecondaryCommandBuffers( VkCommandBufferInheritanceInfo inheritanceInfo, const uint32_t &imageIndex );
 
-	const Indices &GetIndices() { return m_Indices; }
-	const Vertices &GetVertices() { return m_Vertices; }
+	MaterialVK *GetMaterial() const { return m_pMaterial; }
+
+	const Indices &GetIndices() const { return m_Indices; }
+	const Vertices &GetVertices() const { return m_Vertices; }
+
+	const ModelVK *GetOwningModel() const { return m_pOwningModel; }
 
 private:
 	enum DrawType
@@ -34,10 +40,12 @@ private:
 		DT_DrawElements
 	};
 
-	void createCommandPool();
 	void createVertexBuffer();
 	void createIndexBuffer();
-	void createCommandBuffers();
+
+	void createCommandPool();
+
+	void allocateSecondaryCommandBuffers();
 
 	DrawType m_iDrawType;
 
@@ -45,7 +53,7 @@ private:
 	Indices m_Indices;
 
 	VkCommandPool m_vkCommandPool = VK_NULL_HANDLE;
-	std::vector< VkCommandBuffer > m_vkCommandBuffers;
+	std::vector< VkCommandBuffer > m_vkSecondaryCommandBuffers;
 
 	VkBuffer m_vkVertexBuffer = VK_NULL_HANDLE;
 	VkDeviceMemory m_vkVertexBufferMemory = VK_NULL_HANDLE;
@@ -54,6 +62,7 @@ private:
 	VkDeviceMemory m_vkIndexBufferMemory = VK_NULL_HANDLE;
 
 	MaterialVK *m_pMaterial = nullptr;
+	ModelVK *m_pOwningModel = nullptr;
 };
 
 #endif // MESHVK_HPP

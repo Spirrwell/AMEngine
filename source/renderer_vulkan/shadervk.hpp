@@ -11,6 +11,7 @@
 #include <vector>
 
 class MaterialVK;
+class MeshVK;
 
 struct DefaultUBO
 {
@@ -74,7 +75,7 @@ public:
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 
-	void createDescriptorPool();
+	void createDescriptorPool( MaterialVK &material );
 	void createDescriptorSets( MaterialVK &material );
 
 	inline const string &GetShaderName() { return m_ShaderName; }
@@ -85,14 +86,15 @@ public:
 	virtual const std::vector< VkVertexInputAttributeDescription > &GetVertexAttributeDescriptions() = 0;
 	virtual const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) = 0; // TODO: Make reference
 	virtual const std::vector< VkPushConstantRange > GetPushConstants() { return {}; }
+	virtual void recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh ) {}
 
 	const std::vector< MaterialParameter_t > &GetMaterialParams() { return m_MaterialParams; }
 
 //protected:
 	std::vector< MaterialParameter_t > m_MaterialParams;
-	VkRenderPass m_vkRenderPass = VK_NULL_HANDLE;
+	//VkRenderPass m_vkRenderPass = VK_NULL_HANDLE;
 	VkDescriptorSetLayout m_vkDescriptorSetLayout = VK_NULL_HANDLE;
-	VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
+	//VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
 	VkPipelineLayout m_vkPipelineLayout = VK_NULL_HANDLE;
 	VkPipeline m_vkGraphicsPipeline = VK_NULL_HANDLE;
 	//std::vector< VkDescriptorSet > m_vkDescriptorSets;

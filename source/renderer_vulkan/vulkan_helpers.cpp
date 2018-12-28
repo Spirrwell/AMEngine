@@ -3,6 +3,9 @@
 #include "engine/config.hpp"
 #include "vertex.hpp"
 #include "shadervk.hpp"
+#include "materialvk.hpp"
+#include "meshvk.hpp"
+#include "modelvk.hpp"
 
 #include "SDL_vulkan.h"
 #include "mathdefs.hpp"
@@ -15,9 +18,12 @@
 #include <map>
 #include <set>
 #include <chrono>
+#include "testshader.hpp"
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
+
+extern TestShaderPushConstants g_tspc;
 
 namespace vkApp
 {
@@ -135,15 +141,16 @@ namespace vkApp
 		createSwapChain();
 		createImageViews();
 		createRenderPass();
-		createDescriptorSetLayout();
-		createGraphicsPipeline();
+		//createDescriptorSetLayout();
+		//createGraphicsPipeline();
 		createCommandPool();
 		createDepthResources();
 		createFramebuffers();
 		vulkan().texture.Load( GAME_DIR "textures/chalet.jpg" );
 
 		AMDL::ModelData modelData;
-		AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/chalet_mat.amdl", modelData );
+		//AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/cube.amdl", modelData );
+		/*AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/chalet_mat.amdl", modelData );
 
 		if ( modelData.meshes.size() > 0 )
 		{
@@ -152,19 +159,32 @@ namespace vkApp
 
 			vertices = modelData.meshes[ 0 ].vertices;
 			indexBuffer = modelData.meshes[ 0 ].indices;
-		}
+		}*/
 
-		createVertexBuffer();
-		createIndexBuffer();
-		createUniformBuffer();
-		createDescriptorPool();
-		createDescriptorSets();
+		//createVertexBuffer();
+		//createIndexBuffer();
+		//createUniformBuffer();
+		//createDescriptorPool();
+		//createDescriptorSets();
 
 		for ( const auto &pShader : m_pShaders )
 			pShader->Init();
 
-		createCommandBuffers();
+		m_pTestModel = new ModelVK;
+		m_pTestModel->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
+		m_pTestModel->LoadModel( string( GAME_DIR ) + "models/axis.amdl" );
+
+		m_pTestModel2 = new ModelVK;
+		m_pTestModel2->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
+		m_pTestModel2->LoadModel( string( GAME_DIR ) + "models/chalet_mat.amdl" );
+
+		allocateCommandBuffers();
+		recordCommandBuffers();
 		createSyncObjects();
+
+		//m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/cube/BasicMaterial.amat" );
+		//m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/chalet/chalet.amat" );
+		//m_pTestMesh = new MeshVK( vertices, indexBuffer, m_pTestMaterial );
 
 		return true;
 	}
@@ -173,6 +193,21 @@ namespace vkApp
 	{
 		if ( vulkan().device != VK_NULL_HANDLE )
 			vkDeviceWaitIdle( vulkan().device );
+
+		/*if ( m_pTestMesh )
+		{
+			delete m_pTestMesh;
+			m_pTestMesh = nullptr;
+		}
+
+		delete m_pTestMaterial;
+		m_pTestMaterial = nullptr;*/
+
+		delete m_pTestModel;
+		m_pTestModel = nullptr;
+
+		delete m_pTestModel2;
+		m_pTestModel2 = nullptr;
 
 		for ( const auto &pShader : m_pShaders )
 			pShader->Shutdown();
@@ -374,7 +409,7 @@ namespace vkApp
 		vkWaitForFences( vulkan().device, 1, &vulkan().inFlightFences[ currentFrame ], VK_TRUE, std::numeric_limits< uint64_t >::max() );
 
 		VkResult result = vkAcquireNextImageKHR( vulkan().device, vulkan().swapChain, std::numeric_limits< uint64_t >::max(), vulkan().imageAvailableSemaphores[ currentFrame ], VK_NULL_HANDLE, &imageIndex );
-		updateUniformBuffer( imageIndex );
+		//updateUniformBuffer( imageIndex );
 
 		if ( result == VK_ERROR_OUT_OF_DATE_KHR )
 		{
@@ -386,6 +421,8 @@ namespace vkApp
 			stprintf( "[Vulkan]Failed to acquire swap chain image.\n" );
 			return;
 		}
+
+		recordCommandBuffer( imageIndex );
 
 		VkSemaphore waitSemaphores[] = { vulkan().imageAvailableSemaphores[ currentFrame ] };
 
@@ -451,8 +488,10 @@ namespace vkApp
 		ubo.model = glm::rotate( Matrix4f( 1.0f ), time * glm::radians( 90.0f ), Vector3f( 0.0f, 0.0f, 1.0f ) );
 		ubo.view = glm::lookAt( Vector3f( 2.0f, 2.0f, 2.0f ), Vector3f( 0.0f, 0.0f, 0.0f ), Vector3f( 0.0f, 0.0f, 1.0f ) );
 		ubo.proj = glm::perspective( glm::radians( 45.0f ), ( float )vulkan().swapChainExtent.width / ( float ) vulkan().swapChainExtent.height, 0.1f, 10.0f );
-		ubo.proj[ 1 ][ 1 ] *= -1;
+		//ubo.proj[ 1 ][ 1 ] *= -1;
 		ubo.mvp = ubo.proj * ubo.view * ubo.model;
+
+		g_tspc.mvp = ubo.mvp;
 
 		void *pData = nullptr;
 		vkMapMemory( vulkan().device, vulkan().uniformBuffersMemory[ currentImage ], 0, sizeof( ubo ), 0, &pData );
@@ -996,7 +1035,7 @@ namespace vkApp
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT; // TODO: Revisit this
+		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // TODO: Revisit this
 		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // TODO: Revisit this
 		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -1014,7 +1053,7 @@ namespace vkApp
 
 		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
 		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachment.blendEnable = VK_FALSE;
+		/*colorBlendAttachment.blendEnable = VK_FALSE;
 		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
 		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
 		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
@@ -1023,17 +1062,17 @@ namespace vkApp
 		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
 
 		/*Alpha Blending*/
-		/*colorBlendAttachment.blendEnable = VK_TRUE;
+		colorBlendAttachment.blendEnable = VK_TRUE;
 		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
 		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;*/
+		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 		VkPipelineColorBlendStateCreateInfo colorBlending = {};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.logicOpEnable = VK_FALSE;
+		colorBlending.logicOpEnable = VK_TRUE;
 		colorBlending.logicOp = VK_LOGIC_OP_COPY;
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
@@ -1129,7 +1168,7 @@ namespace vkApp
 		VkCommandPoolCreateInfo poolInfo = {};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
-		poolInfo.flags = 0; // Optional
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Optional
 
 		if ( vkCreateCommandPool( vulkan().device, &poolInfo, nullptr, &vulkan().commandPool ) != VK_SUCCESS )
 			throw std::runtime_error( "[Vulkan]Failed to create command pool." );
@@ -1262,7 +1301,7 @@ namespace vkApp
 		}
 	}
 
-	void VulkanApp::createCommandBuffers()
+	void VulkanApp::allocateCommandBuffers()
 	{
 		vulkan().commandBuffers.resize( vulkan().swapChainFramebuffers.size(), VK_NULL_HANDLE );
 
@@ -1274,45 +1313,65 @@ namespace vkApp
 
 		if ( vkAllocateCommandBuffers( vulkan().device, &allocInfo, vulkan().commandBuffers.data() ) != VK_SUCCESS )
 			throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
+	}
 
+	void VulkanApp::recordCommandBuffer( const uint32_t &imageIndex )
+	{
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+		beginInfo.pInheritanceInfo = nullptr; // Optional
+
+		if ( vkBeginCommandBuffer( vulkan().commandBuffers[ imageIndex ], &beginInfo ) != VK_SUCCESS )
+			throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
+
+		VkRenderPassBeginInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = vulkan().renderPass;
+		renderPassInfo.framebuffer = vulkan().swapChainFramebuffers[ imageIndex ];
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = vulkan().swapChainExtent;
+
+		std::array< VkClearValue, 2 > clearValues;
+		clearValues[ 0 ].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		clearValues[ 1 ].depthStencil = { 1.0f, 0 };
+
+		renderPassInfo.clearValueCount = static_cast< uint32_t >( clearValues.size() );
+		renderPassInfo.pClearValues = clearValues.data();
+
+		vkCmdBeginRenderPass( vulkan().commandBuffers[ imageIndex ], &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS );
+
+			VkCommandBufferInheritanceInfo inheritanceInfo = {};
+			inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+			inheritanceInfo.renderPass = vulkan().renderPass;
+			inheritanceInfo.framebuffer = vulkan().swapChainFramebuffers[ imageIndex ];
+
+			for ( auto pMesh : m_pMeshes )
+			{
+				const VkCommandBuffer &secondaryCommandBuffer = pMesh->RecordSecondaryCommandBuffers( inheritanceInfo, imageIndex );
+				vkCmdExecuteCommands( vulkan().commandBuffers[ imageIndex ], 1, &secondaryCommandBuffer );
+			}
+
+			/*for ( auto pMesh : m_pMeshes )
+				pMesh->Draw( vulkan().commandBuffers[ i ], static_cast< uint32_t >( i ) );*/
+			/*vkCmdBindPipeline( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().graphicsPipeline );
+			VkBuffer vertexBuffers[] = { vulkan().vertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers( vulkan().commandBuffers[ i ], 0, 1, vertexBuffers, offsets );
+			vkCmdBindIndexBuffer( vulkan().commandBuffers[ i ], vulkan().indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+			vkCmdBindDescriptorSets( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().pipelineLayout, 0, 1, &vulkan().descriptorSets[ i ], 0, nullptr );
+			vkCmdDrawIndexed( vulkan().commandBuffers[ i ], static_cast< uint32_t >( indexBuffer.size() ), 1, 0, 0, 0 );*/
+			//vkCmdDraw( vulkan().commandBuffers[ i ], static_cast< uint32_t >( vertices.size() ), 1, 0, 0 );
+		vkCmdEndRenderPass( vulkan().commandBuffers[ imageIndex ] );
+
+		if ( vkEndCommandBuffer( vulkan().commandBuffers[ imageIndex ] ) != VK_SUCCESS )
+			throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
+	}
+
+	void VulkanApp::recordCommandBuffers()
+	{
 		for ( size_t i = 0; i < vulkan().commandBuffers.size(); ++i )
-		{
-			VkCommandBufferBeginInfo beginInfo = {};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-			beginInfo.pInheritanceInfo = nullptr; // Optional
-
-			if ( vkBeginCommandBuffer( vulkan().commandBuffers[ i ], &beginInfo ) != VK_SUCCESS )
-				throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
-
-			VkRenderPassBeginInfo renderPassInfo = {};
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = vulkan().renderPass;
-			renderPassInfo.framebuffer = vulkan().swapChainFramebuffers[ i ];
-			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = vulkan().swapChainExtent;
-
-			std::array< VkClearValue, 2 > clearValues;
-			clearValues[ 0 ].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-			clearValues[ 1 ].depthStencil = { 1.0f, 0 };
-
-			renderPassInfo.clearValueCount = static_cast< uint32_t >( clearValues.size() );
-			renderPassInfo.pClearValues = clearValues.data();
-
-			vkCmdBeginRenderPass( vulkan().commandBuffers[ i ], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
-				vkCmdBindPipeline( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().graphicsPipeline );
-				VkBuffer vertexBuffers[] = { vulkan().vertexBuffer };
-				VkDeviceSize offsets[] = { 0 };
-				vkCmdBindVertexBuffers( vulkan().commandBuffers[ i ], 0, 1, vertexBuffers, offsets );
-				vkCmdBindIndexBuffer( vulkan().commandBuffers[ i ], vulkan().indexBuffer, 0, VK_INDEX_TYPE_UINT32 );
-				vkCmdBindDescriptorSets( vulkan().commandBuffers[ i ], VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan().pipelineLayout, 0, 1, &vulkan().descriptorSets[ i ], 0, nullptr );
-				vkCmdDrawIndexed( vulkan().commandBuffers[ i ], static_cast< uint32_t >( indexBuffer.size() ), 1, 0, 0, 0 );
-				//vkCmdDraw( vulkan().commandBuffers[ i ], static_cast< uint32_t >( vertices.size() ), 1, 0, 0 );
-			vkCmdEndRenderPass( vulkan().commandBuffers[ i ] );
-
-			if ( vkEndCommandBuffer( vulkan().commandBuffers[ i ] ) != VK_SUCCESS )
-				throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
-		}
+			recordCommandBuffer( static_cast< uint32_t >( i ) );
 	}
 
 	void VulkanApp::createSyncObjects()
@@ -1456,13 +1515,16 @@ namespace vkApp
 		createSwapChain();
 		createImageViews();
 		createRenderPass();
-		createGraphicsPipeline();
+		//createGraphicsPipeline();
 		createDepthResources();
 		createFramebuffers();
-		createCommandBuffers();
 
 		for ( const auto &pShader : m_pShaders )
 			pShader->recreateSwapChainElements();
+
+		allocateCommandBuffers();
+		recordCommandBuffers();
+
 	}
 
 	std::vector< const char * > VulkanApp::getRequiredExtensions()

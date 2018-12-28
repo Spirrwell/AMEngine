@@ -5,3 +5,6 @@ C:\VulkanSDK\1.1.85.0\Bin\glslangValidator.exe -V skyShader.frag -o ../shaders/s
 
 C:\VulkanSDK\1.1.85.0\Bin\glslangValidator.exe -V testShader.vert -o ../shaders/testShader.vert.spv
 C:\VulkanSDK\1.1.85.0\Bin\glslangValidator.exe -V testShader.frag -o ../shaders/testShader.frag.spv
+
+C:\VulkanSDK\1.1.85.0\Bin\glslangValidator.exe -V testShader2.vert -o ../shaders/testShader2.vert.spv
+C:\VulkanSDK\1.1.85.0\Bin\glslangValidator.exe -V testShader2.frag -o ../shaders/testShader2.frag.spv

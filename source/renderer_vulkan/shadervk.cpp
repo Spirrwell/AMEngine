@@ -44,7 +44,7 @@ void ShaderVK::Init()
 	createDescriptorSetLayout();
 	createGraphicsPipeline();
 
-	createDescriptorPool();
+	//createDescriptorPool();
 	//createDescriptorSets( nullptr );
 }
 
@@ -52,11 +52,11 @@ void ShaderVK::Shutdown()
 {
 	cleanupSwapChainElements();
 
-	if ( m_vkDescriptorPool != VK_NULL_HANDLE )
+	/*if ( m_vkDescriptorPool != VK_NULL_HANDLE )
 	{
 		vkDestroyDescriptorPool( vulkan().device, m_vkDescriptorPool, nullptr );
 		m_vkDescriptorPool = VK_NULL_HANDLE;
-	}
+	}*/
 
 	if ( m_vkDescriptorSetLayout != VK_NULL_HANDLE )
 	{
@@ -80,11 +80,11 @@ void ShaderVK::cleanupSwapChainElements()
 		m_vkPipelineLayout = VK_NULL_HANDLE;
 	}
 
-	if ( m_vkRenderPass != VK_NULL_HANDLE )
+	/*if ( m_vkRenderPass != VK_NULL_HANDLE )
 	{
 		vkDestroyRenderPass( vulkan().device, m_vkRenderPass, nullptr );
 		m_vkRenderPass = VK_NULL_HANDLE;
-	}
+	}*/
 }
 
 void ShaderVK::recreateSwapChainElements()
@@ -97,7 +97,7 @@ void ShaderVK::recreateSwapChainElements()
 
 void ShaderVK::createRenderPass()
 {
-	VkAttachmentDescription colorAttachment = {};
+	/*VkAttachmentDescription colorAttachment = {};
 	colorAttachment.format = vulkan().swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -151,7 +151,7 @@ void ShaderVK::createRenderPass()
 	renderPassInfo.pDependencies = &dependency;
 
 	if ( vkCreateRenderPass( vulkan().device, &renderPassInfo, nullptr, &m_vkRenderPass ) != VK_SUCCESS )
-		throw std::runtime_error( "[Vulkan]Failed to create render pass." );
+		throw std::runtime_error( "[Vulkan]Failed to create render pass." );*/
 }
 
 void ShaderVK::createDescriptorSetLayout()
@@ -262,22 +262,22 @@ void ShaderVK::createGraphicsPipeline()
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
 	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_FALSE;
+	/*colorBlendAttachment.blendEnable = VK_FALSE;
 	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
 	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
 	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
 	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
 	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional*/
 
 	/*Alpha Blending*/
-	/*colorBlendAttachment.blendEnable = VK_TRUE;
+	colorBlendAttachment.blendEnable = VK_TRUE;
 	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
 	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;*/
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 	VkPipelineColorBlendStateCreateInfo colorBlending = {};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -336,7 +336,8 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = nullptr; // Optional
 	pipelineInfo.layout = m_vkPipelineLayout;
-	pipelineInfo.renderPass = m_vkRenderPass;
+	//pipelineInfo.renderPass = m_vkRenderPass;
+	pipelineInfo.renderPass = vulkan().renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
@@ -350,7 +351,7 @@ void ShaderVK::createGraphicsPipeline()
 	destroyShaderModules();
 }
 
-void ShaderVK::createDescriptorPool()
+void ShaderVK::createDescriptorPool( MaterialVK &material )
 {
 	std::array< VkDescriptorPoolSize, 2 > poolSizes = {};
 	poolSizes[ 0 ].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -364,7 +365,7 @@ void ShaderVK::createDescriptorPool()
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 
-	if ( vkCreateDescriptorPool( vulkan().device, &poolInfo, nullptr, &m_vkDescriptorPool ) != VK_SUCCESS )
+	if ( vkCreateDescriptorPool( vulkan().device, &poolInfo, nullptr, &material.m_vkDescriptorPool ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
 }
 
@@ -374,13 +375,18 @@ void ShaderVK::createDescriptorSets( MaterialVK &material )
 
 	VkDescriptorSetAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = m_vkDescriptorPool;
+	allocInfo.descriptorPool = material.m_vkDescriptorPool;
 	allocInfo.descriptorSetCount = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 	allocInfo.pSetLayouts = layouts.data();
 
 	material.m_vkDescriptorSets.resize( vulkan().swapChainImages.size() );
-	if ( vkAllocateDescriptorSets( vulkan().device, &allocInfo, material.m_vkDescriptorSets.data() ) != VK_SUCCESS )
-		throw std::runtime_error( "[Vulkan]Failed to allocate descriptor sets!" );
+	auto err = vkAllocateDescriptorSets( vulkan().device, &allocInfo, material.m_vkDescriptorSets.data() );
+	if ( err != VK_SUCCESS )
+	{
+		stprintf( "Failed to allocate descriptor sets: %d\n", err );
+		return;
+		//throw std::runtime_error( "[Vulkan]Failed to allocate descriptor sets!" );
+	}
 
 	for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
 	{

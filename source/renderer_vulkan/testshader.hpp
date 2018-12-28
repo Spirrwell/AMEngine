@@ -3,6 +3,10 @@
 
 #include "shadervk.hpp"
 
+struct TestShaderPushConstants
+{
+	Matrix4f mvp;
+};
 
 class TestShader : public ShaderVK
 {
@@ -19,6 +23,7 @@ public:
 	const std::vector< VkVertexInputAttributeDescription > &GetVertexAttributeDescriptions() override;
 	const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) override;
 	const std::vector< VkPushConstantRange > GetPushConstants() override;
+	void recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh ) override;
 
 private:
 	UBOWrapperVK< DefaultUBO > m_UBO;

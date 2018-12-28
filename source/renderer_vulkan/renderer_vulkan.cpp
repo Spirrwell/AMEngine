@@ -49,8 +49,8 @@ bool RendererVulkan::Init()
 		return false;
 	}
 
-	//SDL_SetWindowGrab( m_pMainWindow, SDL_TRUE );
-	//SDL_SetRelativeMouseMode( SDL_TRUE );
+	SDL_SetWindowGrab( m_pMainWindow, SDL_TRUE );
+	SDL_SetRelativeMouseMode( SDL_TRUE );
 
 	g_pInput = ( IInput* )GetFactory()->GetInterface( INPUT_INTERFACE_VERSION );
 

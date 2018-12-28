@@ -14,6 +14,8 @@ project "renderer_vulkan"
 	}
 	
 	files {
+			"%{cfg.location}/camera.hpp",
+			"%{cfg.location}/camera.cpp",
 			"%{cfg.location}/materialvk.hpp",
 			"%{cfg.location}/materialvk.cpp",
 			"%{cfg.location}/meshvk.hpp",
