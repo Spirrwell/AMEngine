@@ -311,17 +311,7 @@ void ShaderVK::createGraphicsPipeline()
 		throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 	}
 
-	VkPipelineDepthStencilStateCreateInfo depthStencil = {};
-	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depthStencil.depthTestEnable = VK_TRUE;
-	depthStencil.depthWriteEnable = VK_TRUE;
-	depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-	depthStencil.depthBoundsTestEnable = VK_FALSE;
-	depthStencil.minDepthBounds = 0.0f; // Optional
-	depthStencil.maxDepthBounds = 1.0f; // Optional
-	depthStencil.stencilTestEnable = VK_FALSE;
-	depthStencil.front = {}; // Optional
-	depthStencil.back = {}; // Optional
+	VkPipelineDepthStencilStateCreateInfo depthStencil = GetDepthStencilStateInfo();
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = {};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -393,4 +383,21 @@ void ShaderVK::createDescriptorSets( MaterialVK &material )
 		auto descriptorWrites = GetDescriptorWrites( material, i );
 		vkUpdateDescriptorSets( vulkan().device, static_cast< uint32_t >( descriptorWrites.size() ), descriptorWrites.data(), 0, nullptr );
 	}
+}
+
+VkPipelineDepthStencilStateCreateInfo ShaderVK::GetDepthStencilStateInfo()
+{
+	VkPipelineDepthStencilStateCreateInfo depthStencil = {};
+	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	depthStencil.depthTestEnable = VK_TRUE;
+	depthStencil.depthWriteEnable = VK_TRUE;
+	depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+	depthStencil.depthBoundsTestEnable = VK_FALSE;
+	depthStencil.minDepthBounds = 0.0f; // Optional
+	depthStencil.maxDepthBounds = 1.0f; // Optional
+	depthStencil.stencilTestEnable = VK_FALSE;
+	depthStencil.front = {}; // Optional
+	depthStencil.back = {}; // Optional
+
+	return depthStencil;
 }

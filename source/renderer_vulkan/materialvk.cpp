@@ -109,11 +109,29 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
                     {
                         switch( matParam.type )
                         {
-                        case MATP_TEXTURE:
-                            TextureVK *pTexture = new TextureVK;
-                            pTexture->Load( string( GAME_DIR ) + tokens[ 1 ] );
-                            m_mapTextures[ matParam.parameterName ] = pTexture;
-                            break;
+							case MATP_TEXTURE:
+							{
+								TextureVK *pTexture = new TextureVK;
+								pTexture->Load( string( GAME_DIR ) + tokens[ 1 ] );
+								m_mapTextures[ matParam.parameterName ] = pTexture;
+								break;
+							}
+							case MATP_SKYTEXTURE:
+							{
+								TextureVK *pTexture = new TextureVK;
+								std::array < string, 6 > faces =
+								{
+									string( GAME_DIR ) + tokens[ 1 ] + "_right.jpg",
+									string( GAME_DIR ) + tokens[ 1 ] + "_left.jpg",
+									string( GAME_DIR ) + tokens[ 1 ] + "_top.jpg",
+									string( GAME_DIR ) + tokens[ 1 ] + "_bottom.jpg",
+									string( GAME_DIR ) + tokens[ 1 ] + "_back.jpg",
+									string( GAME_DIR ) + tokens[ 1 ] + "_front.jpg"
+								};
+								pTexture->Load( faces );
+								m_mapTextures[ matParam.parameterName ] = pTexture;
+								break;
+							}
                         }
                     }
                 }

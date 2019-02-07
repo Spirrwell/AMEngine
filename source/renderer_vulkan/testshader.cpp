@@ -13,6 +13,8 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
+Camera g_vkcam( Vector3f( 0.0f, -5.0f, 0.0f ) );
+
 static TestShader s_TestShader( "testShader2" );
 extern IEngine *g_pEngine;
 
@@ -160,9 +162,8 @@ const std::vector< VkPushConstantRange > TestShader::GetPushConstants()
 void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh )
 {
 	static auto startTime = std::chrono::high_resolution_clock::now();
-	static Camera cam( Vector3f( 0.0f, -5.0f, 0.0f ) );
-	cam.Update();
-	cam.UpdateView();
+	g_vkcam.Update();
+	g_vkcam.UpdateView();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration< float, std::chrono::seconds::period >( currentTime - startTime ).count();
@@ -170,26 +171,11 @@ void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const Mes
 	//Matrix4f model = mesh.GetOwningModel() ? mesh.GetOwningModel()->GetModelMatrix() : Matrix4f( 1.0f );
 	Matrix4f model = glm::translate( Vector3f( 0.0f, -5.0f, 10.0f ) );
 
-	Matrix4f view = cam.GetViewMatrix();
+	Matrix4f view = g_vkcam.GetViewMatrix();
 	//Matrix4f view = glm::translate( Vector3f( 5.0f, 0.0f, 0.0f ) );
 	Matrix4f proj = glm::perspective( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 1000.0f );
 
 	proj[ 1 ][ 1 ] *= -1.0f;
-
-	struct MatrixPrinter
-	{
-		MatrixPrinter( const Matrix4f &mat )
-		{
-			for ( int i = 0; i < 4; ++i )
-				stprintf( "%f %f %f %f\n", mat[ i ][ 0 ], mat[ i ][ 1 ], mat[ i ][ 2 ], mat[ i ][ 3 ] );
-
-			stprintf( "\n" );
-		}
-	};
-
-	static MatrixPrinter v( view );
-	static MatrixPrinter m( model );
-	static MatrixPrinter p( proj );
 
 	g_tspc.mvp = proj * view * model;
 

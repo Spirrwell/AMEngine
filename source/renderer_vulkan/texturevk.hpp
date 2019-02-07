@@ -6,12 +6,14 @@
 #include "string.hpp"
 
 #include <stdint.h>
+#include <array>
 
 class TextureVK : vkApp::CVulkanInterface
 {
 public:
 	virtual ~TextureVK();
 	void Load( const string &path );
+	void Load( const std::array< string, 6 > &faces );
 	void Shutdown();
 
 	const VkImageView &ImageView() { return m_vkTextureImageView; }

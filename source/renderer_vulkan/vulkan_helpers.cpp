@@ -24,6 +24,50 @@
 #include "memlib/memoryoverride.hpp"
 
 extern TestShaderPushConstants g_tspc;
+static std::vector< Vector3f > skyboxVertices = {
+	// positions
+	{ -1.0f,  1.0f, -1.0f },
+	{ -1.0f, -1.0f, -1.0f },
+	{ 1.0f, -1.0f, -1.0f },
+	{ 1.0f, -1.0f, -1.0f },
+	{ 1.0f,  1.0f, -1.0f },
+	{ -1.0f,  1.0f, -1.0f },
+
+	{ -1.0f, -1.0f,  1.0f },
+	{ -1.0f, -1.0f, -1.0f },
+	{ -1.0f,  1.0f, -1.0f },
+	{ -1.0f,  1.0f, -1.0f },
+	{ -1.0f,  1.0f,  1.0f },
+	{ -1.0f, -1.0f,  1.0f },
+
+	{ 1.0f, -1.0f, -1.0f },
+	{ 1.0f, -1.0f,  1.0f },
+	{ 1.0f,  1.0f,  1.0f },
+	{ 1.0f,  1.0f,  1.0f },
+	{ 1.0f,  1.0f, -1.0f },
+	{ 1.0f, -1.0f, -1.0f },
+
+	{ -1.0f, -1.0f,  1.0f },
+	{ -1.0f,  1.0f,  1.0f },
+	{ 1.0f,  1.0f,  1.0f },
+	{ 1.0f,  1.0f,  1.0f },
+	{ 1.0f, -1.0f,  1.0f },
+	{ -1.0f, -1.0f,  1.0f },
+
+	{ -1.0f,  1.0f, -1.0f },
+	{ 1.0f,  1.0f, -1.0f },
+	{ 1.0f,  1.0f,  1.0f },
+	{ 1.0f,  1.0f,  1.0f },
+	{ -1.0f,  1.0f,  1.0f },
+	{ -1.0f,  1.0f, -1.0f },
+
+	{ -1.0f, -1.0f, -1.0f },
+	{ -1.0f, -1.0f,  1.0f },
+	{ 1.0f, -1.0f, -1.0f },
+	{ 1.0f, -1.0f, -1.0f },
+	{ -1.0f, -1.0f,  1.0f },
+	{ 1.0f, -1.0f,  1.0f }
+};
 
 namespace vkApp
 {
@@ -178,6 +222,14 @@ namespace vkApp
 		m_pTestModel2->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
 		m_pTestModel2->LoadModel( string( GAME_DIR ) + "models/chalet_mat.amdl" );
 
+		std::vector< Vertex > skyVerts;
+		skyVerts.resize( skyboxVertices.size() );
+		for ( size_t i = 0; i < skyboxVertices.size(); ++i )
+			skyVerts[ i ].pos = skyboxVertices[ i ];
+
+		m_pSkyboxMaterial = new MaterialVK( string( GAME_DIR ) + "materials/skybox/default_sky.amat" );
+		m_pSkyboxTest = new MeshVK( skyVerts, {}, m_pSkyboxMaterial );
+
 		allocateCommandBuffers();
 		recordCommandBuffers();
 		createSyncObjects();
@@ -202,6 +254,18 @@ namespace vkApp
 
 		delete m_pTestMaterial;
 		m_pTestMaterial = nullptr;*/
+
+		if ( m_pSkyboxMaterial )
+		{
+			delete m_pSkyboxMaterial;
+			m_pSkyboxMaterial = nullptr;
+		}
+
+		if ( m_pSkyboxTest )
+		{
+			delete m_pSkyboxTest;
+			m_pSkyboxTest = nullptr;
+		}
 
 		delete m_pTestModel;
 		m_pTestModel = nullptr;
@@ -857,7 +921,7 @@ namespace vkApp
 		vulkan().swapChainImageViews.resize( vulkan().swapChainImages.size(), VK_NULL_HANDLE );
 
 		for ( size_t i = 0; i < vulkan().swapChainImages.size(); i++ )
-			vulkan().swapChainImageViews[ i ] = createImageView( vulkan().swapChainImages[ i ], vulkan().swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1 );
+			vulkan().swapChainImageViews[ i ] = createImageView( vulkan().swapChainImages[ i ], vulkan().swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1, VK_IMAGE_VIEW_TYPE_2D );
 	}
 
 	void VulkanApp::createRenderPass()
@@ -1178,7 +1242,7 @@ namespace vkApp
 	{
 		VkFormat depthFormat = findDepthFormat();
 		createImage( vulkan().swapChainExtent.width, vulkan().swapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vulkan().depthImage, vulkan().depthImageMemory );
-		vulkan().depthImageView = createImageView( vulkan().depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1 );
+		vulkan().depthImageView = createImageView( vulkan().depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1, VK_IMAGE_VIEW_TYPE_2D );
 		transitionImageLayout( vulkan().depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1 );
 	}
 
@@ -1422,7 +1486,7 @@ namespace vkApp
 		vkBindBufferMemory( vulkan().device, buffer, bufferMemory, 0 );
 	}
 
-	void VulkanApp::createImage( uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory )
+	void VulkanApp::createImage( uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory, bool bCubeMap /*= false*/ )
 	{
 		VkImageCreateInfo imageInfo = {};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1431,14 +1495,19 @@ namespace vkApp
 		imageInfo.extent.height = height;
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = mipLevels;
-		imageInfo.arrayLayers = 1;
+		if ( !bCubeMap )
+			imageInfo.arrayLayers = 1;
+		else
+		{
+			imageInfo.arrayLayers = 6;
+			imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+		}
 		imageInfo.format = format;
 		imageInfo.tiling = tiling;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageInfo.usage = usage;
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.flags = 0; // Optional
 
 		if ( vkCreateImage( vulkan().device, &imageInfo, nullptr, &image ) != VK_SUCCESS )
 			throw std::runtime_error( "[Vulkan]Failed to create image!" );
@@ -1457,18 +1526,22 @@ namespace vkApp
 		vkBindImageMemory( vulkan().device, image, imageMemory, 0 );
 	}
 
-	VkImageView VulkanApp::createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels )
+	VkImageView VulkanApp::createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels, VkImageViewType imageViewType )
 	{
 		VkImageViewCreateInfo viewInfo = {};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewInfo.image = image;
-		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.viewType = imageViewType;
 		viewInfo.format = format;
 		viewInfo.subresourceRange.aspectMask = aspectFlags;
 		viewInfo.subresourceRange.baseMipLevel = 0;
 		viewInfo.subresourceRange.levelCount = mipLevels;
 		viewInfo.subresourceRange.baseArrayLayer = 0;
-		viewInfo.subresourceRange.layerCount = 1;
+
+		if ( imageViewType == VK_IMAGE_VIEW_TYPE_2D )
+			viewInfo.subresourceRange.layerCount = 1;
+		else if ( imageViewType == VK_IMAGE_VIEW_TYPE_CUBE )
+			viewInfo.subresourceRange.layerCount = 6;
 
 		VkImageView imageView = VK_NULL_HANDLE;
 
@@ -1489,9 +1562,33 @@ namespace vkApp
 		endSingleTimeCommands( commandBuffer );
 	}
 
-	void VulkanApp::copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height )
+	void VulkanApp::copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t numComponents, bool bCubeMap /*= false*/ )
 	{
-		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+		std::vector< VkBufferImageCopy > bufferCopyRegions;
+
+		if ( bCubeMap )
+		{
+			uint32_t offset = 0;
+
+			for ( uint32_t face = 0; face < 6; ++face )
+			{
+				VkBufferImageCopy bufferCopyRegion = {};
+				bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				bufferCopyRegion.imageSubresource.mipLevel = 0;
+				bufferCopyRegion.imageSubresource.baseArrayLayer = face;
+				bufferCopyRegion.imageSubresource.layerCount = 1;
+				bufferCopyRegion.imageExtent.width = width;
+				bufferCopyRegion.imageExtent.height = height;
+				bufferCopyRegion.imageExtent.depth = 1;
+				bufferCopyRegion.bufferOffset = offset;
+
+				bufferCopyRegions.push_back( bufferCopyRegion );
+
+				offset += ( width * height * numComponents );
+			}
+		}
+		else
+		{
 			VkBufferImageCopy region = {};
 			region.bufferOffset = 0;
 			region.bufferRowLength = 0;
@@ -1502,7 +1599,11 @@ namespace vkApp
 			region.imageSubresource.layerCount = 1;
 			region.imageOffset = { 0, 0, 0 };
 			region.imageExtent = { width, height, 1 };
-			vkCmdCopyBufferToImage( commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region );
+			bufferCopyRegions.push_back( region );
+		}
+
+		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+			vkCmdCopyBufferToImage( commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast< uint32_t >( bufferCopyRegions.size() ), bufferCopyRegions.data() );
 		endSingleTimeCommands( commandBuffer );
 	}
 
@@ -1701,7 +1802,7 @@ namespace vkApp
 		vkFreeCommandBuffers( vulkan().device, vulkan().commandPool, 1, &commandBuffer );
 	}
 
-	void VulkanApp::transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels )
+	void VulkanApp::transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, bool bCubeMap /*= false*/ )
 	{
 		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 			VkImageMemoryBarrier barrier = {};
@@ -1716,7 +1817,7 @@ namespace vkApp
 			{
 				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 				
-				if ( hasStencilComponent( format ))
+				if ( hasStencilComponent( format ) )
 					barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 			}
 			else
@@ -1725,7 +1826,10 @@ namespace vkApp
 			barrier.subresourceRange.baseMipLevel = 0;
 			barrier.subresourceRange.levelCount = mipLevels;
 			barrier.subresourceRange.baseArrayLayer = 0;
-			barrier.subresourceRange.layerCount = 1;
+			if ( !bCubeMap )
+				barrier.subresourceRange.layerCount = 1;
+			else
+				barrier.subresourceRange.layerCount = 6;
 			barrier.srcAccessMask = 0; // TODO
 			barrier.dstAccessMask = 0; // TODO
 
@@ -1800,7 +1904,7 @@ namespace vkApp
 		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
-	void VulkanApp::generateMipMaps( VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels )
+	void VulkanApp::generateMipMaps( VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, bool bCubeMap /*= false*/ )
 	{
 		// Check if the image format supports linear blitting
 		VkFormatProperties formatProperties;
@@ -1818,7 +1922,10 @@ namespace vkApp
 		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
+		if ( !bCubeMap )
+			barrier.subresourceRange.layerCount = 1;
+		else
+			barrier.subresourceRange.layerCount = 6;
 		barrier.subresourceRange.levelCount = 1;
 
 		int32_t mipWidth = texWidth;
@@ -1844,13 +1951,19 @@ namespace vkApp
 			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			blit.srcSubresource.mipLevel = i - 1;
 			blit.srcSubresource.baseArrayLayer = 0;
-			blit.srcSubresource.layerCount = 1;
+			if ( !bCubeMap )
+				blit.srcSubresource.layerCount = 1;
+			else
+				blit.srcSubresource.layerCount = 6;
 			blit.dstOffsets[ 0 ] = { 0, 0, 0 };
 			blit.dstOffsets[ 1 ] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
 			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			blit.dstSubresource.mipLevel = i;
 			blit.dstSubresource.baseArrayLayer = 0;
-			blit.dstSubresource.layerCount = 1;
+			if ( !bCubeMap )
+				blit.dstSubresource.layerCount = 1;
+			else
+				blit.dstSubresource.layerCount = 6;
 
 			vkCmdBlitImage( commandBuffer,
 				image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,

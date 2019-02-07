@@ -191,10 +191,10 @@ namespace vkApp
 
 	public:
 		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
-		void createImage( uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory );
-		VkImageView createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels );
+		void createImage( uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory, bool bCubeMap = false );
+		VkImageView createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels, VkImageViewType imageViewType );
 		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
-		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
+		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t numComponents, bool bCubeMap = false );
 		
 	private:
 		void recreateSwapChain();
@@ -210,17 +210,19 @@ namespace vkApp
 		VkShaderModule createShaderModule( const std::vector< std::byte > &code );
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands( VkCommandBuffer commandBuffer );
-		void transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels );
+		void transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, bool bCubeMap = false );
 		VkFormat findSupportedFormat( const std::vector< VkFormat > &candidates, VkImageTiling tiling, VkFormatFeatureFlags features );
 		VkFormat findDepthFormat();
 		bool hasStencilComponent( VkFormat format );
-		void generateMipMaps( VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels );
+		void generateMipMaps( VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, bool bCubeMap = false );
 
 		//MeshVK *m_pTestMesh = nullptr;
 		//MaterialVK *m_pTestMaterial = nullptr;
 
 		ModelVK *m_pTestModel = nullptr;
 		ModelVK *m_pTestModel2 = nullptr;
+		MeshVK *m_pSkyboxTest = nullptr;
+		MaterialVK *m_pSkyboxMaterial = nullptr;
 	};
 }
 

@@ -30,6 +30,8 @@ project "renderer_vulkan"
 			"%{cfg.location}/texturevk.cpp",
 			"%{cfg.location}/shadervk.hpp",
 			"%{cfg.location}/shadervk.cpp",
+			"%{cfg.location}/skyshadervk.hpp",
+			"%{cfg.location}/skyshadervk.cpp",
 			"%{cfg.location}/vulkan_helpers.hpp",
 			"%{cfg.location}/vulkan_helpers.cpp",
 			"%{cfg.location}/vulkan_interface.hpp",

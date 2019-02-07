@@ -75,12 +75,13 @@ public:
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 
-	void createDescriptorPool( MaterialVK &material );
+	virtual void createDescriptorPool( MaterialVK &material );
 	void createDescriptorSets( MaterialVK &material );
 
 	inline const string &GetShaderName() { return m_ShaderName; }
 
 	virtual void InitShaderParams() = 0;
+	virtual VkPipelineDepthStencilStateCreateInfo GetDepthStencilStateInfo();
 	virtual const std::vector< VkDescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() = 0;
 	virtual VkVertexInputBindingDescription GetVertexBindingDescription() = 0;
 	virtual const std::vector< VkVertexInputAttributeDescription > &GetVertexAttributeDescriptions() = 0;
