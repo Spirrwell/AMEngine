@@ -13,13 +13,12 @@ class SkyShaderVK : public ShaderVK
 {
 	using ShaderVK::ShaderVK;
 
+	void InitVertexInputAttributeDescriptions() override;
 	void InitShaderParams() override;
 
 	VkPipelineDepthStencilStateCreateInfo GetDepthStencilStateInfo() override;
 	void createDescriptorPool( MaterialVK &material ) override;
 	const std::vector< VkDescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() override;
-	VkVertexInputBindingDescription GetVertexBindingDescription() override;
-	const std::vector< VkVertexInputAttributeDescription > &GetVertexAttributeDescriptions() override;
 	const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) override;
 	const std::vector< VkPushConstantRange > GetPushConstants() override;
 	void recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh ) override;

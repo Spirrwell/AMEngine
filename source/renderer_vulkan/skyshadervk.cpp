@@ -12,6 +12,16 @@ extern Camera g_vkcam;
 static SkyShaderVK s_SkyShader( "skyShader" );
 extern IEngine *g_pEngine;
 
+void SkyShaderVK::InitVertexInputAttributeDescriptions()
+{
+	m_Pipeline.VertexInputAttributeDescriptions.resize( 1 );
+
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].binding = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].location = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
+}
+
 void SkyShaderVK::InitShaderParams()
 {
 	m_MaterialParams.push_back( MaterialParameter_t { "skybox", MATP_SKYTEXTURE } );
@@ -59,33 +69,6 @@ const std::vector< VkDescriptorSetLayoutBinding > &SkyShaderVK::GetDescriptorSet
 	bindings[ 0 ] = samplerLayoutBinding;
 
 	return bindings;
-}
-
-VkVertexInputBindingDescription SkyShaderVK::GetVertexBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof( Vertex );
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	return bindingDescription;
-}
-
-const std::vector< VkVertexInputAttributeDescription > &SkyShaderVK::GetVertexAttributeDescriptions()
-{
-	static std::vector< VkVertexInputAttributeDescription > attributeDescriptions;
-
-	if ( attributeDescriptions.size() > 0 )
-		return attributeDescriptions;
-
-	attributeDescriptions.resize( 1 );
-
-	attributeDescriptions[ 0 ].binding = 0;
-	attributeDescriptions[ 0 ].location = 0;
-	attributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
-
-	return attributeDescriptions;
 }
 
 const std::vector< VkWriteDescriptorSet > SkyShaderVK::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
@@ -138,5 +121,5 @@ void SkyShaderVK::recordToCommandBuffer( VkCommandBuffer commandBuffer, const Me
 	pConstants.view = view;
 	pConstants.projection = proj;
 
-	vkCmdPushConstants( commandBuffer, m_vkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( pConstants ), &pConstants );
+	vkCmdPushConstants( commandBuffer, Pipeline().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( pConstants ), &pConstants );
 }

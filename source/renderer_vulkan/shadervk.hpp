@@ -13,6 +13,13 @@
 class MaterialVK;
 class MeshVK;
 
+enum ShaderType : size_t
+{
+	VERTEX_SHADER,
+	FRAGMENT_SHADER,
+	SHADER_COUNT
+};
+
 struct DefaultUBO
 {
 	Matrix4f view;
@@ -22,6 +29,15 @@ struct DefaultUBO
 struct MVPUniform
 {
 	Matrix4f mvp;
+};
+
+struct PipelineContainer
+{
+	std::vector< VkVertexInputBindingDescription > VertexInputBindingDescriptions;
+	std::vector< VkVertexInputAttributeDescription > VertexInputAttributeDescriptions;
+	VkShaderModule ShaderModules[ SHADER_COUNT ] = { VK_NULL_HANDLE };
+	VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
+	VkPipeline Pipeline = VK_NULL_HANDLE;
 };
 
 template< typename T >
@@ -54,25 +70,21 @@ struct UBOWrapperVK : public vkApp::CVulkanInterface
 
 class ShaderVK : public vkApp::CVulkanInterface
 {
-	enum ShaderType : size_t
-	{
-		VERTEX_SHADER,
-		FRAGMENT_SHADER,
-		SHADER_COUNT
-	};
-
 public:
 	ShaderVK( const string &shaderName );
 	virtual ~ShaderVK();
 
 	virtual void Init();
 	virtual void Shutdown();
+
+	virtual void InitVertexInputBindingDescriptions();
+	virtual void InitVertexInputAttributeDescriptions();
 	
 	void cleanupSwapChainElements();
 	void recreateSwapChainElements();
 
-	void createRenderPass();
 	void createDescriptorSetLayout();
+	void createShaderModules();
 	void createGraphicsPipeline();
 
 	virtual void createDescriptorPool( MaterialVK &material );
@@ -83,24 +95,24 @@ public:
 	virtual void InitShaderParams() = 0;
 	virtual VkPipelineDepthStencilStateCreateInfo GetDepthStencilStateInfo();
 	virtual const std::vector< VkDescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() = 0;
-	virtual VkVertexInputBindingDescription GetVertexBindingDescription() = 0;
-	virtual const std::vector< VkVertexInputAttributeDescription > &GetVertexAttributeDescriptions() = 0;
 	virtual const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) = 0; // TODO: Make reference
 	virtual const std::vector< VkPushConstantRange > GetPushConstants() { return {}; }
 	virtual void recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh ) {}
 
 	const std::vector< MaterialParameter_t > &GetMaterialParams() { return m_MaterialParams; }
+	const PipelineContainer &Pipeline() const { return m_Pipeline; }
 
 //protected:
 	std::vector< MaterialParameter_t > m_MaterialParams;
-	//VkRenderPass m_vkRenderPass = VK_NULL_HANDLE;
 	VkDescriptorSetLayout m_vkDescriptorSetLayout = VK_NULL_HANDLE;
-	//VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
-	VkPipelineLayout m_vkPipelineLayout = VK_NULL_HANDLE;
-	VkPipeline m_vkGraphicsPipeline = VK_NULL_HANDLE;
-	//std::vector< VkDescriptorSet > m_vkDescriptorSets;
 
 	string m_ShaderName;
+
+protected:
+	PipelineContainer m_Pipeline;
+
+private:
+	uint32_t computeVertexInputSize();
 };
 
 #endif // SHADEVK_HPP

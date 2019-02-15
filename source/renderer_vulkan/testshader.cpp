@@ -13,12 +13,10 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-Camera g_vkcam( Vector3f( 0.0f, -5.0f, 0.0f ) );
+extern Camera g_vkcam;
 
 static TestShader s_TestShader( "testShader2" );
 extern IEngine *g_pEngine;
-
-TestShaderPushConstants g_tspc;
 
 void TestShader::Init()
 {
@@ -63,48 +61,6 @@ const std::vector< VkDescriptorSetLayoutBinding > &TestShader::GetDescriptorSetL
 	bindings[ 1 ] = samplerLayoutBinding;
 
 	return bindings;
-}
-
-VkVertexInputBindingDescription TestShader::GetVertexBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription = {};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof( Vertex );
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	return bindingDescription;
-}
-
-const std::vector< VkVertexInputAttributeDescription > &TestShader::GetVertexAttributeDescriptions()
-{
-	static std::vector< VkVertexInputAttributeDescription > attributeDescriptions;
-
-	if ( attributeDescriptions.size() > 0 )
-		return attributeDescriptions;
-
-	attributeDescriptions.resize( 4 );
-
-	attributeDescriptions[ 0 ].binding = 0;
-	attributeDescriptions[ 0 ].location = 0;
-	attributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
-
-	attributeDescriptions[ 1 ].binding = 0;
-	attributeDescriptions[ 1 ].location = 1;
-	attributeDescriptions[ 1 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[ 1 ].offset = offsetof( Vertex, color );
-
-	attributeDescriptions[ 2 ].binding = 0;
-	attributeDescriptions[ 2 ].location = 2;
-	attributeDescriptions[ 2 ].format = VK_FORMAT_R32G32_SFLOAT;
-	attributeDescriptions[ 2 ].offset = offsetof( Vertex, texCoord );
-
-	attributeDescriptions[ 3 ].binding = 0;
-	attributeDescriptions[ 3 ].location = 3;
-	attributeDescriptions[ 3 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[ 3 ].offset = offsetof( Vertex, normal );
-
-	return attributeDescriptions;
 }
 
 const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
@@ -161,13 +117,6 @@ const std::vector< VkPushConstantRange > TestShader::GetPushConstants()
 
 void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh )
 {
-	static auto startTime = std::chrono::high_resolution_clock::now();
-	g_vkcam.Update();
-	g_vkcam.UpdateView();
-
-	auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration< float, std::chrono::seconds::period >( currentTime - startTime ).count();
-
 	//Matrix4f model = mesh.GetOwningModel() ? mesh.GetOwningModel()->GetModelMatrix() : Matrix4f( 1.0f );
 	Matrix4f model = glm::translate( Vector3f( 0.0f, -5.0f, 10.0f ) );
 
@@ -177,7 +126,8 @@ void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const Mes
 
 	proj[ 1 ][ 1 ] *= -1.0f;
 
-	g_tspc.mvp = proj * view * model;
+	static TestShaderPushConstants pConstants;
+	pConstants.mvp = proj * view * model;
 
-	vkCmdPushConstants( commandBuffer, m_vkPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( g_tspc ), &g_tspc );
+	vkCmdPushConstants( commandBuffer, Pipeline().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( pConstants ), &pConstants );
 }

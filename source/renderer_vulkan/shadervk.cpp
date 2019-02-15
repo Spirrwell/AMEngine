@@ -2,6 +2,7 @@
 #include "platform.hpp"
 #include "vulkan_helpers.hpp"
 #include "materialvk.hpp"
+#include "vertex.hpp"
 
 #include <fstream>
 
@@ -38,10 +39,13 @@ ShaderVK::~ShaderVK()
 
 void ShaderVK::Init()
 {
+	InitVertexInputBindingDescriptions();
+	InitVertexInputAttributeDescriptions();
+
 	InitShaderParams();
 
-	createRenderPass();
 	createDescriptorSetLayout();
+	createShaderModules();
 	createGraphicsPipeline();
 
 	//createDescriptorPool();
@@ -50,6 +54,15 @@ void ShaderVK::Init()
 
 void ShaderVK::Shutdown()
 {
+	for ( auto &shaderModule : m_Pipeline.ShaderModules )
+	{
+		if ( shaderModule != VK_NULL_HANDLE )
+		{
+			vkDestroyShaderModule( vulkan().device, shaderModule, nullptr );
+			shaderModule = VK_NULL_HANDLE;
+		}
+	}
+
 	cleanupSwapChainElements();
 
 	/*if ( m_vkDescriptorPool != VK_NULL_HANDLE )
@@ -65,19 +78,53 @@ void ShaderVK::Shutdown()
 	}
 }
 
+void ShaderVK::InitVertexInputBindingDescriptions()
+{
+	m_Pipeline.VertexInputBindingDescriptions.resize( 1 );
+
+	m_Pipeline.VertexInputBindingDescriptions[ 0 ].binding = 0;
+	m_Pipeline.VertexInputBindingDescriptions[ 0 ].stride = computeVertexInputSize();
+	m_Pipeline.VertexInputBindingDescriptions[ 0 ].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+}
+
+void ShaderVK::InitVertexInputAttributeDescriptions()
+{
+	m_Pipeline.VertexInputAttributeDescriptions.resize( 4 );
+
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].binding = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].location = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
+
+	m_Pipeline.VertexInputAttributeDescriptions[ 1 ].binding = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 1 ].location = 1;
+	m_Pipeline.VertexInputAttributeDescriptions[ 1 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+	m_Pipeline.VertexInputAttributeDescriptions[ 1 ].offset = offsetof( Vertex, color );
+
+	m_Pipeline.VertexInputAttributeDescriptions[ 2 ].binding = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 2 ].location = 2;
+	m_Pipeline.VertexInputAttributeDescriptions[ 2 ].format = VK_FORMAT_R32G32_SFLOAT;
+	m_Pipeline.VertexInputAttributeDescriptions[ 2 ].offset = offsetof( Vertex, texCoord );
+
+	m_Pipeline.VertexInputAttributeDescriptions[ 3 ].binding = 0;
+	m_Pipeline.VertexInputAttributeDescriptions[ 3 ].location = 3;
+	m_Pipeline.VertexInputAttributeDescriptions[ 3 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+	m_Pipeline.VertexInputAttributeDescriptions[ 3 ].offset = offsetof( Vertex, normal );
+}
+
 void ShaderVK::cleanupSwapChainElements()
 {
 	// Swap Chain
-	if ( m_vkGraphicsPipeline != VK_NULL_HANDLE )
+	if ( m_Pipeline.Pipeline != VK_NULL_HANDLE )
 	{
-		vkDestroyPipeline( vulkan().device, m_vkGraphicsPipeline, nullptr );
-		m_vkGraphicsPipeline = VK_NULL_HANDLE;
+		vkDestroyPipeline( vulkan().device, m_Pipeline.Pipeline, nullptr );
+		m_Pipeline.Pipeline = VK_NULL_HANDLE;
 	}
 
-	if ( m_vkPipelineLayout != VK_NULL_HANDLE )
+	if ( m_Pipeline.PipelineLayout != VK_NULL_HANDLE )
 	{
-		vkDestroyPipelineLayout( vulkan().device, m_vkPipelineLayout, nullptr );
-		m_vkPipelineLayout = VK_NULL_HANDLE;
+		vkDestroyPipelineLayout( vulkan().device, m_Pipeline.PipelineLayout, nullptr );
+		m_Pipeline.PipelineLayout = VK_NULL_HANDLE;
 	}
 
 	/*if ( m_vkRenderPass != VK_NULL_HANDLE )
@@ -90,68 +137,7 @@ void ShaderVK::cleanupSwapChainElements()
 void ShaderVK::recreateSwapChainElements()
 {
 	cleanupSwapChainElements();
-
-	createRenderPass();
 	createGraphicsPipeline();
-}
-
-void ShaderVK::createRenderPass()
-{
-	/*VkAttachmentDescription colorAttachment = {};
-	colorAttachment.format = vulkan().swapChainImageFormat;
-	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-	VkAttachmentReference colorAttachmentRef = {};
-	colorAttachmentRef.attachment = 0;
-	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentDescription depthAttachment = {};
-	depthAttachment.format = VulkanApp().findDepthFormat();
-	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference depthAttachmentRef = {};
-	depthAttachmentRef.attachment = 1;
-	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-	VkSubpassDescription subpass = {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = 1;
-	subpass.pColorAttachments = &colorAttachmentRef;
-	subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-	VkSubpassDependency dependency = {};
-	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependency.dstSubpass = 0;
-	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependency.srcAccessMask = 0;
-	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-	std::array< VkAttachmentDescription, 2 > attachments = { colorAttachment, depthAttachment };
-	VkRenderPassCreateInfo renderPassInfo = {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = static_cast< uint32_t >( attachments.size() );
-	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpass;
-
-	renderPassInfo.dependencyCount = 1;
-	renderPassInfo.pDependencies = &dependency;
-
-	if ( vkCreateRenderPass( vulkan().device, &renderPassInfo, nullptr, &m_vkRenderPass ) != VK_SUCCESS )
-		throw std::runtime_error( "[Vulkan]Failed to create render pass." );*/
 }
 
 void ShaderVK::createDescriptorSetLayout()
@@ -167,7 +153,7 @@ void ShaderVK::createDescriptorSetLayout()
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor set layout!\n" );
 }
 
-void ShaderVK::createGraphicsPipeline()
+void ShaderVK::createShaderModules()
 {
 	std::vector< std::byte > shaderCode[ SHADER_COUNT ] =
 	{
@@ -178,26 +164,27 @@ void ShaderVK::createGraphicsPipeline()
 	for ( const auto &shader : shaderCode )
 		if ( shader.empty() ) throw std::runtime_error( "[Vulkan]Failed to read byte code for shader \"" + m_ShaderName + "\"" );
 
-	VkShaderModule shaderModules[ SHADER_COUNT ] = { VK_NULL_HANDLE, VK_NULL_HANDLE };
-
 	for ( size_t i = 0; i < SHADER_COUNT; ++i )
 	{
-		shaderModules[ i ] = VulkanApp().createShaderModule( shaderCode[ i ] );
+		m_Pipeline.ShaderModules[ i ] = VulkanApp().createShaderModule( shaderCode[ i ] );
 
-		if ( shaderModules[ i ] == VK_NULL_HANDLE )
+		if ( m_Pipeline.ShaderModules[ i ] == VK_NULL_HANDLE )
 			throw std::runtime_error( "[Vulkan]Failed to create shader modules for shader \"" + m_ShaderName + "\"" );
 	}
+}
 
+void ShaderVK::createGraphicsPipeline()
+{
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderStageInfo.module = shaderModules[ VERTEX_SHADER ];
+	vertShaderStageInfo.module = m_Pipeline.ShaderModules[ VERTEX_SHADER ];
 	vertShaderStageInfo.pName = "main";
 
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = shaderModules[ FRAGMENT_SHADER ];
+	fragShaderStageInfo.module = m_Pipeline.ShaderModules[ FRAGMENT_SHADER ];
 	fragShaderStageInfo.pName = "main";
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
@@ -205,14 +192,11 @@ void ShaderVK::createGraphicsPipeline()
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-	auto bindingDescription = GetVertexBindingDescription();
-	const auto &attributeDescriptions = GetVertexAttributeDescriptions();
+	vertexInputInfo.vertexBindingDescriptionCount = static_cast< uint32_t >( m_Pipeline.VertexInputBindingDescriptions.size() );
+	vertexInputInfo.pVertexBindingDescriptions = m_Pipeline.VertexInputBindingDescriptions.data();
 
-	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast< uint32_t >( attributeDescriptions.size() );
-	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast< uint32_t >( m_Pipeline.VertexInputAttributeDescriptions.size() );
+	vertexInputInfo.pVertexAttributeDescriptions = m_Pipeline.VertexInputAttributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -299,17 +283,8 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineLayoutInfo.pushConstantRangeCount = static_cast< uint32_t >( pushConstantRanges.size() );
 	pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges.data();
 
-	auto destroyShaderModules = [ & ]()
-	{
-		for ( auto &shaderModule : shaderModules )
-			vkDestroyShaderModule( vulkan().device, shaderModule, nullptr );
-	};
-
-	if ( vkCreatePipelineLayout( vulkan().device, &pipelineLayoutInfo, nullptr, &m_vkPipelineLayout ) != VK_SUCCESS )
-	{
-		destroyShaderModules();
+	if ( vkCreatePipelineLayout( vulkan().device, &pipelineLayoutInfo, nullptr, &m_Pipeline.PipelineLayout ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
-	}
 
 	VkPipelineDepthStencilStateCreateInfo depthStencil = GetDepthStencilStateInfo();
 
@@ -325,20 +300,14 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineInfo.pDepthStencilState = &depthStencil;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = nullptr; // Optional
-	pipelineInfo.layout = m_vkPipelineLayout;
-	//pipelineInfo.renderPass = m_vkRenderPass;
+	pipelineInfo.layout = m_Pipeline.PipelineLayout;
 	pipelineInfo.renderPass = vulkan().renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
 
-	if ( vkCreateGraphicsPipelines( vulkan().device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_vkGraphicsPipeline ) != VK_SUCCESS )
-	{
-		destroyShaderModules();
+	if ( vkCreateGraphicsPipelines( vulkan().device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline.Pipeline ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
-	}
-
-	destroyShaderModules();
 }
 
 void ShaderVK::createDescriptorPool( MaterialVK &material )
@@ -400,4 +369,9 @@ VkPipelineDepthStencilStateCreateInfo ShaderVK::GetDepthStencilStateInfo()
 	depthStencil.back = {}; // Optional
 
 	return depthStencil;
+}
+
+uint32_t ShaderVK::computeVertexInputSize()
+{
+	return static_cast< uint32_t >( sizeof( Vertex ) );
 }

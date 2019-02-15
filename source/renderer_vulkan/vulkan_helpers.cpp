@@ -19,11 +19,13 @@
 #include <set>
 #include <chrono>
 #include "testshader.hpp"
+#include "camera.hpp"
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-extern TestShaderPushConstants g_tspc;
+Camera g_vkcam( Vector3f( 0.0f, -5.0f, 0.0f ) );
+
 static std::vector< Vector3f > skyboxVertices = {
 	// positions
 	{ -1.0f,  1.0f, -1.0f },
@@ -486,6 +488,9 @@ namespace vkApp
 			return;
 		}
 
+		g_vkcam.Update();
+		g_vkcam.UpdateView();
+
 		recordCommandBuffer( imageIndex );
 
 		VkSemaphore waitSemaphores[] = { vulkan().imageAvailableSemaphores[ currentFrame ] };
@@ -543,7 +548,7 @@ namespace vkApp
 
 	void VulkanApp::updateUniformBuffer( const uint32_t &currentImage )
 	{
-		static auto startTime = std::chrono::high_resolution_clock::now();
+		/*static auto startTime = std::chrono::high_resolution_clock::now();
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration< float, std::chrono::seconds::period >( currentTime - startTime ).count();
@@ -560,7 +565,7 @@ namespace vkApp
 		void *pData = nullptr;
 		vkMapMemory( vulkan().device, vulkan().uniformBuffersMemory[ currentImage ], 0, sizeof( ubo ), 0, &pData );
 			std::memcpy( pData, &ubo, sizeof( ubo ) );
-		vkUnmapMemory( vulkan().device, vulkan().uniformBuffersMemory[ currentImage ] );
+		vkUnmapMemory( vulkan().device, vulkan().uniformBuffersMemory[ currentImage ] );*/
 	}
 
 #if VULKAN_VALIDATION_LAYERS
