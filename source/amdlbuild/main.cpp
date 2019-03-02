@@ -51,7 +51,7 @@ void WriteAMDLFile( const AMDLModel &model, const string &output )
 
 	for ( uint32_t i = 0; i < numMaterialPaths; ++i )
 	{
-		uint32_t pathLen = static_cast< uint32_t >( model.materialPaths[ 0 ].size() );
+		uint32_t pathLen = static_cast< uint32_t >( model.materialPaths[ i ].size() );
 		amdlFile.write( ( char* )&pathLen, sizeof( pathLen ) );
 		amdlFile.write( model.materialPaths[ i ].data(), static_cast< std::streamsize >( pathLen ) );
 	}
