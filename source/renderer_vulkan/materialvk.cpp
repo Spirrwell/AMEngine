@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <filesystem>
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
@@ -41,10 +42,10 @@ void MaterialVK::Shutdown()
 
 	m_mapTextures.clear();
 
-	if ( m_vkDescriptorPool != VK_NULL_HANDLE )
+	if ( m_vkDescriptorPool )
 	{
-		vkDestroyDescriptorPool( vulkan().device, m_vkDescriptorPool, nullptr );
-		m_vkDescriptorPool = VK_NULL_HANDLE;
+		vulkan().device.destroyDescriptorPool( m_vkDescriptorPool, nullptr );
+		m_vkDescriptorPool = nullptr;
 	}
 }
 
@@ -119,7 +120,12 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 							case MATP_SKYTEXTURE:
 							{
 								TextureVK *pTexture = new TextureVK;
-								std::array < string, 6 > faces =
+//								string skyKtx = string( GAME_DIR ) + tokens[ 1 ];
+								std::filesystem::path texPath = GAME_DIR;
+								texPath += tokens[ 1 ];
+								pTexture->LoadKtx( texPath );
+
+								/*std::array < string, 6 > faces =
 								{
 									string( GAME_DIR ) + tokens[ 1 ] + "_right.jpg",
 									string( GAME_DIR ) + tokens[ 1 ] + "_left.jpg",
@@ -127,8 +133,9 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 									string( GAME_DIR ) + tokens[ 1 ] + "_bottom.jpg",
 									string( GAME_DIR ) + tokens[ 1 ] + "_back.jpg",
 									string( GAME_DIR ) + tokens[ 1 ] + "_front.jpg"
-								};
-								pTexture->Load( faces );
+								};*/
+								//pTexture->Load( faces );
+								
 								m_mapTextures[ matParam.parameterName ] = pTexture;
 								break;
 							}

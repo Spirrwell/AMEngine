@@ -18,7 +18,7 @@ void SkyShaderVK::InitVertexInputAttributeDescriptions()
 
 	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].binding = 0;
 	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].location = 0;
-	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
+	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].format = vk::Format::eR32G32B32Sfloat;
 	m_Pipeline.VertexInputAttributeDescriptions[ 0 ].offset = offsetof( Vertex, pos );
 }
 
@@ -27,43 +27,46 @@ void SkyShaderVK::InitShaderParams()
 	m_MaterialParams.push_back( MaterialParameter_t { "skybox", MATP_SKYTEXTURE } );
 }
 
-VkPipelineDepthStencilStateCreateInfo SkyShaderVK::GetDepthStencilStateInfo()
+vk::PipelineDepthStencilStateCreateInfo SkyShaderVK::GetDepthStencilStateInfo()
 {
-	VkPipelineDepthStencilStateCreateInfo depthStencil = ShaderVK::GetDepthStencilStateInfo();
-	depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+	vk::PipelineDepthStencilStateCreateInfo depthStencil = ShaderVK::GetDepthStencilStateInfo();
+	depthStencil.depthCompareOp = vk::CompareOp::eLessOrEqual;
 
 	return depthStencil;
 }
 
 void SkyShaderVK::createDescriptorPool( MaterialVK &material )
 {
-	std::array< VkDescriptorPoolSize, 1 > poolSizes = {};
-	poolSizes[ 0 ].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	std::array< vk::DescriptorPoolSize, 1 > poolSizes;
+	poolSizes[ 0 ].type = vk::DescriptorType::eCombinedImageSampler;
 	poolSizes[ 0 ].descriptorCount = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 
-	VkDescriptorPoolCreateInfo poolInfo = {};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	vk::DescriptorPoolCreateInfo poolInfo = {};
 	poolInfo.poolSizeCount = static_cast< uint32_t >( poolSizes.size() );
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 
-	if ( vkCreateDescriptorPool( vulkan().device, &poolInfo, nullptr, &material.m_vkDescriptorPool ) != VK_SUCCESS )
+	auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr );
+
+	if ( result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
+
+	material.m_vkDescriptorPool = std::move( descriptorPool );
 }
 
-const std::vector< VkDescriptorSetLayoutBinding > &SkyShaderVK::GetDescriptorSetLayoutBindings()
+const std::vector< vk::DescriptorSetLayoutBinding > &SkyShaderVK::GetDescriptorSetLayoutBindings()
 {
-	static std::vector< VkDescriptorSetLayoutBinding > bindings;
+	static std::vector< vk::DescriptorSetLayoutBinding > bindings;
 
 	if ( bindings.size() > 0 )
 		return bindings;
 
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+	vk::DescriptorSetLayoutBinding samplerLayoutBinding;
 	samplerLayoutBinding.binding = 0;
 	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
 
 	bindings.resize( 1 );
 	bindings[ 0 ] = samplerLayoutBinding;
@@ -71,10 +74,10 @@ const std::vector< VkDescriptorSetLayoutBinding > &SkyShaderVK::GetDescriptorSet
 	return bindings;
 }
 
-const std::vector< VkWriteDescriptorSet > SkyShaderVK::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
+const std::vector< vk::WriteDescriptorSet > SkyShaderVK::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
 {
-	static VkDescriptorImageInfo imageInfo = {};
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	static vk::DescriptorImageInfo imageInfo = {};
+	imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
 	TextureVK *pTexture = material.GetTexture( "skybox" );
 
@@ -84,14 +87,13 @@ const std::vector< VkWriteDescriptorSet > SkyShaderVK::GetDescriptorWrites( Mate
 		imageInfo.sampler = pTexture->Sampler();
 	}
 
-	std::vector< VkWriteDescriptorSet > descriptorWrites = {};
+	std::vector< vk::WriteDescriptorSet > descriptorWrites;
 	descriptorWrites.resize( 1 );
 
-	descriptorWrites[ 0 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[ 0 ].dstSet = material.m_vkDescriptorSets[ imageIndex ];
 	descriptorWrites[ 0 ].dstBinding = 0;
 	descriptorWrites[ 0 ].dstArrayElement = 0;
-	descriptorWrites[ 0 ].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptorWrites[ 0 ].descriptorType = vk::DescriptorType::eCombinedImageSampler;
 	descriptorWrites[ 0 ].descriptorCount = 1;
 	descriptorWrites[ 0 ].pImageInfo = &imageInfo;
 	descriptorWrites[ 0 ].pTexelBufferView = nullptr; // Optional
@@ -99,18 +101,18 @@ const std::vector< VkWriteDescriptorSet > SkyShaderVK::GetDescriptorWrites( Mate
 	return descriptorWrites;
 }
 
-const std::vector< VkPushConstantRange > SkyShaderVK::GetPushConstants()
+const std::vector< vk::PushConstantRange > SkyShaderVK::GetPushConstants()
 {
-	VkPushConstantRange pushConstantRange = {};
+	vk::PushConstantRange pushConstantRange;
 	pushConstantRange.offset = 0;
 	pushConstantRange.size = sizeof( SkyShaderPushConstants );
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
 
-	std::vector< VkPushConstantRange > pushRanges = { pushConstantRange };
+	std::vector< vk::PushConstantRange > pushRanges = { pushConstantRange };
 	return pushRanges;
 }
 
-void SkyShaderVK::recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh )
+void SkyShaderVK::recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const MeshVK &mesh )
 {
 	Matrix4f view = Matrix4f( Matrix3f( g_vkcam.GetViewMatrix() ) );
 	Matrix4f proj = glm::perspective( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 1000.0f );
@@ -121,5 +123,5 @@ void SkyShaderVK::recordToCommandBuffer( VkCommandBuffer commandBuffer, const Me
 	pConstants.view = view;
 	pConstants.projection = proj;
 
-	vkCmdPushConstants( commandBuffer, Pipeline().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( pConstants ), &pConstants );
+	commandBuffer.pushConstants( Pipeline().PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof( pConstants ), &pConstants );
 }

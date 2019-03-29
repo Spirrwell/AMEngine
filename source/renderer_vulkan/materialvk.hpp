@@ -29,8 +29,8 @@ public:
     TextureVK *GetTexture( const string &matParamName );
     ShaderVK *GetShader() const { return m_pShader; }
 
-    std::vector< VkDescriptorSet > m_vkDescriptorSets;
-	VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
+    std::vector< vk::DescriptorSet > m_vkDescriptorSets;
+	vk::DescriptorPool m_vkDescriptorPool;
 
 private:
     ShaderVK *m_pShader = nullptr;

@@ -35,26 +35,26 @@ void TestShader::InitShaderParams()
 	m_MaterialParams.push_back( MaterialParameter_t { "diffuse", MATP_TEXTURE, "textures/shader/error.png" } );
 }
 
-const std::vector< VkDescriptorSetLayoutBinding > &TestShader::GetDescriptorSetLayoutBindings()
+const std::vector< vk::DescriptorSetLayoutBinding > &TestShader::GetDescriptorSetLayoutBindings()
 {
-	static std::vector< VkDescriptorSetLayoutBinding > bindings;
+	static std::vector< vk::DescriptorSetLayoutBinding > bindings;
 
 	if ( bindings.size() > 0 )
 		return bindings;
 
-	VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+	vk::DescriptorSetLayoutBinding uboLayoutBinding;
 	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
 	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	uboLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
 	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+	vk::DescriptorSetLayoutBinding samplerLayoutBinding;
 	samplerLayoutBinding.binding = 1;
 	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
 
 	bindings.resize( 2 );
 	bindings[ 0 ] = uboLayoutBinding;
@@ -63,15 +63,15 @@ const std::vector< VkDescriptorSetLayoutBinding > &TestShader::GetDescriptorSetL
 	return bindings;
 }
 
-const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
+const std::vector< vk::WriteDescriptorSet > TestShader::GetDescriptorWrites( MaterialVK &material, size_t imageIndex )
 {
-	static VkDescriptorBufferInfo bufferInfo = {};
+	static vk::DescriptorBufferInfo bufferInfo;
 	bufferInfo.buffer = m_UBO.uniformBuffer[ imageIndex ];
 	bufferInfo.offset = 0;
 	bufferInfo.range = sizeof( m_UBO.UBO );
 
-	static VkDescriptorImageInfo imageInfo = {};
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	static vk::DescriptorImageInfo imageInfo;
+	imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
 	TextureVK *pTexture = material.GetTexture( "diffuse" );
 
@@ -81,22 +81,20 @@ const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( Mater
 		imageInfo.sampler = pTexture->Sampler();
 	}
 
-	std::vector< VkWriteDescriptorSet > descriptorWrites = {};
+	std::vector< vk::WriteDescriptorSet > descriptorWrites = {};
 	descriptorWrites.resize( 2 );
 
-	descriptorWrites[ 0 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[ 0 ].dstSet = material.m_vkDescriptorSets[ imageIndex ];
 	descriptorWrites[ 0 ].dstBinding = 0;
 	descriptorWrites[ 0 ].dstArrayElement = 0;
-	descriptorWrites[ 0 ].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	descriptorWrites[ 0 ].descriptorType = vk::DescriptorType::eUniformBuffer;
 	descriptorWrites[ 0 ].descriptorCount = 1;
 	descriptorWrites[ 0 ].pBufferInfo = &bufferInfo;
 
-	descriptorWrites[ 1 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[ 1 ].dstSet = material.m_vkDescriptorSets[ imageIndex ];
 	descriptorWrites[ 1 ].dstBinding = 1;
 	descriptorWrites[ 1 ].dstArrayElement = 0;
-	descriptorWrites[ 1 ].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptorWrites[ 1 ].descriptorType = vk::DescriptorType::eCombinedImageSampler;
 	descriptorWrites[ 1 ].descriptorCount = 1;
 	descriptorWrites[ 1 ].pImageInfo = &imageInfo;
 	descriptorWrites[ 1 ].pTexelBufferView = nullptr; // Optional
@@ -104,18 +102,18 @@ const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( Mater
 	return descriptorWrites;
 }
 
-const std::vector< VkPushConstantRange > TestShader::GetPushConstants()
+const std::vector< vk::PushConstantRange > TestShader::GetPushConstants()
 {
-	VkPushConstantRange pushConstantRange = {};
+	vk::PushConstantRange pushConstantRange;
 	pushConstantRange.offset = 0;
 	pushConstantRange.size = sizeof( MVPUniform );
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
 
-	std::vector< VkPushConstantRange > pushRanges = { pushConstantRange };
+	std::vector< vk::PushConstantRange > pushRanges = { pushConstantRange };
 	return pushRanges;
 }
 
-void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const MeshVK &mesh )
+void TestShader::recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const MeshVK &mesh )
 {
 	//Matrix4f model = mesh.GetOwningModel() ? mesh.GetOwningModel()->GetModelMatrix() : Matrix4f( 1.0f );
 	Matrix4f model = glm::translate( Vector3f( 0.0f, -5.0f, 10.0f ) );
@@ -129,5 +127,5 @@ void TestShader::recordToCommandBuffer( VkCommandBuffer commandBuffer, const Mes
 	static TestShaderPushConstants pConstants;
 	pConstants.mvp = proj * view * model;
 
-	vkCmdPushConstants( commandBuffer, Pipeline().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( pConstants ), &pConstants );
+	commandBuffer.pushConstants( Pipeline().PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof( pConstants ), &pConstants );
 }

@@ -39,85 +39,89 @@ MeshVK::~MeshVK()
 void MeshVK::Shutdown()
 {
 	if ( m_vkSecondaryCommandBuffers.size() > 0 )
-		vkFreeCommandBuffers( vulkan().device, m_vkCommandPool, static_cast< uint32_t >( m_vkSecondaryCommandBuffers.size() ), m_vkSecondaryCommandBuffers.data() );
+		vulkan().device.freeCommandBuffers( m_vkCommandPool, static_cast< uint32_t >( m_vkSecondaryCommandBuffers.size() ), m_vkSecondaryCommandBuffers.data() );
 
 	m_vkSecondaryCommandBuffers.clear();
 
-	if ( m_vkCommandPool != VK_NULL_HANDLE )
+	if ( m_vkCommandPool )
 	{
-		vkDestroyCommandPool( vulkan().device, m_vkCommandPool, nullptr );
-		m_vkCommandPool = VK_NULL_HANDLE;
+		vulkan().device.destroyCommandPool( m_vkCommandPool, nullptr );
+		m_vkCommandPool = nullptr;
 	}
 
-	if ( m_vkIndexBuffer != VK_NULL_HANDLE )
+	if ( m_vkIndexBuffer )
 	{
-		vkDestroyBuffer( vulkan().device, m_vkIndexBuffer, nullptr );
-		m_vkIndexBuffer = VK_NULL_HANDLE;
+		vulkan().device.destroyBuffer( m_vkIndexBuffer, nullptr );
+		m_vkIndexBuffer = nullptr;
 	}
 
-	if ( m_vkIndexBufferMemory != VK_NULL_HANDLE )
+	if ( m_vkIndexBufferMemory )
 	{
-		vkFreeMemory( vulkan().device, m_vkIndexBufferMemory, nullptr );
-		m_vkIndexBufferMemory = VK_NULL_HANDLE;
+		vulkan().device.freeMemory( m_vkIndexBufferMemory, nullptr );
+		m_vkIndexBufferMemory = nullptr;
 	}
 
-	if ( m_vkVertexBuffer != VK_NULL_HANDLE )
+	if ( m_vkVertexBuffer )
 	{
-		vkDestroyBuffer( vulkan().device, m_vkVertexBuffer, nullptr );
-		m_vkVertexBuffer = VK_NULL_HANDLE;
+		vulkan().device.destroyBuffer( m_vkVertexBuffer, nullptr );
+		m_vkVertexBuffer = nullptr;
 	}
 
-	if ( m_vkVertexBufferMemory != VK_NULL_HANDLE )
+	if ( m_vkVertexBufferMemory )
 	{
-		vkFreeMemory( vulkan().device, m_vkVertexBufferMemory, nullptr );
-		m_vkVertexBufferMemory = VK_NULL_HANDLE;
+		vulkan().device.freeMemory( m_vkVertexBufferMemory, nullptr );
+		m_vkVertexBufferMemory = nullptr;
 	}
 }
 
-void MeshVK::Draw( VkCommandBuffer commandBuffer, const uint32_t &imageIndex )
+void MeshVK::Draw( vk::CommandBuffer &commandBuffer, const uint32_t &imageIndex )
 {
 	return;
 	ShaderVK *pShader = m_pMaterial->GetShader();
 
 	// We assume that we're already in the render pass (vkCmdBeginRenderPass)
-	vkCmdBindPipeline( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pShader->Pipeline().Pipeline );
-	VkBuffer vertexBuffers[] = { m_vkVertexBuffer };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers( commandBuffer, 0, 1, vertexBuffers, offsets );
+	commandBuffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().Pipeline );
+	vk::Buffer vertexBuffers[] = { m_vkVertexBuffer };
+	vk::DeviceSize offsets[] = { 0 };
+	commandBuffer.bindVertexBuffers( 0, 1, vertexBuffers, offsets );
 	if ( m_iDrawType == DT_DrawElements )
-		vkCmdBindIndexBuffer( commandBuffer, m_vkIndexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+		commandBuffer.bindIndexBuffer( m_vkIndexBuffer, 0, vk::IndexType::eUint32 );
 	pShader->recordToCommandBuffer( commandBuffer, *this );
-	vkCmdBindDescriptorSets( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pShader->Pipeline().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
+	commandBuffer.bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
 	if ( m_iDrawType == DT_DrawElements )
-		vkCmdDrawIndexed( commandBuffer, static_cast< uint32_t >( m_Indices.size() ), 1, 0, 0, 0 );
+		commandBuffer.drawIndexed( static_cast< uint32_t >( m_Indices.size() ), 1, 0, 0, 0 );
 	else
-		vkCmdDraw( commandBuffer, static_cast< uint32_t >( m_Vertices.size() ), 1, 0, 0 );
+		commandBuffer.draw( static_cast< uint32_t >( m_Vertices.size() ), 1, 0, 0 );
 
 }
 
-const VkCommandBuffer &MeshVK::RecordSecondaryCommandBuffers( VkCommandBufferInheritanceInfo inheritanceInfo, const uint32_t &imageIndex )
+const vk::CommandBuffer &MeshVK::RecordSecondaryCommandBuffers( vk::CommandBufferInheritanceInfo inheritanceInfo, const uint32_t &imageIndex )
 {
 	ShaderVK *pShader = m_pMaterial->GetShader();
 
-	VkCommandBufferBeginInfo beginInfo = {};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+	vk::CommandBufferBeginInfo beginInfo;
+	beginInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse | vk::CommandBufferUsageFlagBits::eRenderPassContinue;
 	beginInfo.pInheritanceInfo = &inheritanceInfo;
 
-	vkBeginCommandBuffer( m_vkSecondaryCommandBuffers[ imageIndex ], &beginInfo );
-		vkCmdBindPipeline( m_vkSecondaryCommandBuffers[ imageIndex ], VK_PIPELINE_BIND_POINT_GRAPHICS, pShader->Pipeline().Pipeline );
-		VkBuffer vertexBuffers[] = { m_vkVertexBuffer };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers( m_vkSecondaryCommandBuffers[ imageIndex ], 0, 1, vertexBuffers, offsets );
+	m_vkSecondaryCommandBuffers[ imageIndex ].begin( beginInfo );
+		m_vkSecondaryCommandBuffers[ imageIndex ].bindPipeline( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().Pipeline );
+
+		vk::Buffer vertexBuffers[] = { m_vkVertexBuffer };
+		vk::DeviceSize offsets[] = { 0 };
+
+		m_vkSecondaryCommandBuffers[ imageIndex ].bindVertexBuffers( 0, 1, vertexBuffers, offsets );
+
 		if ( m_iDrawType == DT_DrawElements )
-			vkCmdBindIndexBuffer( m_vkSecondaryCommandBuffers[ imageIndex ], m_vkIndexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+			m_vkSecondaryCommandBuffers[ imageIndex ].bindIndexBuffer( m_vkIndexBuffer, 0, vk::IndexType::eUint32 );
+
 		pShader->recordToCommandBuffer( m_vkSecondaryCommandBuffers[ imageIndex ], *this );
-		vkCmdBindDescriptorSets( m_vkSecondaryCommandBuffers[ imageIndex ], VK_PIPELINE_BIND_POINT_GRAPHICS, pShader->Pipeline().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
+		m_vkSecondaryCommandBuffers[ imageIndex ].bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
+
 		if ( m_iDrawType == DT_DrawElements )
-			vkCmdDrawIndexed( m_vkSecondaryCommandBuffers[ imageIndex ], static_cast< uint32_t >( m_Indices.size() ), 1, 0, 0, 0 );
+			m_vkSecondaryCommandBuffers[ imageIndex ].drawIndexed( static_cast< uint32_t >( m_Indices.size() ), 1, 0, 0, 0 );
 		else
-			vkCmdDraw( m_vkSecondaryCommandBuffers[ imageIndex ], static_cast< uint32_t >( m_Vertices.size() ), 1, 0, 0 );
-	vkEndCommandBuffer( m_vkSecondaryCommandBuffers[ imageIndex ] );
+			m_vkSecondaryCommandBuffers[ imageIndex ].draw( static_cast< uint32_t >( m_Vertices.size() ), 1, 0, 0 );
+	m_vkSecondaryCommandBuffers[ imageIndex ].end();
 
 	return m_vkSecondaryCommandBuffers[ imageIndex ];
 }
@@ -127,24 +131,24 @@ void MeshVK::createVertexBuffer()
 	if ( m_Vertices.size() == 0 )
 		return;
 
-	VkDeviceSize bufferSize = sizeof( m_Vertices[ 0 ] ) * m_Vertices.size();
+	vk::DeviceSize bufferSize = sizeof( m_Vertices[ 0 ] ) * m_Vertices.size();
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
+	vk::Buffer stagingBuffer;
+	vk::DeviceMemory stagingBufferMemory;
 	
-	VulkanApp().createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
+	VulkanApp().createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
 
 	void *pData = nullptr;
 
-	vkMapMemory( vulkan().device, stagingBufferMemory, 0, bufferSize, 0, &pData );
+	vulkan().device.mapMemory( stagingBufferMemory, 0, bufferSize, vk::MemoryMapFlags(), &pData );
 		std::memcpy( pData, m_Vertices.data(), static_cast< size_t >( bufferSize ) );
-	vkUnmapMemory( vulkan().device, stagingBufferMemory );
+	vulkan().device.unmapMemory( stagingBufferMemory );
 
-	VulkanApp().createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vkVertexBuffer, m_vkVertexBufferMemory );
+	VulkanApp().createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_vkVertexBuffer, m_vkVertexBufferMemory );
 	VulkanApp().copyBuffer( stagingBuffer, m_vkVertexBuffer, bufferSize );
 
-	vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
-	vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
+	vulkan().device.destroyBuffer( stagingBuffer, nullptr );
+	vulkan().device.freeMemory( stagingBufferMemory, nullptr );
 }
 
 void MeshVK::createIndexBuffer()
@@ -152,48 +156,54 @@ void MeshVK::createIndexBuffer()
 	if ( m_Indices.size() == 0 )
 		return;
 
-	VkDeviceSize bufferSize = sizeof( m_Indices[ 0 ] ) * m_Indices.size();
+	vk::DeviceSize bufferSize = sizeof( m_Indices[ 0 ] ) * m_Indices.size();
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	VulkanApp().createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
+	vk::Buffer stagingBuffer;
+	vk::DeviceMemory stagingBufferMemory;
+	VulkanApp().createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
 
 	void *pData = nullptr;
 
-	vkMapMemory( vulkan().device, stagingBufferMemory, 0, bufferSize, 0, &pData );
+	vulkan().device.mapMemory( stagingBufferMemory, 0, bufferSize, vk::MemoryMapFlags(), &pData );
 		std::memcpy( pData, m_Indices.data(), static_cast< size_t >( bufferSize ) );
-	vkUnmapMemory( vulkan().device, stagingBufferMemory );
+	vulkan().device.unmapMemory( stagingBufferMemory );
 
-	VulkanApp().createBuffer( bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vkIndexBuffer, m_vkIndexBufferMemory );
+	VulkanApp().createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_vkIndexBuffer, m_vkIndexBufferMemory );
 	VulkanApp().copyBuffer( stagingBuffer, m_vkIndexBuffer, bufferSize );
 
-	vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
-	vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
+	vulkan().device.destroyBuffer( stagingBuffer, nullptr );
+	vulkan().device.freeMemory( stagingBufferMemory, nullptr );
 }
 
 void MeshVK::createCommandPool()
 {
 	auto queueFamilyIndices = VulkanApp().findQueueFamilies( vulkan().physicalDevice );
 
-	VkCommandPoolCreateInfo poolInfo = {};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	vk::CommandPoolCreateInfo poolInfo;
 	poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	poolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
-	if ( vkCreateCommandPool( vulkan().device, &poolInfo, nullptr, &m_vkCommandPool ) != VK_SUCCESS )
+	auto[ result, commandPool ] = vulkan().device.createCommandPool( poolInfo, nullptr );
+
+	if ( result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create command pool." );
+
+	m_vkCommandPool = std::move( commandPool );
 }
 
 void MeshVK::allocateSecondaryCommandBuffers()
 {
-	m_vkSecondaryCommandBuffers.resize( vulkan().swapChainFramebuffers.size(), VK_NULL_HANDLE );
+	m_vkSecondaryCommandBuffers.resize( vulkan().swapChainFramebuffers.size(), nullptr );
 
-	VkCommandBufferAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	vk::CommandBufferAllocateInfo allocInfo = {};
 	allocInfo.commandPool = m_vkCommandPool;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+	allocInfo.level = vk::CommandBufferLevel::eSecondary;
 	allocInfo.commandBufferCount = static_cast< uint32_t >( vulkan().swapChainFramebuffers.size() );
 
-	if ( vkAllocateCommandBuffers( vulkan().device, &allocInfo, m_vkSecondaryCommandBuffers.data() ) != VK_SUCCESS )
+	auto[ result, commandBuffers ] = vulkan().device.allocateCommandBuffers( allocInfo );
+
+	if ( result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
+
+	m_vkSecondaryCommandBuffers = std::move( commandBuffers );
 }

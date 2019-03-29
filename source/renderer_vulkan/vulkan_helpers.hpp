@@ -22,57 +22,58 @@ namespace vkApp
 	// Our Vulkan variables\info will be stored here
 	struct vulkanContainer
 	{
-		std::vector< VkExtensionProperties > extensions;
+		std::vector< vk::ExtensionProperties > extensions;
 		const std::vector< const char * > deviceExtensions =
 		{
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
 
-		VkInstance instance = VK_NULL_HANDLE;
+		vk::Instance instance;
 
 #if VULKAN_VALIDATION_LAYERS
-		VkDebugUtilsMessengerEXT debugCallback = VK_NULL_HANDLE;
+		vk::DebugUtilsMessengerEXT debugCallback;
 
 		const std::vector< const char * > validationLayers =
 		{ 
 			"VK_LAYER_LUNARG_standard_validation"
 		};
 #endif
-		VkSurfaceKHR surface = VK_NULL_HANDLE;
-		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-		VkDevice device = VK_NULL_HANDLE;
-		VkQueue graphicsQueue = VK_NULL_HANDLE;
-		VkQueue presentQueue = VK_NULL_HANDLE;
-		VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-		std::vector< VkImage > swapChainImages;
-		VkFormat swapChainImageFormat;
-		VkExtent2D swapChainExtent;
-		std::vector< VkImageView > swapChainImageViews;
-		VkRenderPass renderPass = VK_NULL_HANDLE;
-		VkDescriptorSetLayout descripterSetLayout = VK_NULL_HANDLE;
-		VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-		std::vector< VkDescriptorSet > descriptorSets;
-		VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-		VkPipeline graphicsPipeline = VK_NULL_HANDLE;
-		std::vector< VkFramebuffer > swapChainFramebuffers;
-		VkCommandPool commandPool = VK_NULL_HANDLE;
+		vk::SurfaceKHR surface;
+		//VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+		vk::PhysicalDevice physicalDevice;
+		vk::Device device;
+		vk::Queue graphicsQueue;
+		vk::Queue presentQueue;
+		vk::SwapchainKHR swapChain;
+		std::vector< vk::Image > swapChainImages;
+		vk::Format swapChainImageFormat;
+		vk::Extent2D swapChainExtent;
+		std::vector< vk::ImageView > swapChainImageViews;
+		vk::RenderPass renderPass;
+		vk::DescriptorSetLayout descriptorSetLayout;
+		vk::DescriptorPool descriptorPool;
+		std::vector< vk::DescriptorSet > descriptorSets;
+		vk::PipelineLayout pipelineLayout;
+		vk::Pipeline graphicsPipeline;
+		std::vector< vk::Framebuffer > swapChainFramebuffers;
+		vk::CommandPool commandPool;
 		TextureVK texture;
-		VkImage depthImage = VK_NULL_HANDLE;
-		VkDeviceMemory depthImageMemory = VK_NULL_HANDLE;
-		VkImageView depthImageView = VK_NULL_HANDLE;
+		vk::Image depthImage;
+		vk::DeviceMemory depthImageMemory;
+		vk::ImageView depthImageView;
 
-		VkBuffer vertexBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
-		VkBuffer indexBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory indexBufferMemory = VK_NULL_HANDLE;
+		vk::Buffer vertexBuffer;
+		vk::DeviceMemory vertexBufferMemory;
+		vk::Buffer indexBuffer;
+		vk::DeviceMemory indexBufferMemory;
 
-		std::vector< VkBuffer > uniformBuffers;
-		std::vector< VkDeviceMemory > uniformBuffersMemory;
+		std::vector< vk::Buffer > uniformBuffers;
+		std::vector< vk::DeviceMemory > uniformBuffersMemory;
 
-		std::vector< VkCommandBuffer > commandBuffers;
-		std::vector< VkSemaphore > imageAvailableSemaphores;
-		std::vector< VkSemaphore > renderFinishedSemaphores;
-		std::vector< VkFence > inFlightFences;
+		std::vector< vk::CommandBuffer > commandBuffers;
+		std::vector< vk::Semaphore > imageAvailableSemaphores;
+		std::vector< vk::Semaphore > renderFinishedSemaphores;
+		std::vector< vk::Fence > inFlightFences;
 
 		bool bFrameBufferResized = false;
 		bool bMinimized = false;
@@ -109,9 +110,9 @@ namespace vkApp
 
 		struct SwapChainSupportDetails
 		{
-			VkSurfaceCapabilitiesKHR capabilities;
-			std::vector< VkSurfaceFormatKHR > formats;
-			std::vector< VkPresentModeKHR > presentModes;
+			vk::SurfaceCapabilitiesKHR capabilities;
+			std::vector< vk::SurfaceFormatKHR > formats;
+			std::vector< vk::PresentModeKHR > presentModes;
 		};
 
 	public:
@@ -128,7 +129,7 @@ namespace vkApp
 
 		const std::vector< ShaderVK* > &GetShaders() { return m_pShaders; }
 
-		static constexpr const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+		static constexpr const auto MAX_FRAMES_IN_FLIGHT = 2;
 
 	protected:
 
@@ -152,8 +153,8 @@ namespace vkApp
 
 #if VULKAN_VALIDATION_LAYERS
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData );
-		static VkResult CreateDebugUtilsMessengerEXT( VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pCallback );
-		static void DestroyDebugUtilsMessengerEXT( VkInstance instance, VkDebugUtilsMessengerEXT callback, const VkAllocationCallbacks *pAllocator );
+		static vk::Result CreateDebugUtilsMessengerEXT( vk::Instance instance, const vk::DebugUtilsMessengerCreateInfoEXT *pCreateInfo, const vk::AllocationCallbacks *pAllocator, vk::DebugUtilsMessengerEXT *pCallback );
+		static void DestroyDebugUtilsMessengerEXT( vk::Instance instance, vk::DebugUtilsMessengerEXT callback, const vk::AllocationCallbacks *pAllocator );
 		void checkValidationLayerSupport();
 #endif
 
@@ -167,7 +168,7 @@ namespace vkApp
 #endif
 		void createSurface();
 		void pickPhysicalDevice();
-		bool isDeviceSuitable( VkPhysicalDevice &device );
+		bool isDeviceSuitable( vk::PhysicalDevice &device );
 		void createLogicalDevice();
 		void createSwapChain();
 		void createImageViews();
@@ -190,31 +191,31 @@ namespace vkApp
 		void createSyncObjects();
 
 	public:
-		void createBuffer( VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory );
-		void createImage( uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory, bool bCubeMap = false );
-		VkImageView createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels, VkImageViewType imageViewType );
-		void copyBuffer( const VkBuffer &srcBuffer, VkBuffer &dstBuffer, VkDeviceSize size );
-		void copyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t numComponents, bool bCubeMap = false );
+		void createBuffer( vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Buffer &buffer, vk::DeviceMemory &bufferMemory );
+		void createImage( uint32_t width, uint32_t height, uint32_t mipLevels, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image &image, vk::DeviceMemory &imageMemory, bool bCubeMap = false );
+		vk::ImageView createImageView( vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels, vk::ImageViewType imageViewType );
+		void copyBuffer( const vk::Buffer &srcBuffer, vk::Buffer &dstBuffer, vk::DeviceSize size );
+		void copyBufferToImage( vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t numComponents, bool bCubeMap = false );
 		
 	private:
 		void recreateSwapChain();
 
 	public:
 		std::vector< const char * > getRequiredExtensions();
-		QueueFamilyIndices findQueueFamilies( VkPhysicalDevice &device );
-		uint32_t findMemoryType( uint32_t typeFilter, VkMemoryPropertyFlags properties );
-		std::shared_ptr< SwapChainSupportDetails > querySwapChainSupport( VkPhysicalDevice &device );
-		VkSurfaceFormatKHR chooseSwapSurfaceFormat( const std::vector< VkSurfaceFormatKHR > &availableFormats );
-		VkPresentModeKHR chooseSwapPresentMode( const std::vector< VkPresentModeKHR > availablePresentModes );
-		VkExtent2D chooseSwapExtent( const VkSurfaceCapabilitiesKHR &capabilities );
-		VkShaderModule createShaderModule( const std::vector< std::byte > &code );
-		VkCommandBuffer beginSingleTimeCommands();
-		void endSingleTimeCommands( VkCommandBuffer commandBuffer );
-		void transitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, bool bCubeMap = false );
-		VkFormat findSupportedFormat( const std::vector< VkFormat > &candidates, VkImageTiling tiling, VkFormatFeatureFlags features );
-		VkFormat findDepthFormat();
-		bool hasStencilComponent( VkFormat format );
-		void generateMipMaps( VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, bool bCubeMap = false );
+		QueueFamilyIndices findQueueFamilies( vk::PhysicalDevice &device );
+		uint32_t findMemoryType( uint32_t typeFilter, vk::MemoryPropertyFlags properties );
+		std::shared_ptr< SwapChainSupportDetails > querySwapChainSupport( vk::PhysicalDevice &device );
+		vk::SurfaceFormatKHR chooseSwapSurfaceFormat( const std::vector< vk::SurfaceFormatKHR > &availableFormats );
+		vk::PresentModeKHR chooseSwapPresentMode( const std::vector< vk::PresentModeKHR > &availablePresentModes );
+		vk::Extent2D chooseSwapExtent( const vk::SurfaceCapabilitiesKHR &capabilities );
+		vk::ShaderModule createShaderModule( const std::vector< std::byte > &code );
+		vk::CommandBuffer beginSingleTimeCommands();
+		void endSingleTimeCommands( vk::CommandBuffer &commandBuffer );
+		void transitionImageLayout( vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels, bool bCubeMap = false );
+		vk::Format findSupportedFormat( const std::vector< vk::Format > &candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features );
+		vk::Format findDepthFormat();
+		bool hasStencilComponent( vk::Format format );
+		void generateMipMaps( vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, bool bCubeMap = false );
 
 		//MeshVK *m_pTestMesh = nullptr;
 		//MaterialVK *m_pTestMaterial = nullptr;

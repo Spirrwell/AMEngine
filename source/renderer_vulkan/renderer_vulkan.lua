@@ -12,6 +12,7 @@ project "renderer_vulkan"
 		[ "Header Files" ] = { "**.hpp", "../shared/**.hpp", "../shared/renderer/**.hpp" },
 		[ "Source Files" ] = { "**.cpp" }
 	}
+	defines { "VULKAN_HPP_NO_EXCEPTIONS" } 
 	
 	files {
 			"%{cfg.location}/camera.hpp",
@@ -43,6 +44,7 @@ project "renderer_vulkan"
 				"../shared/renderer",
 				"../thirdparty/glm/include",
 				"../thirdparty/stb_image/include",
+				"../thirdparty/libktx/include",
 				--"../thirdparty/assimp-4.0.1/include",
 		}
 	
@@ -65,6 +67,7 @@ project "renderer_vulkan"
 		links {
 				"amlib.lib",
 				"factory.lib",
+				"libktx.es3.lib",
 				"memlib.lib",
 				"memory_system.lib",
 				"SDL2main.lib",

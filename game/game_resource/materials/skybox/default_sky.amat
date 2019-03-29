@@ -1,3 +1,3 @@
 ShaderName = "skyShader"
 
-$skybox "textures/skybox/default"
+$skybox "textures/skybox/default_sky_bc1.ktx"

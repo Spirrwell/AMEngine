@@ -1,9 +1,12 @@
 #ifndef TEXTUREVK_HPP
 #define TEXTUREVK_HPP
 
+#include <filesystem>
+
 #include "vulkan/vulkan.hpp"
 #include "vulkan_interface.hpp"
 #include "string.hpp"
+#include "ktxvulkan.h"
 
 #include <stdint.h>
 #include <array>
@@ -14,18 +17,20 @@ public:
 	virtual ~TextureVK();
 	void Load( const string &path );
 	void Load( const std::array< string, 6 > &faces );
+	void LoadKtx( const std::filesystem::path &ktxFile );
 	void Shutdown();
 
-	const VkImageView &ImageView() { return m_vkTextureImageView; }
-	const VkSampler &Sampler() { return m_vkTextureSampler; }
+	const vk::ImageView &ImageView() { return m_vkTextureImageView; }
+	const vk::Sampler &Sampler() { return m_vkTextureSampler; }
 
 private:
-	VkImage m_vkTextureImage = VK_NULL_HANDLE;
-	VkDeviceMemory m_vkTextureImageMemory = VK_NULL_HANDLE;
-	VkImageView m_vkTextureImageView = VK_NULL_HANDLE;
-	VkSampler m_vkTextureSampler = VK_NULL_HANDLE;
+	vk::Image m_vkTextureImage;
+	vk::DeviceMemory m_vkTextureImageMemory;
+	vk::ImageView m_vkTextureImageView;
+	vk::Sampler m_vkTextureSampler;
 
 	uint32_t m_nMipLevels = 1;
+	ktxVulkanTexture m_ktxVulkanTexture = {};
 };
 
 #endif // TEXTUREVK_HPP
