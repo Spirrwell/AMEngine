@@ -31,7 +31,7 @@ struct MVPUniform
 	Matrix4f mvp;
 };
 
-struct PipelineContainer
+struct VulkanPipelineContext
 {
 	std::vector< vk::VertexInputBindingDescription > VertexInputBindingDescriptions;
 	std::vector< vk::VertexInputAttributeDescription > VertexInputAttributeDescriptions;
@@ -100,7 +100,7 @@ public:
 	virtual void recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const MeshVK &mesh ) {}
 
 	const std::vector< MaterialParameter_t > &GetMaterialParams() { return m_MaterialParams; }
-	const PipelineContainer &Pipeline() const { return m_Pipeline; }
+	const VulkanPipelineContext &PipelineCtx() const { return m_Pipeline; }
 
 //protected:
 	std::vector< MaterialParameter_t > m_MaterialParams;
@@ -109,7 +109,7 @@ public:
 	string m_ShaderName;
 
 protected:
-	PipelineContainer m_Pipeline;
+	VulkanPipelineContext m_Pipeline;
 
 private:
 	uint32_t computeVertexInputSize();

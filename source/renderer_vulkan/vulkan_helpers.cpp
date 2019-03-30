@@ -125,25 +125,6 @@ namespace vkApp
 		{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } }
 	};*/
 
-	std::vector< Vertex > vertices =
-	{
-		{ { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },
-		{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } },
-		{ { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
-		{ { -0.5f, 0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } },
-
-		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },
-		{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } },
-		{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
-		{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } }
-	};
-
-	std::vector< uint32_t > indexBuffer =
-	{
-		0, 1, 2, 2, 3, 0,
-		4, 5, 6, 6, 7, 4
-	};
-
 	static std::vector< std::byte > readFile( const string &fileName )
 	{
 		std::ifstream file( fileName, std::ios::ate | std::ios::binary );
@@ -193,8 +174,6 @@ namespace vkApp
 		createDepthResources();
 		createFramebuffers();
 
-		vulkan().texture.Load( GAME_DIR "textures/chalet.jpg" );
-
 		AMDL::ModelData modelData;
 		//AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/cube.amdl", modelData );
 		/*AMDL::ReadAMDLFile( string( GAME_DIR ) + "models/chalet_mat.amdl", modelData );
@@ -217,9 +196,9 @@ namespace vkApp
 		for ( const auto &pShader : m_pShaders )
 			pShader->Init();
 
-		m_pTestModel = new ModelVK;
-		m_pTestModel->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
-		m_pTestModel->LoadModel( string( GAME_DIR ) + "models/axis.amdl" );
+		//m_pTestModel = new ModelVK;
+		//m_pTestModel->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
+		//m_pTestModel->LoadModel( string( GAME_DIR ) + "models/axis.amdl" );
 
 		m_pTestModel2 = new ModelVK;
 		m_pTestModel2->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
@@ -281,22 +260,6 @@ namespace vkApp
 
 		cleanupSwapChain();
 
-		vulkan().texture.Shutdown();
-
-		if ( vulkan().descriptorPool )
-		{
-			vulkan().device.destroyDescriptorPool( vulkan().descriptorPool, nullptr );
-			vulkan().descriptorPool = nullptr;
-		}
-
-		if ( vulkan().descriptorSetLayout )
-		{
-			vulkan().device.destroyDescriptorSetLayout( vulkan().descriptorSetLayout, nullptr );
-			vulkan().descriptorSetLayout = nullptr;
-		}
-
-		vulkan().descriptorSets.clear();
-
 		for ( size_t i = 0; i < vulkan().uniformBuffers.size(); ++i )
 		{
 			vulkan().device.destroyBuffer( vulkan().uniformBuffers[ i ], nullptr );
@@ -305,30 +268,6 @@ namespace vkApp
 
 		vulkan().uniformBuffers.clear();
 		vulkan().uniformBuffersMemory.clear();
-
-		if ( vulkan().indexBuffer )
-		{
-			vulkan().device.destroyBuffer( vulkan().indexBuffer, nullptr );
-			vulkan().indexBuffer = nullptr;
-		}
-
-		if ( vulkan().indexBufferMemory )
-		{
-			vulkan().device.freeMemory( vulkan().indexBufferMemory, nullptr );
-			vulkan().indexBufferMemory = nullptr;
-		}
-
-		if ( vulkan().vertexBuffer )
-		{
-			vulkan().device.destroyBuffer( vulkan().vertexBuffer, nullptr );
-			vulkan().vertexBuffer = nullptr;
-		}
-
-		if ( vulkan().vertexBufferMemory )
-		{
-			vulkan().device.freeMemory( vulkan().vertexBufferMemory, nullptr );
-			vulkan().vertexBufferMemory = nullptr;
-		}
 
 		for ( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
 		{
@@ -430,18 +369,6 @@ namespace vkApp
 			vulkan().device.freeCommandBuffers( vulkan().commandPool, static_cast< uint32_t >( vulkan().commandBuffers.size() ), vulkan().commandBuffers.data() );
 
 		vulkan().commandBuffers.clear();
-
-		if ( vulkan().graphicsPipeline )
-		{
-			vulkan().device.destroyPipeline( vulkan().graphicsPipeline, nullptr );
-			vulkan().graphicsPipeline = nullptr;
-		}
-
-		if ( vulkan().pipelineLayout )
-		{
-			vulkan().device.destroyPipelineLayout( vulkan().pipelineLayout, nullptr );
-			vulkan().pipelineLayout = nullptr;
-		}
 
 		if ( vulkan().renderPass )
 		{
@@ -992,224 +919,6 @@ namespace vkApp
 			vulkan().renderPass = std::move( renderPass );
 	}
 
-	void VulkanApp::createDescriptorSetLayout()
-	{
-		vk::DescriptorSetLayoutBinding uboLayoutBinding;
-		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
-		uboLayoutBinding.descriptorCount = 1;
-		uboLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
-		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-		vk::DescriptorSetLayoutBinding samplerLayoutBinding;
-		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment;
-
-		std::array< vk::DescriptorSetLayoutBinding, 2 > bindings = { uboLayoutBinding, samplerLayoutBinding };
-		vk::DescriptorSetLayoutCreateInfo layoutInfo = {};
-		layoutInfo.bindingCount = static_cast< uint32_t >( bindings.size() );
-		layoutInfo.pBindings = bindings.data();
-
-		if ( auto[ result, descriptorSetLayout ] = vulkan().device.createDescriptorSetLayout( layoutInfo, nullptr ); result != vk::Result::eSuccess )
-			throw std::runtime_error( "[Vulkan]Failed to create descriptor set layout!\n" );
-		else
-			vulkan().descriptorSetLayout = std::move( descriptorSetLayout );
-	}
-
-	void VulkanApp::createGraphicsPipeline()
-	{
-		enum shaderType : size_t
-		{
-			VERTEX_SHADER,
-			FRAGMENT_SHADER,
-			SHADER_COUNT
-		};
-
-		std::vector< std::byte > shaderCode[ SHADER_COUNT ] =
-		{
-			readFile( string( GAME_DIR ) + string( "shaders/testShader.vert.spv" ) ),
-			readFile( string( GAME_DIR ) + string( "shaders/testShader.frag.spv" ) )
-		};
-
-		for ( const auto &shader : shaderCode )
-		{
-			if ( shader.empty() )
-				throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
-		}
-
-		vk::ShaderModule shaderModules[ SHADER_COUNT ];
-
-		for ( size_t i = 0; i < SHADER_COUNT; i++ )
-		{
-			shaderModules[ i ] = createShaderModule( shaderCode[ i ] );
-
-			if ( !shaderModules[ i ] )
-				throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
-		}
-
-		vk::PipelineShaderStageCreateInfo vertShaderStageInfo;
-		vertShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
-		vertShaderStageInfo.module = shaderModules[ VERTEX_SHADER ];
-		vertShaderStageInfo.pName = "main";
-
-		vk::PipelineShaderStageCreateInfo fragShaderStageInfo;
-		fragShaderStageInfo.stage = vk::ShaderStageFlagBits::eFragment;
-		fragShaderStageInfo.module = shaderModules[ FRAGMENT_SHADER ];
-		fragShaderStageInfo.pName = "main";
-
-		vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
-
-		vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
-
-		auto bindingDescription = getVertexBindingDescription();
-		auto attributeDescriptions = getVertexAttributeDescriptions();
-
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast< uint32_t >( attributeDescriptions.size() );
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
-		vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
-		inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
-		inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-		vk::Viewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = ( float )vulkan().swapChainExtent.width;
-		viewport.height = ( float )vulkan().swapChainExtent.height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		vk::Rect2D scissor = {};
-		scissor.offset = { 0, 0 };
-		scissor.extent = vulkan().swapChainExtent;
-
-		vk::PipelineViewportStateCreateInfo viewportState;
-		viewportState.viewportCount = 1;
-		viewportState.pViewports = &viewport;
-		viewportState.scissorCount = 1;
-		viewportState.pScissors = &scissor;
-
-		vk::PipelineRasterizationStateCreateInfo rasterizer;
-		rasterizer.depthClampEnable = VK_FALSE;
-		rasterizer.rasterizerDiscardEnable = VK_FALSE;
-		rasterizer.polygonMode = vk::PolygonMode::eFill;
-		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = vk::CullModeFlagBits::eBack; // TODO: Revisit this
-		rasterizer.frontFace = vk::FrontFace::eCounterClockwise; // TODO: Revisit this
-		rasterizer.depthBiasEnable = VK_FALSE;
-		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-		rasterizer.depthBiasClamp = 0.0f; // Optioanl
-		rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-
-		vk::PipelineMultisampleStateCreateInfo multisampling;
-		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
-		multisampling.minSampleShading = 1.0f; // Optional
-		multisampling.pSampleMask = nullptr; // Optional
-		multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-		multisampling.alphaToOneEnable = VK_FALSE; // Optional
-
-		vk::PipelineColorBlendAttachmentState colorBlendAttachment;
-		colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-		/*colorBlendAttachment.blendEnable = VK_FALSE;
-		colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
-		colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-		colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
-		colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
-		colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-		colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
-
-		/*Alpha Blending*/
-		colorBlendAttachment.blendEnable = VK_TRUE;
-		colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-		colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-		colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
-		colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-		colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-		colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
-
-		vk::PipelineColorBlendStateCreateInfo colorBlending;
-		colorBlending.logicOpEnable = VK_TRUE;
-		colorBlending.logicOp = vk::LogicOp::eCopy;
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlendAttachment;
-		colorBlending.blendConstants[ 0 ] = 0.0f; // Optional
-		colorBlending.blendConstants[ 1 ] = 0.0f; // Optional
-		colorBlending.blendConstants[ 2 ] = 0.0f; // Optional
-		colorBlending.blendConstants[ 3 ] = 0.0f; // Optional
-
-		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &vulkan().descriptorSetLayout;
-		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
-		auto destroyShaderModules = [ & ]()
-		{
-			for ( auto &shaderModule : shaderModules )
-				vkDestroyShaderModule( vulkan().device, shaderModule, nullptr );
-		};
-
-		if ( auto[ result, pipelineLayout ] = vulkan().device.createPipelineLayout( pipelineLayoutInfo, nullptr ); result != vk::Result::eSuccess )
-		{
-			destroyShaderModules();
-			throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
-		}
-		else
-		{
-			vulkan().pipelineLayout = std::move( pipelineLayout );
-		}
-
-		vk::PipelineDepthStencilStateCreateInfo depthStencil;
-		depthStencil.depthTestEnable = VK_TRUE;
-		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = vk::CompareOp::eLess;
-		depthStencil.depthBoundsTestEnable = VK_FALSE;
-		depthStencil.minDepthBounds = 0.0f; // Optional
-		depthStencil.maxDepthBounds = 1.0f; // Optional
-		depthStencil.stencilTestEnable = VK_FALSE;
-		depthStencil.front = {}; // Optional
-		depthStencil.back = {}; // Optional
-
-		vk::GraphicsPipelineCreateInfo pipelineInfo;
-		pipelineInfo.stageCount = 2;
-		pipelineInfo.pStages = shaderStages;
-		pipelineInfo.pVertexInputState = &vertexInputInfo;
-		pipelineInfo.pInputAssemblyState = &inputAssembly;
-		pipelineInfo.pViewportState = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizer;
-		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = &depthStencil;
-		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.pDynamicState = nullptr; // Optional
-		pipelineInfo.layout = vulkan().pipelineLayout;
-		pipelineInfo.renderPass = vulkan().renderPass;
-		pipelineInfo.subpass = 0;
-		pipelineInfo.basePipelineHandle = nullptr; // Optional
-		pipelineInfo.basePipelineIndex = -1; // Optional
-
-		if ( auto[ result, graphicsPipeline ] = vulkan().device.createGraphicsPipeline( nullptr, pipelineInfo, nullptr ); result != vk::Result::eSuccess )
-		{
-			destroyShaderModules();
-			throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
-		}
-		else
-		{
-			vulkan().graphicsPipeline = std::move( graphicsPipeline );
-		}
-
-		destroyShaderModules();
-	}
-
 	void VulkanApp::createFramebuffers()
 	{
 		vulkan().swapChainFramebuffers.resize( vulkan().swapChainImageViews.size(), nullptr );
@@ -1255,50 +964,6 @@ namespace vkApp
 		transitionImageLayout( vulkan().depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1 );
 	}
 
-	void VulkanApp::createVertexBuffer()
-	{
-		vk::DeviceSize bufferSize = sizeof( vertices[ 0 ] ) * vertices.size();
-
-		vk::Buffer stagingBuffer;
-		vk::DeviceMemory stagingBufferMemory;
-
-		createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
-
-		void *pData = nullptr;
-
-		vulkan().device.mapMemory( stagingBufferMemory, 0, bufferSize, vk::MemoryMapFlags(), &pData );
-			std::memcpy( pData, vertices.data(), static_cast< size_t >( bufferSize ) );
-		vulkan().device.unmapMemory( stagingBufferMemory );
-
-		createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, vulkan().vertexBuffer, vulkan().vertexBufferMemory );
-		copyBuffer( stagingBuffer, vulkan().vertexBuffer, bufferSize );
-
-		vulkan().device.destroyBuffer( stagingBuffer, nullptr );
-		vulkan().device.freeMemory( stagingBufferMemory, nullptr );
-	}
-
-	void VulkanApp::createIndexBuffer()
-	{
-		vk::DeviceSize bufferSize = sizeof( indexBuffer[ 0 ] ) * indexBuffer.size();
-
-		vk::Buffer stagingBuffer;
-		vk::DeviceMemory stagingBufferMemory;
-
-		createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
-
-		void *pData = nullptr;
-
-		vulkan().device.mapMemory( stagingBufferMemory, 0, bufferSize, vk::MemoryMapFlags(), &pData );
-			std::memcpy( pData, indexBuffer.data(), static_cast< size_t >( bufferSize ) );
-		vulkan().device.unmapMemory( stagingBufferMemory );
-
-		createBuffer( bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, vulkan().indexBuffer, vulkan().indexBufferMemory );
-		copyBuffer( stagingBuffer, vulkan().indexBuffer, bufferSize );
-
-		vulkan().device.destroyBuffer( stagingBuffer, nullptr );
-		vulkan().device.freeMemory( stagingBufferMemory, nullptr );
-	}
-
 	void VulkanApp::createUniformBuffer()
 	{
 		vk::DeviceSize bufferSize = sizeof( UniformBufferObject );
@@ -1308,74 +973,6 @@ namespace vkApp
 
 		for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
 			createBuffer( bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, vulkan().uniformBuffers[ i ], vulkan().uniformBuffersMemory[ i ] );
-	}
-
-	void VulkanApp::createDescriptorPool()
-	{
-		std::array< vk::DescriptorPoolSize, 2 > poolSizes;
-		poolSizes[ 0 ].type = vk::DescriptorType::eUniformBuffer;
-		poolSizes[ 0 ].descriptorCount = static_cast< uint32_t >( vulkan().swapChainImages.size() );
-		poolSizes[ 1 ].type = vk::DescriptorType::eCombinedImageSampler;
-		poolSizes[ 1 ].descriptorCount = static_cast< uint32_t >( vulkan().swapChainImages.size() );
-
-		vk::DescriptorPoolCreateInfo poolInfo;
-		poolInfo.poolSizeCount = static_cast< uint32_t >( poolSizes.size() );
-		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast< uint32_t >( vulkan().swapChainImages.size() );
-
-		if ( auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr ); result != vk::Result::eSuccess )
-			throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
-		else
-			vulkan().descriptorPool = std::move( descriptorPool );
-	}
-
-	void VulkanApp::createDescriptorSets()
-	{
-		std::vector< vk::DescriptorSetLayout > layouts( vulkan().swapChainImages.size(), vulkan().descriptorSetLayout );
-
-		vk::DescriptorSetAllocateInfo allocInfo;
-		allocInfo.descriptorPool = vulkan().descriptorPool;
-		allocInfo.descriptorSetCount = static_cast< uint32_t >( vulkan().swapChainImages.size() );
-		allocInfo.pSetLayouts = layouts.data();
-
-		vulkan().descriptorSets.resize( vulkan().swapChainImages.size() );
-
-		if ( auto[ result, descriptorSets ] = vulkan().device.allocateDescriptorSets( allocInfo ); result != vk::Result::eSuccess )
-			throw std::runtime_error( "[Vulkan]Failed to allocate descriptor sets!" );
-		else
-			vulkan().descriptorSets = std::move( descriptorSets );
-
-		for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
-		{
-			vk::DescriptorBufferInfo bufferInfo;
-			bufferInfo.buffer = vulkan().uniformBuffers[ i ];
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof( UniformBufferObject );
-
-			vk::DescriptorImageInfo imageInfo = {};
-			imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-			imageInfo.imageView = vulkan().texture.ImageView();
-			imageInfo.sampler = vulkan().texture.Sampler();
-
-			std::array< vk::WriteDescriptorSet, 2 > descriptorWrites = {};
-
-			descriptorWrites[ 0 ].dstSet = vulkan().descriptorSets[ i ];
-			descriptorWrites[ 0 ].dstBinding = 0;
-			descriptorWrites[ 0 ].dstArrayElement = 0;
-			descriptorWrites[ 0 ].descriptorType = vk::DescriptorType::eUniformBuffer;
-			descriptorWrites[ 0 ].descriptorCount = 1;
-			descriptorWrites[ 0 ].pBufferInfo = &bufferInfo;
-
-			descriptorWrites[ 1 ].dstSet = vulkan().descriptorSets[ i ];
-			descriptorWrites[ 1 ].dstBinding = 1;
-			descriptorWrites[ 1 ].dstArrayElement = 0;
-			descriptorWrites[ 1 ].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-			descriptorWrites[ 1 ].descriptorCount = 1;
-			descriptorWrites[ 1 ].pImageInfo = &imageInfo;
-			descriptorWrites[ 1 ].pTexelBufferView = nullptr; // Optional
-
-			vulkan().device.updateDescriptorSets( static_cast< uint32_t >( descriptorWrites.size() ), descriptorWrites.data(), 0, nullptr );
-		}
 	}
 
 	void VulkanApp::allocateCommandBuffers()

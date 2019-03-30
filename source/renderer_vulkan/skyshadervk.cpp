@@ -121,5 +121,5 @@ void SkyShaderVK::recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const
 	pConstants.view = view;
 	pConstants.projection = proj;
 
-	commandBuffer.pushConstants( Pipeline().PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof( pConstants ), &pConstants );
+	commandBuffer.pushConstants( PipelineCtx().PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof( pConstants ), &pConstants );
 }

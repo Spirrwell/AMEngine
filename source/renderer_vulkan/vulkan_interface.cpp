@@ -9,5 +9,5 @@ namespace vkApp
 {
 	CVulkanInterface::CVulkanInterface() : m_vkApp( GetVkRenderer_Internal().VulkanApp() ) {}
 	VulkanApp &CVulkanInterface::VulkanApp() { return m_vkApp; }
-	vulkanContainer &CVulkanInterface::vulkan() { return m_vkApp.vulkan(); }
+	VulkanContext &CVulkanInterface::vulkan() { return m_vkApp.vulkan(); }
 }

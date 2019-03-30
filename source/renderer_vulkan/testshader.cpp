@@ -127,5 +127,5 @@ void TestShader::recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const 
 	static TestShaderPushConstants pConstants;
 	pConstants.mvp = proj * view * model;
 
-	commandBuffer.pushConstants( Pipeline().PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof( pConstants ), &pConstants );
+	commandBuffer.pushConstants( PipelineCtx().PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof( pConstants ), &pConstants );
 }

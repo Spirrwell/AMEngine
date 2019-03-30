@@ -4,7 +4,7 @@
 namespace vkApp
 {
 	class VulkanApp;
-	struct vulkanContainer;
+	struct VulkanContext;
 
 	class CVulkanInterface
 	{
@@ -12,7 +12,7 @@ namespace vkApp
 		CVulkanInterface();
 
 		vkApp::VulkanApp &VulkanApp();
-		vulkanContainer &vulkan();
+		VulkanContext &vulkan();
 
 	private:
 		vkApp::VulkanApp &m_vkApp;

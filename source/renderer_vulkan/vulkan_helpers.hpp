@@ -15,12 +15,12 @@ class MeshVK;
 class MaterialVK;
 class ModelVK;
 
-#define VULKAN_VALIDATION_LAYERS 1
+#define VULKAN_VALIDATION_LAYERS 0
 
 namespace vkApp
 {
 	// Our Vulkan variables\info will be stored here
-	struct vulkanContainer
+	struct VulkanContext
 	{
 		std::vector< vk::ExtensionProperties > extensions;
 		const std::vector< const char * > deviceExtensions =
@@ -50,22 +50,11 @@ namespace vkApp
 		vk::Extent2D swapChainExtent;
 		std::vector< vk::ImageView > swapChainImageViews;
 		vk::RenderPass renderPass;
-		vk::DescriptorSetLayout descriptorSetLayout;
-		vk::DescriptorPool descriptorPool;
-		std::vector< vk::DescriptorSet > descriptorSets;
-		vk::PipelineLayout pipelineLayout;
-		vk::Pipeline graphicsPipeline;
 		std::vector< vk::Framebuffer > swapChainFramebuffers;
 		vk::CommandPool commandPool;
-		TextureVK texture;
 		vk::Image depthImage;
 		vk::DeviceMemory depthImageMemory;
 		vk::ImageView depthImageView;
-
-		vk::Buffer vertexBuffer;
-		vk::DeviceMemory vertexBufferMemory;
-		vk::Buffer indexBuffer;
-		vk::DeviceMemory indexBufferMemory;
 
 		std::vector< vk::Buffer > uniformBuffers;
 		std::vector< vk::DeviceMemory > uniformBuffersMemory;
@@ -119,7 +108,7 @@ namespace vkApp
 		VulkanApp();
 		virtual ~VulkanApp();
 
-		vulkanContainer &vulkan() { return m_Vulkan; }
+		VulkanContext &vulkan() { return m_Vulkan; }
 
 		void AddShader( ShaderVK *pShader ) { m_pShaders.push_back( pShader ); }
 		void RemoveShader( ShaderVK *pShader ) { for ( auto it = m_pShaders.begin(); it != m_pShaders.end(); ++it ) if ( *it == pShader ) { m_pShaders.erase( it ); return; } }
@@ -141,7 +130,7 @@ namespace vkApp
 		void updateUniformBuffer( const uint32_t &currentImage );
 
 	private:
-		vulkanContainer m_Vulkan;
+		VulkanContext m_Vulkan;
 		QueueFamilyIndices m_QueueFamilyIndices;
 
 		std::vector< ShaderVK* > m_pShaders;
@@ -173,17 +162,11 @@ namespace vkApp
 		void createSwapChain();
 		void createImageViews();
 		void createRenderPass();
-		void createDescriptorSetLayout(); // UBOs
-		void createGraphicsPipeline();
 		void createFramebuffers();
 		void createCommandPool();
 		void createDepthResources();
 
-		void createVertexBuffer();
-		void createIndexBuffer();
 		void createUniformBuffer();
-		void createDescriptorPool();
-		void createDescriptorSets();
 
 		void allocateCommandBuffers();
 		void recordCommandBuffer( const uint32_t &imageIndex );

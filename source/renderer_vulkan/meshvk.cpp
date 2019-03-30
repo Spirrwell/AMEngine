@@ -80,14 +80,14 @@ void MeshVK::Draw( vk::CommandBuffer &commandBuffer, const uint32_t &imageIndex 
 	ShaderVK *pShader = m_pMaterial->GetShader();
 
 	// We assume that we're already in the render pass (vkCmdBeginRenderPass)
-	commandBuffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().Pipeline );
+	commandBuffer.bindPipeline( vk::PipelineBindPoint::eGraphics, pShader->PipelineCtx().Pipeline );
 	vk::Buffer vertexBuffers[] = { m_vkVertexBuffer };
 	vk::DeviceSize offsets[] = { 0 };
 	commandBuffer.bindVertexBuffers( 0, 1, vertexBuffers, offsets );
 	if ( m_iDrawType == DT_DrawElements )
 		commandBuffer.bindIndexBuffer( m_vkIndexBuffer, 0, vk::IndexType::eUint32 );
 	pShader->recordToCommandBuffer( commandBuffer, *this );
-	commandBuffer.bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
+	commandBuffer.bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pShader->PipelineCtx().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
 	if ( m_iDrawType == DT_DrawElements )
 		commandBuffer.drawIndexed( static_cast< uint32_t >( m_Indices.size() ), 1, 0, 0, 0 );
 	else
@@ -104,7 +104,7 @@ const vk::CommandBuffer &MeshVK::RecordSecondaryCommandBuffers( vk::CommandBuffe
 	beginInfo.pInheritanceInfo = &inheritanceInfo;
 
 	m_vkSecondaryCommandBuffers[ imageIndex ].begin( beginInfo );
-		m_vkSecondaryCommandBuffers[ imageIndex ].bindPipeline( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().Pipeline );
+		m_vkSecondaryCommandBuffers[ imageIndex ].bindPipeline( vk::PipelineBindPoint::eGraphics, pShader->PipelineCtx().Pipeline );
 
 		vk::Buffer vertexBuffers[] = { m_vkVertexBuffer };
 		vk::DeviceSize offsets[] = { 0 };
@@ -115,7 +115,7 @@ const vk::CommandBuffer &MeshVK::RecordSecondaryCommandBuffers( vk::CommandBuffe
 			m_vkSecondaryCommandBuffers[ imageIndex ].bindIndexBuffer( m_vkIndexBuffer, 0, vk::IndexType::eUint32 );
 
 		pShader->recordToCommandBuffer( m_vkSecondaryCommandBuffers[ imageIndex ], *this );
-		m_vkSecondaryCommandBuffers[ imageIndex ].bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pShader->Pipeline().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
+		m_vkSecondaryCommandBuffers[ imageIndex ].bindDescriptorSets( vk::PipelineBindPoint::eGraphics, pShader->PipelineCtx().PipelineLayout, 0, 1, &m_pMaterial->m_vkDescriptorSets[ imageIndex ], 0, nullptr );
 
 		if ( m_iDrawType == DT_DrawElements )
 			m_vkSecondaryCommandBuffers[ imageIndex ].drawIndexed( static_cast< uint32_t >( m_Indices.size() ), 1, 0, 0, 0 );
