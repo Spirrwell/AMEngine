@@ -83,12 +83,10 @@ void TextureVK::Load( const string &path )
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = static_cast< float >( m_nMipLevels );
 
-	auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-
-	m_vkTextureSampler = std::move( sampler );
+	else
+		m_vkTextureSampler = std::move( sampler );
 }
 
 void TextureVK::Load( const std::array< string, 6 > &faces )
@@ -165,12 +163,10 @@ void TextureVK::Load( const std::array< string, 6 > &faces )
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = static_cast< float >( m_nMipLevels );
 
-	auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-
-	m_vkTextureSampler = std::move( sampler );
+	else
+		m_vkTextureSampler = std::move( sampler );
 }
 
 void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
@@ -193,9 +189,7 @@ void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
 		}
 	};
 
-	std::cout << "ktxFile: "  << ktxFile.string().c_str() << std::endl;
 	CheckThrowError( ktxTexture_CreateFromNamedFile( ktxFile.string().c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &pTexture ) );
-	std::cout << "CreateFromNamedFile worked\n";
 	CheckThrowError( ktxTexture_VkUploadEx( pTexture,
 		&kvdi,
 		&m_ktxVulkanTexture,
@@ -226,12 +220,10 @@ void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = static_cast< float >( m_ktxVulkanTexture.levelCount );
 
-	auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-
-	m_vkTextureSampler = std::move( sampler );
+	else
+		m_vkTextureSampler = std::move( sampler );
 
 	ktxTexture_Destroy( pTexture );
 }

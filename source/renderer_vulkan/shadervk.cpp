@@ -148,12 +148,10 @@ void ShaderVK::createDescriptorSetLayout()
 	layoutInfo.bindingCount = static_cast< uint32_t >( bindings.size() );
 	layoutInfo.pBindings = bindings.data();
 
-	auto[ result, descriptorSetLayout ] = vulkan().device.createDescriptorSetLayout( layoutInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, descriptorSetLayout ] = vulkan().device.createDescriptorSetLayout( layoutInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor set layout!\n" );
-
-	m_vkDescriptorSetLayout = std::move( descriptorSetLayout );
+	else
+		m_vkDescriptorSetLayout = std::move( descriptorSetLayout );
 }
 
 void ShaderVK::createShaderModules()
@@ -277,8 +275,10 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineLayoutInfo.pushConstantRangeCount = static_cast< uint32_t >( pushConstantRanges.size() );
 	pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges.data();
 
-	if ( auto[ result, pipelineLayout ] = vulkan().device.createPipelineLayout( pipelineLayoutInfo, nullptr ); result == vk::Result::eSuccess )
-		m_Pipeline.PipelineLayout = std::move( pipelineLayout ); else throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
+	if ( auto[ result, pipelineLayout ] = vulkan().device.createPipelineLayout( pipelineLayoutInfo, nullptr ); result != vk::Result::eSuccess )
+		throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
+	else
+		m_Pipeline.PipelineLayout = std::move( pipelineLayout );
 
 	vk::PipelineDepthStencilStateCreateInfo depthStencil = GetDepthStencilStateInfo();
 
@@ -299,8 +299,10 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineInfo.basePipelineHandle = nullptr; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
 
-	if ( auto[ result, graphicsPipeline ] = vulkan().device.createGraphicsPipeline( nullptr, pipelineInfo, nullptr ); result == vk::Result::eSuccess )
-		m_Pipeline.Pipeline = std::move( graphicsPipeline ); else throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
+	if ( auto[ result, graphicsPipeline ] = vulkan().device.createGraphicsPipeline( nullptr, pipelineInfo, nullptr ); result != vk::Result::eSuccess )
+		throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
+	else
+		m_Pipeline.Pipeline = std::move( graphicsPipeline );
 }
 
 void ShaderVK::createDescriptorPool( MaterialVK &material )
@@ -316,12 +318,10 @@ void ShaderVK::createDescriptorPool( MaterialVK &material )
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 
-	auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
-
-	material.m_vkDescriptorPool = std::move( descriptorPool );
+	else
+		material.m_vkDescriptorPool = std::move( descriptorPool );
 }
 
 void ShaderVK::createDescriptorSets( MaterialVK &material )
@@ -334,15 +334,13 @@ void ShaderVK::createDescriptorSets( MaterialVK &material )
 	allocInfo.pSetLayouts = layouts.data();
 
 	material.m_vkDescriptorSets.resize( vulkan().swapChainImages.size() );
-	auto[ result, descriptorSets ] = vulkan().device.allocateDescriptorSets( allocInfo );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, descriptorSets ] = vulkan().device.allocateDescriptorSets( allocInfo ); result != vk::Result::eSuccess )
 	{
 		stprintf( "Failed to allocate descriptor sets: %d\n", result );
 		return;
 	}
-
-	material.m_vkDescriptorSets = std::move( descriptorSets );
+	else
+		material.m_vkDescriptorSets = std::move( descriptorSets );
 
 	for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
 	{

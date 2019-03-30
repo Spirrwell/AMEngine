@@ -183,12 +183,10 @@ void MeshVK::createCommandPool()
 	poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
 	poolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
-	auto[ result, commandPool ] = vulkan().device.createCommandPool( poolInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, commandPool ] = vulkan().device.createCommandPool( poolInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create command pool." );
-
-	m_vkCommandPool = std::move( commandPool );
+	else
+		m_vkCommandPool = std::move( commandPool );
 }
 
 void MeshVK::allocateSecondaryCommandBuffers()
@@ -200,10 +198,8 @@ void MeshVK::allocateSecondaryCommandBuffers()
 	allocInfo.level = vk::CommandBufferLevel::eSecondary;
 	allocInfo.commandBufferCount = static_cast< uint32_t >( vulkan().swapChainFramebuffers.size() );
 
-	auto[ result, commandBuffers ] = vulkan().device.allocateCommandBuffers( allocInfo );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, commandBuffers ] = vulkan().device.allocateCommandBuffers( allocInfo ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
-
-	m_vkSecondaryCommandBuffers = std::move( commandBuffers );
+	else
+		m_vkSecondaryCommandBuffers = std::move( commandBuffers );
 }

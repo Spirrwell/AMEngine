@@ -684,12 +684,10 @@ namespace vkApp
 		createInfo.enabledLayerCount = 0;
 #endif
 
-		auto[ result, instance ] = vk::createInstance( createInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, instance ] = vk::createInstance( createInfo, nullptr ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create instance." );
-
-		vulkan().instance = std::move( instance );
+		else
+			vulkan().instance = std::move( instance );
 
 		// Query available extensions
 		uint32_t extensionCount = 0;
@@ -856,12 +854,10 @@ namespace vkApp
 		createInfo.enabledLayerCount = 0;
 #endif
 
-		auto[ result, logicalDevice ] = vulkan().physicalDevice.createDevice( createInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, logicalDevice ] = vulkan().physicalDevice.createDevice( createInfo, nullptr ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create logical device." );
-
-		vulkan().device = std::move( logicalDevice );
+		else
+			vulkan().device = std::move( logicalDevice );
 			
 		vulkan().device.getQueue( indices.graphicsFamily, 0, &vulkan().graphicsQueue );
 		vulkan().device.getQueue( indices.presentFamily, 0, &vulkan().presentQueue );
@@ -990,12 +986,10 @@ namespace vkApp
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		auto[ result, renderPass ] = vulkan().device.createRenderPass( renderPassInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, renderPass ] = vulkan().device.createRenderPass( renderPassInfo, nullptr ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create render pass." );
-
-		vulkan().renderPass = std::move( renderPass );
+		else
+			vulkan().renderPass = std::move( renderPass );
 	}
 
 	void VulkanApp::createDescriptorSetLayout()
@@ -1019,12 +1013,10 @@ namespace vkApp
 		layoutInfo.bindingCount = static_cast< uint32_t >( bindings.size() );
 		layoutInfo.pBindings = bindings.data();
 
-		auto[ result, descriptorSetLayout ] = vulkan().device.createDescriptorSetLayout( layoutInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, descriptorSetLayout ] = vulkan().device.createDescriptorSetLayout( layoutInfo, nullptr ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create descriptor set layout!\n" );
-
-		vulkan().descriptorSetLayout = std::move( descriptorSetLayout );
+		else
+			vulkan().descriptorSetLayout = std::move( descriptorSetLayout );
 	}
 
 	void VulkanApp::createGraphicsPipeline()
@@ -1167,12 +1159,14 @@ namespace vkApp
 				vkDestroyShaderModule( vulkan().device, shaderModule, nullptr );
 		};
 
-		if ( auto[ result, pipelineLayout ] = vulkan().device.createPipelineLayout( pipelineLayoutInfo, nullptr ); result == vk::Result::eSuccess )
-			vulkan().pipelineLayout = std::move( pipelineLayout );
-		else
+		if ( auto[ result, pipelineLayout ] = vulkan().device.createPipelineLayout( pipelineLayoutInfo, nullptr ); result != vk::Result::eSuccess )
 		{
 			destroyShaderModules();
 			throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
+		}
+		else
+		{
+			vulkan().pipelineLayout = std::move( pipelineLayout );
 		}
 
 		vk::PipelineDepthStencilStateCreateInfo depthStencil;
@@ -1203,15 +1197,15 @@ namespace vkApp
 		pipelineInfo.basePipelineHandle = nullptr; // Optional
 		pipelineInfo.basePipelineIndex = -1; // Optional
 
-		auto[ result, graphicsPipeline ] = vulkan().device.createGraphicsPipeline( nullptr, pipelineInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, graphicsPipeline ] = vulkan().device.createGraphicsPipeline( nullptr, pipelineInfo, nullptr ); result != vk::Result::eSuccess )
 		{
 			destroyShaderModules();
 			throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 		}
-
-		vulkan().graphicsPipeline = std::move( graphicsPipeline );
+		else
+		{
+			vulkan().graphicsPipeline = std::move( graphicsPipeline );
+		}
 
 		destroyShaderModules();
 	}
@@ -1232,12 +1226,10 @@ namespace vkApp
 			framebufferInfo.height = vulkan().swapChainExtent.height;
 			framebufferInfo.layers = 1;
 
-			auto[ result, framebuffer ] = vulkan().device.createFramebuffer( framebufferInfo, nullptr );
-
-			if ( result != vk::Result::eSuccess )
+			if ( auto[ result, framebuffer ] = vulkan().device.createFramebuffer( framebufferInfo, nullptr ); result != vk::Result::eSuccess )
 				throw std::runtime_error( "[Vulkan]Failed to create framebuffers." );
-
-			vulkan().swapChainFramebuffers[ i ] = std::move( framebuffer );
+			else
+				vulkan().swapChainFramebuffers[ i ] = std::move( framebuffer );
 		}
 	}
 
@@ -1249,12 +1241,10 @@ namespace vkApp
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
 		poolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer; // Optional
 
-		auto[ result, commandPool ] = vulkan().device.createCommandPool( poolInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, commandPool ] = vulkan().device.createCommandPool( poolInfo, nullptr ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create command pool." );
-
-		vulkan().commandPool = std::move( commandPool );
+		else
+			vulkan().commandPool = std::move( commandPool );
 	}
 
 	void VulkanApp::createDepthResources()
@@ -1333,12 +1323,10 @@ namespace vkApp
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 
-		auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
-
-		vulkan().descriptorPool = std::move( descriptorPool );
+		else
+			vulkan().descriptorPool = std::move( descriptorPool );
 	}
 
 	void VulkanApp::createDescriptorSets()
@@ -1352,12 +1340,10 @@ namespace vkApp
 
 		vulkan().descriptorSets.resize( vulkan().swapChainImages.size() );
 
-		auto[ result, descriptorSets ] = vulkan().device.allocateDescriptorSets( allocInfo );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, descriptorSets ] = vulkan().device.allocateDescriptorSets( allocInfo ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to allocate descriptor sets!" );
-
-		vulkan().descriptorSets = std::move( descriptorSets );
+		else
+			vulkan().descriptorSets = std::move( descriptorSets );
 
 		for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
 		{
@@ -1401,12 +1387,10 @@ namespace vkApp
 		allocInfo.level = vk::CommandBufferLevel::ePrimary;
 		allocInfo.commandBufferCount = static_cast< uint32_t >( vulkan().commandBuffers.size() );
 
-		auto[ result, commandBuffers ] = vulkan().device.allocateCommandBuffers( allocInfo );
-
-		if ( result != vk::Result::eSuccess )
+		if ( auto[ result, commandBuffers ] = vulkan().device.allocateCommandBuffers( allocInfo ); result != vk::Result::eSuccess )
 			throw std::runtime_error( "[Vulkan]Failed to create command buffers." );
-
-		vulkan().commandBuffers = std::move( commandBuffers );
+		else
+			vulkan().commandBuffers = std::move( commandBuffers );
 	}
 
 	void VulkanApp::recordCommandBuffer( const uint32_t &imageIndex )
@@ -1478,12 +1462,20 @@ namespace vkApp
 
 		for ( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i )
 		{
-			if ( auto[ result, semaphore ] = vulkan().device.createSemaphore( semaphoreInfo, nullptr ); result == vk::Result::eSuccess )
-				vulkan().imageAvailableSemaphores[ i ] = std::move( semaphore ); else throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
-			if ( auto[ result, semaphore ] = vulkan().device.createSemaphore( semaphoreInfo, nullptr ); result == vk::Result::eSuccess )
-				vulkan().renderFinishedSemaphores[ i ] = std::move( semaphore ); else throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
-			if ( auto[ result, fence ] = vulkan().device.createFence( fenceInfo, nullptr ); result == vk::Result::eSuccess )
-				vulkan().inFlightFences[ i ] = std::move( fence ); else throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
+			if ( auto[ result, semaphore ] = vulkan().device.createSemaphore( semaphoreInfo, nullptr ); result != vk::Result::eSuccess )
+				throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
+			else
+				vulkan().imageAvailableSemaphores[ i ] = std::move( semaphore );
+
+			if ( auto[ result, semaphore ] = vulkan().device.createSemaphore( semaphoreInfo, nullptr ); result != vk::Result::eSuccess )
+				throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
+			else
+				vulkan().renderFinishedSemaphores[ i ] = std::move( semaphore );
+
+			if ( auto[ result, fence ] = vulkan().device.createFence( fenceInfo, nullptr ); result != vk::Result::eSuccess )
+				throw std::runtime_error( "[Vulkan]Failed to create sync objects." );
+			else
+				vulkan().inFlightFences[ i ] = std::move( fence );
 		}
 
 	}
@@ -1495,8 +1487,10 @@ namespace vkApp
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = vk::SharingMode::eExclusive;
 
-		if ( auto[ result, buf ] = vulkan().device.createBuffer( bufferInfo, nullptr ); result == vk::Result::eSuccess )
-			buffer = std::move( buf ); else throw std::runtime_error( "[Vulkan]Failed to create buffer." );
+		if ( auto[ result, buf ] = vulkan().device.createBuffer( bufferInfo, nullptr ); result != vk::Result::eSuccess )
+			throw std::runtime_error( "[Vulkan]Failed to create buffer." );
+		else
+			buffer = std::move( buf );
 
 		vk::MemoryRequirements memRequirements;
 		vulkan().device.getBufferMemoryRequirements( buffer, &memRequirements );
@@ -1505,8 +1499,10 @@ namespace vkApp
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = findMemoryType( memRequirements.memoryTypeBits, properties );
 
-		if ( auto[ result, memory ] = vulkan().device.allocateMemory( allocInfo, nullptr ); result == vk::Result::eSuccess )
-			bufferMemory = std::move( memory ); else throw std::runtime_error( "[Vulkan]Failed to allocate buffer memory!" );
+		if ( auto[ result, memory ] = vulkan().device.allocateMemory( allocInfo, nullptr ); result != vk::Result::eSuccess )
+			throw std::runtime_error( "[Vulkan]Failed to allocate buffer memory!" );
+		else
+			bufferMemory = std::move( memory );
 
 		vulkan().device.bindBufferMemory( buffer, bufferMemory, 0 );
 	}
@@ -1533,8 +1529,10 @@ namespace vkApp
 		imageInfo.samples = vk::SampleCountFlagBits::e1;
 		imageInfo.sharingMode = vk::SharingMode::eExclusive;
 
-		if ( auto[ result, img ] = vulkan().device.createImage( imageInfo, nullptr ); result == vk::Result::eSuccess )
-			image = std::move( img ); else throw std::runtime_error( "[Vulkan]Failed to create image!" );
+		if ( auto[ result, img ] = vulkan().device.createImage( imageInfo, nullptr ); result != vk::Result::eSuccess )
+			throw std::runtime_error( "[Vulkan]Failed to create image!" );
+		else
+			image = std::move( img );
 
 		vk::MemoryRequirements memRequirements = vulkan().device.getImageMemoryRequirements( image );
 		
@@ -1542,8 +1540,10 @@ namespace vkApp
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = findMemoryType( memRequirements.memoryTypeBits, properties );
 
-		if ( auto[ result, memory ] = vulkan().device.allocateMemory( allocInfo, nullptr ); result == vk::Result::eSuccess )
-			imageMemory = std::move( memory ); else throw std::runtime_error( "Failed to allocate image memory!" );
+		if ( auto[ result, memory ] = vulkan().device.allocateMemory( allocInfo, nullptr ); result != vk::Result::eSuccess )
+			throw std::runtime_error( "Failed to allocate image memory!" );
+		else
+			imageMemory = std::move( memory );
 
 		vulkan().device.bindImageMemory( image, imageMemory, 0 );
 	}
@@ -1564,8 +1564,10 @@ namespace vkApp
 		else if ( imageViewType == vk::ImageViewType::eCube )
 			viewInfo.subresourceRange.layerCount = 6;
 
-		if ( auto[ result, imageView ] = vulkan().device.createImageView( viewInfo, nullptr ); result == vk::Result::eSuccess )
-			return imageView; else throw std::runtime_error( "[Vulkan]Failed to create image view!" );
+		if ( auto[ result, imageView ] = vulkan().device.createImageView( viewInfo, nullptr ); result != vk::Result::eSuccess )
+			throw std::runtime_error( "[Vulkan]Failed to create image view!" );
+		else
+			return imageView;
 
 		return nullptr;
 	}
@@ -1793,12 +1795,19 @@ namespace vkApp
 
 		auto[ result, commandBuffer ] = vulkan().device.allocateCommandBuffers( allocInfo );
 
-		vk::CommandBufferBeginInfo beginInfo;
-		beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+		if ( result == vk::Result::eSuccess && commandBuffer.size() == 1 )
+		{
+			vk::CommandBufferBeginInfo beginInfo;
+			beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-		commandBuffer[ 0 ].begin( beginInfo );
+			commandBuffer[ 0 ].begin( beginInfo );
 
-		return commandBuffer[ 0 ];
+			return commandBuffer[ 0 ];
+		}
+		else
+			throw std::runtime_error( "Failed to allocate single use command buffer!" );
+
+		return nullptr;
 	}
 
 	void VulkanApp::endSingleTimeCommands( vk::CommandBuffer &commandBuffer )

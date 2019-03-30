@@ -46,12 +46,10 @@ void SkyShaderVK::createDescriptorPool( MaterialVK &material )
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = static_cast< uint32_t >( vulkan().swapChainImages.size() );
 
-	auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr );
-
-	if ( result != vk::Result::eSuccess )
+	if ( auto[ result, descriptorPool ] = vulkan().device.createDescriptorPool( poolInfo, nullptr ); result != vk::Result::eSuccess )
 		throw std::runtime_error( "[Vulkan]Failed to create descriptor pool!" );
-
-	material.m_vkDescriptorPool = std::move( descriptorPool );
+	else
+		material.m_vkDescriptorPool = std::move( descriptorPool );
 }
 
 const std::vector< vk::DescriptorSetLayoutBinding > &SkyShaderVK::GetDescriptorSetLayoutBindings()
