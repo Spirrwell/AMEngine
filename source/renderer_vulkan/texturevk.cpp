@@ -17,11 +17,19 @@ TextureVK::~TextureVK()
 	Shutdown();
 }
 
-void TextureVK::Load( const string &path )
+void TextureVK::Load( const std::filesystem::path &path )
 {
+	if ( string extension = path.extension().string(); !extension.empty() )
+	{
+		std::transform( extension.begin(), extension.end(), extension.begin(), ::tolower );
+
+		if ( extension == ".ktx" )
+			return LoadKtx( path );
+	}
+
 	// Create Texture Image
 	int texWidth = 0, texHeight = 0, numComponents = 0;
-	stbi_uc *pPixels = stbi_load( path.c_str(), &texWidth, &texHeight, &numComponents, STBI_rgb_alpha );
+	stbi_uc *pPixels = stbi_load( path.string().c_str(), &texWidth, &texHeight, &numComponents, STBI_rgb_alpha );
 
 	if ( !pPixels )
 		throw std::runtime_error( "[Vulkan]Failed to load texture image!" );
@@ -171,9 +179,6 @@ void TextureVK::Load( const std::array< string, 6 > &faces )
 
 void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
 {
-	if ( ktxFile.empty() || ktxFile.extension() != ".ktx" )
-		throw std::runtime_error( "[Vulkan]Invalid KTX file path: " + ktxFile.string() );
-
 	ktxVulkanDeviceInfo kvdi;
 	ktxTexture *pTexture = nullptr;
 

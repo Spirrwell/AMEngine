@@ -15,7 +15,7 @@ class TextureVK : vkApp::CVulkanInterface
 {
 public:
 	virtual ~TextureVK();
-	void Load( const string &path );
+	void Load( const std::filesystem::path &path );
 	void Load( const std::array< string, 6 > &faces );
 	void LoadKtx( const std::filesystem::path &ktxFile );
 	void Shutdown();
