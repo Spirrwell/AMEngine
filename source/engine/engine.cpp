@@ -79,7 +79,7 @@ bool Engine::Init()
 		return false;
 
 	std::ifstream config;
-	config.open( string( GAME_DIR ) + "cfg/config.cfg", std::ifstream::in );
+	config.open( PATHS::GAME / "cfg" / "config.cfg", std::ifstream::in );
 
 	if ( config.is_open() )
 	{
@@ -271,7 +271,7 @@ int Engine::RunMainLoop()
 void Engine::LoadMap( const string &mapName )
 {
 	std::ifstream map;
-	map.open( string( GAME_DIR ) + "maps/" + mapName );
+	map.open( PATHS::GAME / "maps" / mapName );
 
 	if ( map.is_open() )
 	{

@@ -1,6 +1,8 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#include <filesystem>
+
 #if defined ( _MSC_VER )
 	#define DLL_EXPORT __declspec( dllexport )
 	#define DLL_IMPORT __declspec( dllimport )
@@ -41,6 +43,13 @@
 	// Needs setup for other platforms
 	#error
 #endif
+
+namespace PATHS
+{
+	const std::filesystem::path ROOT = std::filesystem::current_path() / "";
+	const std::filesystem::path BIN = std::filesystem::absolute( "./bin/" );
+	const std::filesystem::path GAME = std::filesystem::absolute( "../../game_resource/" );
+}
 
 // Temporary game directory definition
 #define GAME_DIR "../../game_resource/"

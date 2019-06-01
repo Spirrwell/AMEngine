@@ -171,6 +171,9 @@ namespace vkApp
 		m_ThreadPool.InitThreads();
 
 		std::cout << "hardware_concurrency: " << std::thread::hardware_concurrency() << std::endl;
+		std::cout << "Root Path: " << PATHS::ROOT << std::endl;
+		std::cout << "Game Path: " << PATHS::GAME << std::endl;
+		std::cout << "Bin Path: " << PATHS::BIN << std::endl;
 
 		loadExtensionsFromSDL();
 #if VULKAN_VALIDATION_LAYERS
@@ -220,16 +223,16 @@ namespace vkApp
 
 		m_pTestModel2 = new ModelVK;
 		m_pTestModel2->SetModelMatrix( glm::translate( Vector3f( 0.0f, 2.0f, 0.0f ) ) );
-		m_pTestModel2->LoadModel( string( GAME_DIR ) + "models/chalet_mat.amdl" );
+		m_pTestModel2->LoadModel( PATHS::GAME / "models" / "chalet_mat.amdl" );
 
 		std::vector< Vertex > skyVerts;
 		skyVerts.resize( skyboxVertices.size() );
 		for ( size_t i = 0; i < skyboxVertices.size(); ++i )
 			skyVerts[ i ].pos = skyboxVertices[ i ];
 
-		m_pSkyboxMaterial = new MaterialVK( string( GAME_DIR ) + "materials/skybox/default_sky.amat" );
+		m_pSkyboxMaterial = new MaterialVK( PATHS::GAME / "materials" / "skybox" / "default_sky.amat" );
 		m_pSkyboxTest = new MeshVK( skyVerts, {}, m_pSkyboxMaterial );
-		m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/test.amat" );
+		m_pTestMaterial = new MaterialVK( PATHS::GAME / "materials" / "test.amat" );
 
 		std::cout << "m_pMeshes.size(): " << m_pMeshes.size() << std::endl;
 

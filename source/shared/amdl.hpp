@@ -5,6 +5,7 @@
 #include <optional>
 #include <fstream>
 #include <stdint.h>
+#include <filesystem>
 
 #include "vertex.hpp"
 #include "string.hpp"
@@ -31,9 +32,9 @@ namespace AMDL
 		MaterialPaths materialPaths;
 	};
 
-	inline void ReadAMDLFile( const string &modelPath, ModelData &outData )
+	inline void ReadAMDLFile( const std::filesystem::path &modelPath, ModelData &outData )
 	{
-		printf( "Reading AMDL file: %s\n", modelPath.c_str() );
+		printf( "Reading AMDL file: %s\n", modelPath.string().c_str() );
 
 		std::ifstream amdlFile;
 		amdlFile.open( modelPath, std::ifstream::binary );

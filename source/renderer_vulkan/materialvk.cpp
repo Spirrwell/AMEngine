@@ -12,7 +12,7 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-MaterialVK::MaterialVK( const string &materialPath )
+MaterialVK::MaterialVK( const std::filesystem::path &materialPath )
 {
 	std::ifstream materialFile( materialPath );
 
@@ -110,7 +110,7 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 						{
 							case MATP_TEXTURE:
 							{
-								m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadTexture( string( GAME_DIR ) + tokens[ 1 ] );
+								m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadTexture( PATHS::GAME / tokens[ 1 ] );
 								break;
 							}
 							case MATP_SKYTEXTURE:
@@ -129,7 +129,7 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 								//pTexture->Load( faces );
 
 								//m_mapTextures[ matParam.parameterName ] = pTexture;
-								m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadSkyTexture( string( GAME_DIR ) + tokens[ 1 ] );
+								m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadSkyTexture( PATHS::GAME / tokens[ 1 ] );
 								break;
 							}
 						}
@@ -146,7 +146,7 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 		if ( matParam.type == MATP_TEXTURE && m_mapTextures[ matParam.parameterName ] == nullptr )
 		{
 			TextureVK *pTexture = new TextureVK;
-			pTexture->Load( string( GAME_DIR ) + matParam.defaultValue );
+			pTexture->Load( PATHS::GAME / matParam.defaultValue );
 			m_mapTextures[ matParam.parameterName ] = pTexture;
 		}
 	}

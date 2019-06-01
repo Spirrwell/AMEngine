@@ -25,7 +25,7 @@ void ModelVK::Shutdown()
 	m_pMeshes.clear();
 }
 
-void ModelVK::LoadModel( const string &modelPath )
+void ModelVK::LoadModel( const std::filesystem::path &modelPath )
 {
 	AMDL::ModelData modelData;
 	AMDL::ReadAMDLFile( modelPath, modelData );
@@ -42,7 +42,7 @@ void ModelVK::LoadModel( const string &modelPath )
 			for ( const auto &matPath : modelData.materialPaths )
 			{
 				std::ifstream testPath;
-				testPath.open( string( GAME_DIR ) + matPath + "/" + meshData.materialName.value() + ".amat" );
+				testPath.open( PATHS::GAME / matPath / ( meshData.materialName.value() + ".amat" ) );
 
 				if ( testPath.is_open() )
 				{

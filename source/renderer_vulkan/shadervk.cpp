@@ -9,18 +9,17 @@
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
 
-static std::vector< std::byte > readFile( const string &fileName )
+static std::vector< std::byte > readFile( const std::filesystem::path &fileName )
 {
-	std::ifstream file( fileName, std::ios::ate | std::ios::binary );
+	std::basic_ifstream< std::byte > file( fileName, std::ios::binary );
 
 	if ( !file.is_open() )
 		return {};
 
-	size_t fileSize = static_cast< size_t >( file.tellg() );
+	uintmax_t fileSize = std::filesystem::file_size( fileName );
 	std::vector< std::byte > buffer( fileSize );
 
-	file.seekg( 0 );
-	file.read( ( char* )buffer.data(), fileSize );
+	file.read( buffer.data(), fileSize );
 
 	file.close();
 		
@@ -172,8 +171,8 @@ void ShaderVK::createShaderModules()
 {
 	std::vector< std::byte > shaderCode[ SHADER_COUNT ] =
 	{
-		readFile( string( GAME_DIR ) + string( "shaders/" ) + m_ShaderName + ".vert.spv" ),
-		readFile( string( GAME_DIR ) + string( "shaders/" ) + m_ShaderName + ".frag.spv" ),
+		readFile( PATHS::GAME / "shaders" / ( m_ShaderName + ".vert.spv" ) ),
+		readFile( PATHS::GAME / "shaders" / ( m_ShaderName + ".frag.spv" ) ),
 	};
 
 	for ( const auto &shader : shaderCode )

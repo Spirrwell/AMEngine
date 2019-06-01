@@ -2,6 +2,7 @@
 #define MODELVK_HPP
 
 #include <vector>
+#include <filesystem>
 
 #include "string.hpp"
 #include "mathdefs.hpp"
@@ -15,7 +16,7 @@ public:
 	virtual ~ModelVK();
 	void Shutdown();
 
-	void LoadModel( const string &modelPath );
+	void LoadModel( const std::filesystem::path &modelPath );
 
 	const std::vector< MeshVK* > &GetMeshes() const { return m_pMeshes; }
 	const Matrix4f &GetModelMatrix() const { return m_mat4Model; }

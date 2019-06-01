@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <filesystem>
 
 #include "vulkan/vulkan.hpp"
 #include "string.hpp"
@@ -18,7 +19,7 @@ class MaterialVK : public vkApp::CVulkanInterface
 	friend class ShaderVK;
 
 public:
-	MaterialVK( const string &materialPath );
+	MaterialVK( const std::filesystem::path &materialPath );
 	MaterialVK( std::ifstream &material );
 	virtual ~MaterialVK();
 
