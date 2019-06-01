@@ -1,0 +1,3 @@
+ShaderName = "testShader2"
+
+$diffuse "textures/test.KTX"

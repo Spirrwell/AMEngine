@@ -8,17 +8,188 @@
 
 #include <vector>
 #include <memory>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 class RendererVulkan;
 class ShaderVK;
 class MeshVK;
 class MaterialVK;
+class MaterialDiffuseOnly;
 class ModelVK;
 
 #define VULKAN_VALIDATION_LAYERS 0
 
 namespace vkApp
 {
+	class VulkanThreadPool
+	{
+	public:
+		
+		void InitThreads()
+		{
+			m_pThreads.resize( m_NumThreads / 2, nullptr );
+
+			for ( auto it = m_pThreads.begin(); it != m_pThreads.end(); ++it )
+			{
+				*it = new CBThread;
+				( *it )->InitThread();
+			}
+		}
+
+		void TerminateThreads()
+		{
+			for ( auto *pThread : m_pThreads )
+			{
+				pThread->Terminate();
+				delete pThread;
+			}
+
+			m_pThreads.clear();
+			ClearJobs();
+		}
+
+		void WaitIdle()
+		{
+			for ( auto *pThread : m_pThreads )
+				while ( !pThread->IsIdle() ){}
+		}
+
+		void ClearJobs()
+		{
+			for ( auto *pThread : m_pThreads )
+				pThread->ClearJobs();
+
+			m_Jobs.clear();
+		}
+
+		class CBJob
+		{
+		public:
+			CBJob( uint32_t imageIndex, size_t meshIndex )
+			{
+				m_iImageIndex = imageIndex;
+				m_iMeshIndex = meshIndex;
+			}
+
+			void Execute();
+			const vk::CommandBuffer *GetResult() const { return m_pResult; }
+
+		private:
+			uint32_t m_iImageIndex;
+			size_t m_iMeshIndex;
+			const vk::CommandBuffer *m_pResult = nullptr;
+		};
+
+		class CBThread
+		{
+		public:
+			
+			void InitThread()
+			{
+				m_pThread = new std::thread( &CBThread::Run, this );
+				m_pThread->detach();
+			}
+
+			void DoJobs()
+			{
+				if ( m_pJobs.size() > 0 )
+					m_bIdle = false;
+			}
+
+			void Terminate()
+			{
+				m_bTerminate = true;
+
+				if ( m_pThread )
+				{
+					if ( m_pThread->joinable() )
+						m_pThread->join();
+					else
+						while ( !IsIdle() ){}
+
+					delete m_pThread;
+				}
+			}
+
+			// Be sure not to add jobs while executing them
+			void AddJob( CBJob *pJob )
+			{
+				m_pJobs.push_back( pJob );
+			}
+
+			// Be sure not to clear jobs while executing them
+			void ClearJobs()
+			{
+				m_pJobs.clear();
+			}
+
+			const std::atomic_bool &IsIdle() const { return m_bIdle; }
+
+		protected:
+			void Run()
+			{
+				using namespace std::literals::chrono_literals;
+				while ( !m_bTerminate )
+				{
+					if ( !IsIdle() )
+					{
+						for ( auto *pJob : m_pJobs )
+							pJob->Execute();
+
+						m_bIdle = true;
+					}
+					else
+						std::this_thread::yield();
+				}
+			}
+
+		private:
+			std::thread *m_pThread = nullptr;
+			std::atomic_bool m_bIdle = true;
+			std::atomic_bool m_bTerminate = false;
+			std::vector< CBJob* > m_pJobs;
+		};
+
+		void AddJob( const CBJob &job )
+		{
+			m_Jobs.push_back( job );
+		}
+
+		const std::vector< CBJob > &GetJobs() const { return m_Jobs; }
+
+		// Assigns jobs to threads
+		void AssignJobs()
+		{
+			if ( m_pThreads.size() == 0 )
+				return;
+
+			auto threadIt = m_pThreads.begin();
+			auto AssignJob = [ &, this ]( CBJob *job )
+			{
+				( *threadIt )->AddJob( job );
+				if ( ++threadIt == m_pThreads.end() )
+					threadIt = m_pThreads.begin();
+			};
+
+			for ( CBJob &job : m_Jobs )
+				AssignJob( &job );
+		}
+
+		void ExecuteJobs()
+		{
+			for ( auto *pThread : m_pThreads )
+				pThread->DoJobs();
+		}
+
+	private:
+
+		unsigned int m_NumThreads = std::thread::hardware_concurrency();
+		std::vector< CBThread* > m_pThreads;
+		std::vector< CBJob > m_Jobs;
+	};
+
 	// Our Vulkan variables\info will be stored here
 	struct VulkanContext
 	{
@@ -134,7 +305,9 @@ namespace vkApp
 		QueueFamilyIndices m_QueueFamilyIndices;
 
 		std::vector< ShaderVK* > m_pShaders;
+	public:
 		std::vector< MeshVK* > m_pMeshes;
+	private:
 
 		// Required extensions loaded from SDL
 		const char **m_ppszReqExtensionNames = nullptr;
@@ -206,7 +379,11 @@ namespace vkApp
 		ModelVK *m_pTestModel = nullptr;
 		ModelVK *m_pTestModel2 = nullptr;
 		MeshVK *m_pSkyboxTest = nullptr;
+		MaterialVK *m_pTestMaterial = nullptr;
+		std::vector< MeshVK* > m_pTestMeshes;
 		MaterialVK *m_pSkyboxMaterial = nullptr;
+
+		VulkanThreadPool m_ThreadPool;
 	};
 }
 

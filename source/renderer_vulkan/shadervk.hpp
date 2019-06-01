@@ -33,6 +33,7 @@ struct MVPUniform
 
 struct VulkanPipelineContext
 {
+	vk::PipelineDepthStencilStateCreateInfo DepthStencilState;
 	std::vector< vk::VertexInputBindingDescription > VertexInputBindingDescriptions;
 	std::vector< vk::VertexInputAttributeDescription > VertexInputAttributeDescriptions;
 	vk::ShaderModule ShaderModules[ SHADER_COUNT ];
@@ -77,6 +78,7 @@ public:
 	virtual void Init();
 	virtual void Shutdown();
 
+	virtual void InitPipelineInfo();
 	virtual void InitVertexInputBindingDescriptions();
 	virtual void InitVertexInputAttributeDescriptions();
 	
@@ -87,13 +89,13 @@ public:
 	void createShaderModules();
 	void createGraphicsPipeline();
 
+	virtual void createUBOs( MaterialVK &material );
 	virtual void createDescriptorPool( MaterialVK &material );
 	void createDescriptorSets( MaterialVK &material );
 
 	inline const string &GetShaderName() { return m_ShaderName; }
 
 	virtual void InitShaderParams() = 0;
-	virtual vk::PipelineDepthStencilStateCreateInfo GetDepthStencilStateInfo();
 	virtual const std::vector< vk::DescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() = 0;
 	virtual const std::vector< vk::WriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) = 0; // TODO: Make reference
 	virtual const std::vector< vk::PushConstantRange > GetPushConstants() { return {}; }

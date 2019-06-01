@@ -4,6 +4,7 @@
 #include "factory/ifactory.hpp"
 #include "materialsystem/imaterialsystem.hpp"
 #include "shadervk.hpp"
+#include "camera.hpp"
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
@@ -11,6 +12,8 @@
 IEngine *g_pEngine = nullptr;
 IInput *g_pInput = nullptr;
 IMaterialSystem *g_pMaterialSystem = nullptr;
+
+extern Camera g_vkcam;
 
 RendererVulkan::RendererVulkan()
 {
@@ -28,7 +31,7 @@ bool RendererVulkan::Init()
 	}
 
 	config cfg = g_pEngine->GetConfig();
-	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
+	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
 	if ( cfg.windowConfig.fullscreen )
 		windowFlags |= SDL_WINDOW_FULLSCREEN;
@@ -36,8 +39,8 @@ bool RendererVulkan::Init()
 	m_pMainWindow = SDL_CreateWindow
 	(
 		"AMEngine",
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED_DISPLAY( 0 ),
+		SDL_WINDOWPOS_CENTERED_DISPLAY( 0 ),
 		cfg.windowConfig.resolution_width,
 		cfg.windowConfig.resolution_height,
 		windowFlags
@@ -93,6 +96,7 @@ bool RendererVulkan::Init()
 		return false;
 	}
 
+
 	/*uint32_t extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties( nullptr, &extensionCount, nullptr );
 
@@ -120,6 +124,12 @@ void RendererVulkan::Shutdown()
 void RendererVulkan::DrawScene()
 {
 	m_vkApp.drawFrame();
+}
+
+void RendererVulkan::CPUFrame()
+{
+	g_vkcam.Update();
+	g_vkcam.UpdateView();
 }
 
 ShaderVK *RendererVulkan::FindShader( const string &shaderName )

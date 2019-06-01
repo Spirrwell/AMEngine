@@ -229,8 +229,17 @@ int Engine::RunMainLoop()
 	m_CurrentTime = std::chrono::high_resolution_clock::now();
 	std::chrono::high_resolution_clock::time_point nextFramePrint = m_CurrentTime + 1s;
 
+	bool IsRenderFrame = true;
+
 	while ( !m_bDone )
 	{
+		if ( nextFramePrint <= m_CurrentTime )
+		{
+			printf( "FPS: %d\n", frameTicks );
+			frameTicks = 0;
+			nextFramePrint = m_CurrentTime + 1s;
+		}
+
 		oldTime = m_CurrentTime;
 		m_CurrentTime = std::chrono::high_resolution_clock::now();
 		auto delta = std::chrono::duration_cast< std::chrono::duration < float > >( m_CurrentTime - oldTime );
@@ -239,30 +248,21 @@ int Engine::RunMainLoop()
 		m_ServerHost.Update();
 		m_Client.Update();
 
-		if ( nextFramePrint <= m_CurrentTime )
-		{
-            printf( "FPS: %d\n", frameTicks );
-            frameTicks = 0;
-            nextFramePrint = m_CurrentTime + 1s;
-		}
-
 		g_pInput->Update();
 		GetSDL_Core()->ProcessEvents();
 
 		if ( g_pInput->IsButtonJustPressed( "Quit" ) )
 			m_bDone = true;
 
-		IViewPort *pViewPort = g_pRenderer->GetViewPort();
-		if ( pViewPort )
-			pViewPort->UpdateViewPort();
+		g_pRenderer->CPUFrame();
 
-		g_pRenderer->Clear();
-		g_pRenderer->DrawScene();
-		g_pRenderer->Swap();
+		if ( IsRenderFrame )
+			g_pRenderer->DrawScene();
 
-		//std::this_thread::sleep_for( 1ms );
-		//std::this_thread::yield();
-		frameTicks++;
+		++frameTicks;
+		std::this_thread::yield();
+
+		IsRenderFrame = !IsRenderFrame;
 	}
 
 	return 0;

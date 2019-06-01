@@ -1,1 +1,1 @@
-..\tools\devtools\bin\premake\windows\premake5.exe --file=AMEnginePremake.lua vs2017
+..\tools\devtools\bin\premake\windows\premake5.exe --file=AMEnginePremake.lua vs2019

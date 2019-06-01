@@ -51,18 +51,23 @@ void Camera::Update()
 	m_vEulerAngles[ YAW ] -= glm::degrees( ( g_pInput->GetMouseDeltaX() * g_pEngine->GetDeltaTime() ) );
 	m_vEulerAngles[ PITCH ] -= glm::degrees( ( g_pInput->GetMouseDeltaY() * g_pEngine->GetDeltaTime() ) );
 
+	constexpr const float defaultspeed = 20.0f;
+	constexpr const float shiftspeedmult = 3.0f;
+
+	const float speed = g_pInput->IsButtonPressed( "Speed" ) ? defaultspeed * shiftspeedmult : defaultspeed;
+
 	if ( g_pInput->IsButtonPressed( "Forward" ) )
-		m_vPosition += ( m_vForward * 10.0f * g_pEngine->GetDeltaTime() );
+		m_vPosition += ( m_vForward * speed * g_pEngine->GetDeltaTime() );
 	else if ( g_pInput->IsButtonPressed( "Backward" ) )
-		m_vPosition += ( m_vBackward * 10.0f * g_pEngine->GetDeltaTime() );
+		m_vPosition += ( m_vBackward * speed * g_pEngine->GetDeltaTime() );
 
 	if ( g_pInput->IsButtonPressed( "Left" ) )
-		m_vPosition += ( m_vLeft * 10.0f * g_pEngine->GetDeltaTime() );
+		m_vPosition += ( m_vLeft * speed * g_pEngine->GetDeltaTime() );
 	else if ( g_pInput->IsButtonPressed( "Right" ) )
-		m_vPosition += ( m_vRight * 10.0f * g_pEngine->GetDeltaTime() );
+		m_vPosition += ( m_vRight * speed * g_pEngine->GetDeltaTime() );
 
 	if ( g_pInput->IsButtonPressed( "Jump" ) )
-		m_vPosition += ( m_vUp * 10.0f * g_pEngine->GetDeltaTime() );
+		m_vPosition += ( Vector3f( 0, 1, 0 ) * speed * g_pEngine->GetDeltaTime() );
 	else if ( g_pInput->IsButtonPressed( "Crouch" ) )
-		m_vPosition += ( m_vDown * 10.0f * g_pEngine->GetDeltaTime() );
+		m_vPosition += ( Vector3f( 0, -1, 0 ) * speed * g_pEngine->GetDeltaTime() );
 }

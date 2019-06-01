@@ -39,6 +39,7 @@ ShaderVK::~ShaderVK()
 
 void ShaderVK::Init()
 {
+	InitPipelineInfo();
 	InitVertexInputBindingDescriptions();
 	InitVertexInputAttributeDescriptions();
 
@@ -76,6 +77,19 @@ void ShaderVK::Shutdown()
 		vulkan().device.destroyDescriptorSetLayout( m_vkDescriptorSetLayout, nullptr );
 		m_vkDescriptorSetLayout = nullptr;
 	}
+}
+
+void ShaderVK::InitPipelineInfo()
+{
+	m_Pipeline.DepthStencilState.depthTestEnable = VK_TRUE;
+	m_Pipeline.DepthStencilState.depthWriteEnable = VK_TRUE;
+	m_Pipeline.DepthStencilState.depthCompareOp = vk::CompareOp::eLess;
+	m_Pipeline.DepthStencilState.depthBoundsTestEnable = VK_FALSE;
+	m_Pipeline.DepthStencilState.minDepthBounds = 0.0f; // Optional
+	m_Pipeline.DepthStencilState.maxDepthBounds = 1.0f; // Optional
+	m_Pipeline.DepthStencilState.stencilTestEnable = VK_FALSE;
+	m_Pipeline.DepthStencilState.front = {}; // Optional
+	m_Pipeline.DepthStencilState.back = {}; // Optional
 }
 
 void ShaderVK::InitVertexInputBindingDescriptions()
@@ -222,6 +236,7 @@ void ShaderVK::createGraphicsPipeline()
 	rasterizer.depthClampEnable = VK_FALSE;
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = vk::PolygonMode::eFill;
+	//rasterizer.polygonMode = vk::PolygonMode::eLine;
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = vk::CullModeFlagBits::eFront; // TODO: Revisit this
 	rasterizer.frontFace = vk::FrontFace::eCounterClockwise; // TODO: Revisit this
@@ -280,7 +295,6 @@ void ShaderVK::createGraphicsPipeline()
 	else
 		m_Pipeline.PipelineLayout = std::move( pipelineLayout );
 
-	vk::PipelineDepthStencilStateCreateInfo depthStencil = GetDepthStencilStateInfo();
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo;
 	pipelineInfo.stageCount = SHADER_COUNT;
@@ -290,7 +304,7 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterizer;
 	pipelineInfo.pMultisampleState = &multisampling;
-	pipelineInfo.pDepthStencilState = &depthStencil;
+	pipelineInfo.pDepthStencilState = &m_Pipeline.DepthStencilState;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = nullptr; // Optional
 	pipelineInfo.layout = m_Pipeline.PipelineLayout;
@@ -303,6 +317,11 @@ void ShaderVK::createGraphicsPipeline()
 		throw std::runtime_error( "[Vulkan]Failed to create graphics pipeline." );
 	else
 		m_Pipeline.Pipeline = std::move( graphicsPipeline );
+}
+
+void ShaderVK::createUBOs( MaterialVK &material )
+{
+
 }
 
 void ShaderVK::createDescriptorPool( MaterialVK &material )
@@ -347,22 +366,6 @@ void ShaderVK::createDescriptorSets( MaterialVK &material )
 		auto descriptorWrites = GetDescriptorWrites( material, i );
 		vulkan().device.updateDescriptorSets( static_cast< uint32_t >( descriptorWrites.size() ), descriptorWrites.data(), 0, nullptr );
 	}
-}
-
-vk::PipelineDepthStencilStateCreateInfo ShaderVK::GetDepthStencilStateInfo()
-{
-	vk::PipelineDepthStencilStateCreateInfo depthStencil;
-	depthStencil.depthTestEnable = VK_TRUE;
-	depthStencil.depthWriteEnable = VK_TRUE;
-	depthStencil.depthCompareOp = vk::CompareOp::eLess;
-	depthStencil.depthBoundsTestEnable = VK_FALSE;
-	depthStencil.minDepthBounds = 0.0f; // Optional
-	depthStencil.maxDepthBounds = 1.0f; // Optional
-	depthStencil.stencilTestEnable = VK_FALSE;
-	depthStencil.front = {}; // Optional
-	depthStencil.back = {}; // Optional
-
-	return depthStencil;
 }
 
 uint32_t ShaderVK::computeVertexInputSize()

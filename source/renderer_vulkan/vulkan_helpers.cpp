@@ -18,8 +18,12 @@
 #include <map>
 #include <set>
 #include <chrono>
+#include <string_view>
+#include <cstdlib>
+
 #include "testshader.hpp"
 #include "camera.hpp"
+#include "texturemgrvk.hpp"
 
 // memoryoverride.hpp must be the last include file in a .cpp file!!!
 #include "memlib/memoryoverride.hpp"
@@ -73,6 +77,16 @@ static std::vector< Vector3f > skyboxVertices = {
 
 namespace vkApp
 {
+	void VulkanThreadPool::CBJob::Execute()
+	{
+		static vk::CommandBufferInheritanceInfo inheritanceInfo;
+
+		inheritanceInfo.renderPass = GetVkRenderer_Internal().VulkanApp().vulkan().renderPass;
+		inheritanceInfo.framebuffer = GetVkRenderer_Internal().VulkanApp().vulkan().swapChainFramebuffers[ m_iImageIndex ];
+
+		m_pResult = &GetVkRenderer_Internal().VulkanApp().m_pMeshes[ m_iMeshIndex ]->RecordSecondaryCommandBuffers( inheritanceInfo, m_iImageIndex );
+	}
+
 	struct UniformBufferObject
 	{
 		glm::mat4 model;
@@ -154,6 +168,10 @@ namespace vkApp
 
 	bool VulkanApp::initVulkan()
 	{
+		m_ThreadPool.InitThreads();
+
+		std::cout << "hardware_concurrency: " << std::thread::hardware_concurrency() << std::endl;
+
 		loadExtensionsFromSDL();
 #if VULKAN_VALIDATION_LAYERS
 		checkValidationLayerSupport();
@@ -211,9 +229,12 @@ namespace vkApp
 
 		m_pSkyboxMaterial = new MaterialVK( string( GAME_DIR ) + "materials/skybox/default_sky.amat" );
 		m_pSkyboxTest = new MeshVK( skyVerts, {}, m_pSkyboxMaterial );
+		m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/test.amat" );
+
+		std::cout << "m_pMeshes.size(): " << m_pMeshes.size() << std::endl;
 
 		allocateCommandBuffers();
-		recordCommandBuffers();
+		//recordCommandBuffers();
 		createSyncObjects();
 
 		//m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/cube/BasicMaterial.amat" );
@@ -225,8 +246,12 @@ namespace vkApp
 
 	void VulkanApp::cleanup()
 	{
+		m_ThreadPool.TerminateThreads();
+
 		if ( vulkan().device )
 			vulkan().device.waitIdle();
+
+		TextureMgrVK::Shutdown();
 
 		/*if ( m_pTestMesh )
 		{
@@ -236,6 +261,17 @@ namespace vkApp
 
 		delete m_pTestMaterial;
 		m_pTestMaterial = nullptr;*/
+
+		if ( m_pTestMaterial )
+		{
+			delete m_pTestMaterial;
+			m_pTestMaterial = nullptr;
+		}
+
+		for ( auto pMesh : m_pTestMeshes )
+			delete pMesh;
+
+		m_pTestMeshes.clear();
 
 		if ( m_pSkyboxMaterial )
 		{
@@ -400,28 +436,28 @@ namespace vkApp
 		if ( vulkan().bMinimized )
 			return;
 
-		vulkan().device.waitForFences( 1, &vulkan().inFlightFences[ currentFrame ], VK_TRUE, std::numeric_limits< uint64_t >::max() );
-		vk::Result result = vulkan().device.acquireNextImageKHR( vulkan().swapChain, std::numeric_limits< uint64_t >::max(), vulkan().imageAvailableSemaphores[ currentFrame ], nullptr, &imageIndex );
-		//updateUniformBuffer( imageIndex );
+		if ( vulkan().bFrameBufferResized )
+		{
+			vulkan().bFrameBufferResized = false;
+			recreateSwapChain();
+			return;
+		}
 
-		if ( result == vk::Result::eErrorOutOfDateKHR )
+		vulkan().device.waitForFences( 1, &vulkan().inFlightFences[ currentFrame ], VK_TRUE, std::numeric_limits< uint64_t >::max() );
+
+		if ( auto result = vulkan().device.acquireNextImageKHR( vulkan().swapChain, std::numeric_limits< uint64_t >::max(), vulkan().imageAvailableSemaphores[ currentFrame ], nullptr ); result.result == vk::Result::eSuccess )
+			imageIndex = result.value;
+		else
 		{
 			recreateSwapChain();
 			return;
 		}
-		else if ( result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR )
-		{
-			stprintf( "[Vulkan]Failed to acquire swap chain image.\n" );
-			return;
-		}
 
-		g_vkcam.Update();
-		g_vkcam.UpdateView();
+		//updateUniformBuffer( imageIndex );
 
 		recordCommandBuffer( imageIndex );
 
 		vk::Semaphore waitSemaphores[] = { vulkan().imageAvailableSemaphores[ currentFrame ] };
-
 		vk::SubmitInfo submitInfo;
 
 		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
@@ -444,27 +480,16 @@ namespace vkApp
 		}
 
 		vk::PresentInfoKHR presentInfo;
-
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
-
-		vk::SwapchainKHR swapChains[] = { vulkan().swapChain };
 		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = swapChains;
+		presentInfo.pSwapchains = &vulkan().swapChain;
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.pResults = nullptr; // Optional
 
-		result = vulkan().presentQueue.presentKHR( presentInfo );
-
-		if ( result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || vulkan().bFrameBufferResized )
+		if ( auto result = vulkan().presentQueue.presentKHR( presentInfo ); result != vk::Result::eSuccess )
 		{
-			vulkan().bFrameBufferResized = false;
 			recreateSwapChain();
-			return;
-		}
-		else if ( result != vk::Result::eSuccess )
-		{
-			stprintf( "[Vulkan]Failed to present swap chain image.\n" );
 			return;
 		}
 		
@@ -1014,14 +1039,34 @@ namespace vkApp
 
 		vulkan().commandBuffers[ imageIndex ].beginRenderPass( renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers );
 
-			vk::CommandBufferInheritanceInfo inheritanceInfo;
-			inheritanceInfo.renderPass = vulkan().renderPass;
-			inheritanceInfo.framebuffer = vulkan().swapChainFramebuffers[ imageIndex ];
+			constexpr const bool MultiThread = true;
 
-			for ( auto pMesh : m_pMeshes )
+			if constexpr ( MultiThread )
 			{
-				const vk::CommandBuffer &secondaryCommandBuffer = pMesh->RecordSecondaryCommandBuffers( inheritanceInfo, imageIndex );
-				vulkan().commandBuffers[ imageIndex ].executeCommands( 1, &secondaryCommandBuffer );
+				for ( size_t i = 0; i < m_pMeshes.size(); ++i )
+					m_ThreadPool.AddJob( { imageIndex, i } );
+
+				m_ThreadPool.AssignJobs();
+				m_ThreadPool.ExecuteJobs();
+				m_ThreadPool.WaitIdle();
+
+				const auto &jobs = m_ThreadPool.GetJobs();
+				for ( const auto &job : jobs )
+					vulkan().commandBuffers[ imageIndex ].executeCommands( 1, job.GetResult() );
+
+				m_ThreadPool.ClearJobs();
+			}
+			else
+			{
+				vk::CommandBufferInheritanceInfo inheritanceInfo;
+				inheritanceInfo.renderPass = vulkan().renderPass;
+				inheritanceInfo.framebuffer = vulkan().swapChainFramebuffers[ imageIndex ];
+
+				for ( auto pMesh : m_pMeshes )
+				{
+					const vk::CommandBuffer &secondaryCommandBuffer = pMesh->RecordSecondaryCommandBuffers( inheritanceInfo, imageIndex );
+					vulkan().commandBuffers[ imageIndex ].executeCommands( 1, &secondaryCommandBuffer );
+				}
 			}
 
 			/*for ( auto pMesh : m_pMeshes )

@@ -17,7 +17,9 @@ public:
 	virtual ~TextureVK();
 	void Load( const std::filesystem::path &path );
 	void Load( const std::array< string, 6 > &faces );
+	void LoadRGBA( const unsigned char *pPixels, size_t width, size_t height, bool bGenMipMaps = false );
 	void LoadKtx( const std::filesystem::path &ktxFile );
+
 	void Shutdown();
 
 	const vk::ImageView &ImageView() { return m_vkTextureImageView; }

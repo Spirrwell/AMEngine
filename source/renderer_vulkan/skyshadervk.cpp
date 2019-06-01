@@ -12,6 +12,12 @@ extern Camera g_vkcam;
 static SkyShaderVK s_SkyShader( "skyShader" );
 extern IEngine *g_pEngine;
 
+void SkyShaderVK::InitPipelineInfo()
+{
+	ShaderVK::InitPipelineInfo();
+	m_Pipeline.DepthStencilState.depthCompareOp = vk::CompareOp::eLessOrEqual;
+}
+
 void SkyShaderVK::InitVertexInputAttributeDescriptions()
 {
 	m_Pipeline.VertexInputAttributeDescriptions.resize( 1 );
@@ -25,14 +31,6 @@ void SkyShaderVK::InitVertexInputAttributeDescriptions()
 void SkyShaderVK::InitShaderParams()
 {
 	m_MaterialParams.push_back( MaterialParameter_t { "skybox", MATP_SKYTEXTURE } );
-}
-
-vk::PipelineDepthStencilStateCreateInfo SkyShaderVK::GetDepthStencilStateInfo()
-{
-	vk::PipelineDepthStencilStateCreateInfo depthStencil = ShaderVK::GetDepthStencilStateInfo();
-	depthStencil.depthCompareOp = vk::CompareOp::eLessOrEqual;
-
-	return depthStencil;
 }
 
 void SkyShaderVK::createDescriptorPool( MaterialVK &material )

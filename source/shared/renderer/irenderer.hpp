@@ -24,6 +24,8 @@ public:
 	virtual void Clear() = 0;
 	virtual void Swap() = 0;
 
+	virtual void CPUFrame() {}
+
 	virtual ITexture *CreateTexture( const std::string &textureName, bool bCubeMap = false ) = 0;
 
 	virtual unsigned int GetShaderCount() = 0;

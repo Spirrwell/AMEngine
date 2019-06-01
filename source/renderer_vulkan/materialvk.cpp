@@ -3,6 +3,7 @@
 #include "renderer_vulkan.hpp"
 #include "texturevk.hpp"
 #include "vulkan_helpers.hpp"
+#include "texturemgrvk.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -37,9 +38,6 @@ MaterialVK::~MaterialVK()
 
 void MaterialVK::Shutdown()
 {
-	for ( auto &kv : m_mapTextures )
-        delete kv.second;
-
 	m_mapTextures.clear();
 
 	if ( m_vkDescriptorPool )
@@ -112,18 +110,12 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
                         {
 							case MATP_TEXTURE:
 							{
-								TextureVK *pTexture = new TextureVK;
-								pTexture->Load( string( GAME_DIR ) + tokens[ 1 ] );
-								m_mapTextures[ matParam.parameterName ] = pTexture;
+								m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadTexture( string( GAME_DIR ) + tokens[ 1 ] );
 								break;
 							}
 							case MATP_SKYTEXTURE:
 							{
-								TextureVK *pTexture = new TextureVK;
 //								string skyKtx = string( GAME_DIR ) + tokens[ 1 ];
-								std::filesystem::path texPath = GAME_DIR;
-								texPath += tokens[ 1 ];
-								pTexture->LoadKtx( texPath );
 
 								/*std::array < string, 6 > faces =
 								{
@@ -136,7 +128,8 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 								};*/
 								//pTexture->Load( faces );
 								
-								m_mapTextures[ matParam.parameterName ] = pTexture;
+								//m_mapTextures[ matParam.parameterName ] = pTexture;
+								m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadSkyTexture( string( GAME_DIR ) + tokens[ 1 ] );
 								break;
 							}
                         }
@@ -171,4 +164,13 @@ TextureVK *MaterialVK::GetTexture( const string &matParamName )
         return it->second;
 
     return nullptr;
+}
+
+MaterialDiffuseOnly::MaterialDiffuseOnly( TextureVK *pDiffuse )
+{
+	m_pShader = GetVkRenderer_Internal().FindShader( "testShader2" );
+	m_mapTextures[ "diffuse" ] = pDiffuse;
+
+	m_pShader->createDescriptorPool( *this );
+    m_pShader->createDescriptorSets( *this );
 }

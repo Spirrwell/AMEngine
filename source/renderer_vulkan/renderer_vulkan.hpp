@@ -29,6 +29,8 @@ public:
 	void Clear() override {}
 	void Swap() override {}
 
+	void CPUFrame() override;
+
 	ITexture *CreateTexture( const string &textureName, bool bCubemap = false ) override { return nullptr; }
 
 	unsigned int GetShaderCount() override { return 0; }

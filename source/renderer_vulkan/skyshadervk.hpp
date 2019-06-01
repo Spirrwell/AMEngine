@@ -11,12 +11,13 @@ struct SkyShaderPushConstants
 
 class SkyShaderVK : public ShaderVK
 {
+public:
 	using ShaderVK::ShaderVK;
 
+	void InitPipelineInfo() override;
 	void InitVertexInputAttributeDescriptions() override;
 	void InitShaderParams() override;
 
-	vk::PipelineDepthStencilStateCreateInfo GetDepthStencilStateInfo() override;
 	void createDescriptorPool( MaterialVK &material ) override;
 	const std::vector< vk::DescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() override;
 	const std::vector< vk::WriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) override;

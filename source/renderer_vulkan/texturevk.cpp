@@ -34,67 +34,8 @@ void TextureVK::Load( const std::filesystem::path &path )
 	if ( !pPixels )
 		throw std::runtime_error( "[Vulkan]Failed to load texture image!" );
 
-	m_nMipLevels = static_cast< uint32_t >( std::floor( std::log2( std::max( texWidth, texHeight ) ) ) ) + 1;
-
-	vk::DeviceSize imageSize = texWidth * texHeight * STBI_rgb_alpha;
-	vk::Buffer stagingBuffer;
-	vk::DeviceMemory stagingBufferMemory;
-
-	VulkanApp().createBuffer( imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
-
-	void *pData = nullptr;
-	vulkan().device.mapMemory( stagingBufferMemory, 0, imageSize, vk::MemoryMapFlags(), &pData );
-		std::memcpy( pData, pPixels, static_cast< size_t >( imageSize ) );
-	vulkan().device.unmapMemory( stagingBufferMemory );
-
+	LoadRGBA( pPixels, texWidth, texHeight );
 	stbi_image_free( pPixels );
-	VulkanApp().createImage( static_cast< uint32_t >( texWidth ),
-			static_cast< uint32_t >( texHeight ),
-			m_nMipLevels,
-			vk::Format::eR8G8B8A8Unorm,
-			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal,
-			m_vkTextureImage,
-			m_vkTextureImageMemory );
-
-	VulkanApp().transitionImageLayout( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, m_nMipLevels );
-	VulkanApp().copyBufferToImage( stagingBuffer, m_vkTextureImage, static_cast< uint32_t >( texWidth ), static_cast< uint32_t >( texHeight ), static_cast< uint32_t >( STBI_rgb_alpha ) );
-	VulkanApp().generateMipMaps( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, texWidth, texHeight, m_nMipLevels );
-
-	// TODO: If we don't generate mip maps, transition
-	//VulkanApp().transitionImageLayout( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_nMipLevels );
-
-	// Generate Mipmaps
-
-	vulkan().device.destroyBuffer( stagingBuffer, nullptr );
-	vulkan().device.freeMemory( stagingBufferMemory, nullptr );
-
-	// Create Texture Image View
-	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, m_nMipLevels, vk::ImageViewType::e2D );
-
-	// Create Texture Sampler
-	vk::SamplerCreateInfo samplerInfo;
-	samplerInfo.magFilter = vk::Filter::eLinear;
-	samplerInfo.minFilter = vk::Filter::eLinear;
-	samplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
-	samplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
-	samplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
-	samplerInfo.anisotropyEnable = VK_TRUE;
-	samplerInfo.maxAnisotropy = 16.0f;
-	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-	samplerInfo.unnormalizedCoordinates = VK_FALSE;
-	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = vk::CompareOp::eNever;
-	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-	samplerInfo.mipLodBias = 0.0f;
-	samplerInfo.minLod = 0.0f;
-	samplerInfo.maxLod = static_cast< float >( m_nMipLevels );
-
-	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
-		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-	else
-		m_vkTextureSampler = std::move( sampler );
 }
 
 void TextureVK::Load( const std::array< string, 6 > &faces )
@@ -155,6 +96,73 @@ void TextureVK::Load( const std::array< string, 6 > &faces )
 
 	// Create Texture Sampler
 	vk::SamplerCreateInfo samplerInfo = {};
+	samplerInfo.magFilter = vk::Filter::eLinear;
+	samplerInfo.minFilter = vk::Filter::eLinear;
+	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.anisotropyEnable = VK_TRUE;
+	samplerInfo.maxAnisotropy = 16.0f;
+	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerInfo.unnormalizedCoordinates = VK_FALSE;
+	samplerInfo.compareEnable = VK_FALSE;
+	samplerInfo.compareOp = vk::CompareOp::eAlways;
+	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.mipLodBias = 0.0f;
+	samplerInfo.minLod = 0.0f;
+	samplerInfo.maxLod = static_cast< float >( m_nMipLevels );
+
+	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
+		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
+	else
+		m_vkTextureSampler = std::move( sampler );
+}
+
+void TextureVK::LoadRGBA( const unsigned char *pPixels, size_t width, size_t height, bool bGenMipMaps /*= false*/ )
+{
+	constexpr const auto numChannels = 4;
+
+	if ( bGenMipMaps )
+		m_nMipLevels = static_cast< uint32_t >( std::floor( std::log2( std::max( width, height ) ) ) ) + 1;
+
+	vk::DeviceSize imageSize = width * height * numChannels;
+	vk::Buffer stagingBuffer;
+	vk::DeviceMemory stagingBufferMemory;
+
+	VulkanApp().createBuffer( imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
+
+	void *pData = nullptr;
+	vulkan().device.mapMemory( stagingBufferMemory, 0, imageSize, vk::MemoryMapFlags(), &pData );
+		std::memcpy( pData, pPixels, static_cast< size_t >( imageSize ) );
+	vulkan().device.unmapMemory( stagingBufferMemory );
+
+	VulkanApp().createImage( static_cast< uint32_t >( width ),
+			static_cast< uint32_t >( height ),
+			m_nMipLevels,
+			vk::Format::eR8G8B8A8Unorm,
+			vk::ImageTiling::eOptimal,
+			vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+			vk::MemoryPropertyFlagBits::eDeviceLocal,
+			m_vkTextureImage,
+			m_vkTextureImageMemory );
+
+	VulkanApp().transitionImageLayout( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, m_nMipLevels );
+	VulkanApp().copyBufferToImage( stagingBuffer, m_vkTextureImage, static_cast< uint32_t >( width ), static_cast< uint32_t >( height ), static_cast< uint32_t >( numChannels ) );
+
+	// Generate Mipmaps
+	if ( bGenMipMaps )
+		VulkanApp().generateMipMaps( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, static_cast< int32_t >( width ), static_cast< int32_t >( height ), m_nMipLevels );
+	else
+		VulkanApp().transitionImageLayout( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, m_nMipLevels );
+
+	vulkan().device.destroyBuffer( stagingBuffer, nullptr );
+	vulkan().device.freeMemory( stagingBufferMemory, nullptr );
+
+	// Create Texture Image View
+	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, m_nMipLevels, vk::ImageViewType::e2D );
+
+	// Create Texture Sampler
+	vk::SamplerCreateInfo samplerInfo;
 	samplerInfo.magFilter = vk::Filter::eLinear;
 	samplerInfo.minFilter = vk::Filter::eLinear;
 	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;

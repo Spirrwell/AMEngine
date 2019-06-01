@@ -44,6 +44,7 @@ bool Input::Init()
 	m_mapButtons[ "TurnLeft" ] = SDL_SCANCODE_LEFT;
 	m_mapButtons[ "TurnRight" ] = SDL_SCANCODE_RIGHT;
 	m_mapButtons[ "Crouch" ] = SDL_SCANCODE_LCTRL;
+	m_mapButtons[ "Speed" ] = SDL_SCANCODE_LSHIFT;
 
 	return true;
 }

@@ -120,7 +120,7 @@ void TestShader::recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const 
 
 	Matrix4f view = g_vkcam.GetViewMatrix();
 	//Matrix4f view = glm::translate( Vector3f( 5.0f, 0.0f, 0.0f ) );
-	Matrix4f proj = glm::perspective( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 1000.0f );
+	Matrix4f proj = glm::perspective( glm::radians( 70.0f ), g_pEngine->GetAspectRatio(), 0.01f, 10000.0f );
 
 	proj[ 1 ][ 1 ] *= -1.0f;
 

@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-#define MEM_DEBUGGING 1
+#define MEM_DEBUGGING 0
 
 #if MEM_DEBUGGING
 void *debug_malloc( size_t size, const char *pszFile, int line, const char *pszFunction );

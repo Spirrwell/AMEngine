@@ -15,28 +15,38 @@ class TextureVK;
 
 class MaterialVK : public vkApp::CVulkanInterface
 {
-    friend class ShaderVK;
+	friend class ShaderVK;
 
 public:
-    MaterialVK( const string &materialPath );
+	MaterialVK( const string &materialPath );
 	MaterialVK( std::ifstream &material );
-    virtual ~MaterialVK();
+	virtual ~MaterialVK();
 
 	void Shutdown();
 
 	void LoadMaterial( std::ifstream &material );
 
-    TextureVK *GetTexture( const string &matParamName );
-    ShaderVK *GetShader() const { return m_pShader; }
+	TextureVK *GetTexture( const string &matParamName );
+	ShaderVK *GetShader() const { return m_pShader; }
 
-    std::vector< vk::DescriptorSet > m_vkDescriptorSets;
+	std::vector< std::vector< vk::Buffer > > m_vkUniformBuffers;
+	std::vector< std::vector< vk::DeviceMemory > > m_vkUniformBuffersMemory;
+
+	std::vector< vk::DescriptorSet > m_vkDescriptorSets;
 	vk::DescriptorPool m_vkDescriptorPool;
+	
+protected:
+	MaterialVK() = default;
+	ShaderVK *m_pShader = nullptr;
 
-private:
-    ShaderVK *m_pShader = nullptr;
+	std::vector< MaterialParameter_t > m_MaterialParams;
+	std::map< string, TextureVK* > m_mapTextures;
+};
 
-    std::vector< MaterialParameter_t > m_MaterialParams;
-    std::map< string, TextureVK* > m_mapTextures;
+class MaterialDiffuseOnly : public MaterialVK
+{
+public:
+	MaterialDiffuseOnly( TextureVK *pDiffuse );
 };
 
 #endif // MATERIALVK_HPP
