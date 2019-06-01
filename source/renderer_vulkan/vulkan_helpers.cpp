@@ -171,9 +171,6 @@ namespace vkApp
 		m_ThreadPool.InitThreads();
 
 		std::cout << "hardware_concurrency: " << std::thread::hardware_concurrency() << std::endl;
-		std::cout << "Root Path: " << PATHS::ROOT << std::endl;
-		std::cout << "Game Path: " << PATHS::GAME << std::endl;
-		std::cout << "Bin Path: " << PATHS::BIN << std::endl;
 
 		loadExtensionsFromSDL();
 #if VULKAN_VALIDATION_LAYERS
