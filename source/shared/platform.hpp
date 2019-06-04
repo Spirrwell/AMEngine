@@ -44,12 +44,15 @@
 	#error
 #endif
 
+#ifndef MEMORY_SYSTEM_DLL_EXPORT
+// TODO: On Linux this crashes our memory system library
 namespace PATHS
 {
 	const std::filesystem::path ROOT = std::filesystem::current_path() / "";
 	const std::filesystem::path BIN = std::filesystem::absolute( "./bin/" );
 	const std::filesystem::path GAME = std::filesystem::absolute( "../../game_resource/" );
 }
+#endif
 
 // Temporary game directory definition
 #define GAME_DIR "../../game_resource/"

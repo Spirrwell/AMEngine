@@ -78,10 +78,11 @@ project "renderer_vulkan"
 
 	filter { "system:Linux" }
 		includedirs {
-					"/usr/include/SDL2", --Yuck
+					"/usr/local/include/SDL2", --Yuck
 					"../thirdparty/vulkan-1.1.82.1/linux/include"
 		}
 		links {
+				"ktx.es3",
 				"SDL2main",
 				"SDL2",
 				"vulkan"

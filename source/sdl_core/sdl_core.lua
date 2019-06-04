@@ -40,7 +40,7 @@ project "sdl_core"
 
 	filter { "system:Linux" }
 		includedirs {
-					"/usr/include/SDL2" --Yuck
+					"/usr/local/include/SDL2" --Yuck
 		}
 		links {
 				"SDL2main",
