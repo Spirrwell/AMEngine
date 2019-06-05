@@ -40,10 +40,10 @@ void MaterialVK::Shutdown()
 {
 	m_mapTextures.clear();
 
-	if ( m_vkDescriptorPool )
+	if ( m_vkDescriptorPool != VK_NULL_HANDLE )
 	{
-		vulkan().device.destroyDescriptorPool( m_vkDescriptorPool, nullptr );
-		m_vkDescriptorPool = nullptr;
+		vkDestroyDescriptorPool( vulkan().device, m_vkDescriptorPool, nullptr );
+		m_vkDescriptorPool = VK_NULL_HANDLE;
 	}
 }
 
@@ -144,11 +144,7 @@ void MaterialVK::LoadMaterial( std::ifstream &material )
 	for ( auto &matParam : m_MaterialParams )
 	{
 		if ( matParam.type == MATP_TEXTURE && m_mapTextures[ matParam.parameterName ] == nullptr )
-		{
-			TextureVK *pTexture = new TextureVK;
-			pTexture->Load( PATHS::GAME / matParam.defaultValue );
-			m_mapTextures[ matParam.parameterName ] = pTexture;
-		}
+			m_mapTextures[ matParam.parameterName ] = TextureMgrVK::LoadTexture( PATHS::GAME / matParam.defaultValue );
 	}
 
 	material.close();

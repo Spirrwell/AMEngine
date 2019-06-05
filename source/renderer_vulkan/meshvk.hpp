@@ -23,8 +23,8 @@ public:
 
 	void Shutdown();
 
-	void Draw( vk::CommandBuffer &commandBuffer, const uint32_t &imageIndex );
-	const vk::CommandBuffer &RecordSecondaryCommandBuffers( vk::CommandBufferInheritanceInfo inheritanceInfo, const uint32_t &imageIndex );
+	void Draw( VkCommandBuffer &commandBuffer, const uint32_t &imageIndex );
+	const VkCommandBuffer &RecordSecondaryCommandBuffers( VkCommandBufferInheritanceInfo inheritanceInfo, const uint32_t &imageIndex );
 
 	MaterialVK *GetMaterial() const { return m_pMaterial; }
 
@@ -52,14 +52,14 @@ private:
 	Vertices m_Vertices;
 	Indices m_Indices;
 
-	vk::CommandPool m_vkCommandPool;
-	std::vector< vk::CommandBuffer > m_vkSecondaryCommandBuffers;
+	VkCommandPool m_vkCommandPool = VK_NULL_HANDLE;
+	std::vector< VkCommandBuffer > m_vkSecondaryCommandBuffers;
 
-	vk::Buffer m_vkVertexBuffer;
-	vk::DeviceMemory m_vkVertexBufferMemory;
+	VkBuffer m_vkVertexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_vkVertexBufferMemory = VK_NULL_HANDLE;
 
-	vk::Buffer m_vkIndexBuffer;
-	vk::DeviceMemory m_vkIndexBufferMemory;
+	VkBuffer m_vkIndexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_vkIndexBufferMemory = VK_NULL_HANDLE;
 
 	MaterialVK *m_pMaterial = nullptr;
 	ModelVK *m_pOwningModel = nullptr;

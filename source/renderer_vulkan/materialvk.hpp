@@ -30,11 +30,11 @@ public:
 	TextureVK *GetTexture( const string &matParamName );
 	ShaderVK *GetShader() const { return m_pShader; }
 
-	std::vector< std::vector< vk::Buffer > > m_vkUniformBuffers;
-	std::vector< std::vector< vk::DeviceMemory > > m_vkUniformBuffersMemory;
+	std::vector< std::vector< VkBuffer > > m_vkUniformBuffers;
+	std::vector< std::vector< VkDeviceMemory > > m_vkUniformBuffersMemory;
 
-	std::vector< vk::DescriptorSet > m_vkDescriptorSets;
-	vk::DescriptorPool m_vkDescriptorPool;
+	std::vector< VkDescriptorSet > m_vkDescriptorSets;
+	VkDescriptorPool m_vkDescriptorPool = VK_NULL_HANDLE;
 	
 protected:
 	MaterialVK() = default;

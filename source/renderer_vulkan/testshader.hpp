@@ -18,10 +18,10 @@ public:
 
 	void InitShaderParams() override;
 
-	const std::vector< vk::DescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() override;
-	const std::vector< vk::WriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) override;
-	const std::vector< vk::PushConstantRange > GetPushConstants() override;
-	void recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const MeshVK &mesh ) override;
+	const std::vector< VkDescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() override;
+	const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) override;
+	const std::vector< VkPushConstantRange > GetPushConstants() override;
+	void recordToCommandBuffer( VkCommandBuffer &commandBuffer, const MeshVK &mesh ) override;
 
 private:
 	UBOWrapperVK< DefaultUBO > m_UBO;

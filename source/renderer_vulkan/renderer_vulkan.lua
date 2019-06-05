@@ -27,6 +27,8 @@ project "renderer_vulkan"
 			"%{cfg.location}/renderer_vulkan.cpp",
 			"%{cfg.location}/testshader.hpp",
 			"%{cfg.location}/testshader.cpp",
+			"%{cfg.location}/texturemgrvk.hpp",
+			"%{cfg.location}/texturemgrvk.cpp",
 			"%{cfg.location}/texturevk.hpp",
 			"%{cfg.location}/texturevk.cpp",
 			"%{cfg.location}/shadervk.hpp",
@@ -62,7 +64,7 @@ project "renderer_vulkan"
 	filter { "system:Windows" }
 		includedirs {
 					"../thirdparty/SDL2-2.0.8/include",
-					"../thirdparty/vulkan-1.1.82.1/win/include"
+					"../thirdparty/vulkan/1.1.82.1/win/include"
 		}
 		links {
 				"amlib.lib",
@@ -79,7 +81,7 @@ project "renderer_vulkan"
 	filter { "system:Linux" }
 		includedirs {
 					"/usr/local/include/SDL2", --Yuck
-					"../thirdparty/vulkan-1.1.82.1/linux/include"
+					"../thirdparty/vulkan/1.1.106.0/linux/include"
 		}
 		links {
 				"ktx.es3",

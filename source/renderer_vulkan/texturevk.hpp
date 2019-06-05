@@ -22,14 +22,14 @@ public:
 
 	void Shutdown();
 
-	const vk::ImageView &ImageView() { return m_vkTextureImageView; }
-	const vk::Sampler &Sampler() { return m_vkTextureSampler; }
+	const VkImageView &ImageView() { return m_vkTextureImageView; }
+	const VkSampler &Sampler() { return m_vkTextureSampler; }
 
 private:
-	vk::Image m_vkTextureImage;
-	vk::DeviceMemory m_vkTextureImageMemory;
-	vk::ImageView m_vkTextureImageView;
-	vk::Sampler m_vkTextureSampler;
+	VkImage m_vkTextureImage = VK_NULL_HANDLE;
+	VkDeviceMemory m_vkTextureImageMemory = VK_NULL_HANDLE;
+	VkImageView m_vkTextureImageView = VK_NULL_HANDLE;
+	VkSampler m_vkTextureSampler = VK_NULL_HANDLE;
 
 	uint32_t m_nMipLevels = 1;
 	ktxVulkanTexture m_ktxVulkanTexture = {};

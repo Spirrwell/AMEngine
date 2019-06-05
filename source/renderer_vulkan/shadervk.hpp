@@ -33,12 +33,12 @@ struct MVPUniform
 
 struct VulkanPipelineContext
 {
-	vk::PipelineDepthStencilStateCreateInfo DepthStencilState;
-	std::vector< vk::VertexInputBindingDescription > VertexInputBindingDescriptions;
-	std::vector< vk::VertexInputAttributeDescription > VertexInputAttributeDescriptions;
-	vk::ShaderModule ShaderModules[ SHADER_COUNT ];
-	vk::PipelineLayout PipelineLayout;
-	vk::Pipeline Pipeline;
+	VkPipelineDepthStencilStateCreateInfo DepthStencilState = {};
+	std::vector< VkVertexInputBindingDescription > VertexInputBindingDescriptions;
+	std::vector< VkVertexInputAttributeDescription > VertexInputAttributeDescriptions;
+	VkShaderModule ShaderModules[ SHADER_COUNT ] = { VK_NULL_HANDLE };
+	VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
+	VkPipeline Pipeline = VK_NULL_HANDLE;
 };
 
 template< typename T >
@@ -46,26 +46,26 @@ struct UBOWrapperVK : public vkApp::CVulkanInterface
 {
 	void Init()
 	{
-		vk::DeviceSize bufferSize = sizeof( T );
+		VkDeviceSize bufferSize = sizeof( T );
 
 		uniformBuffer.resize( vulkan().swapChainImages.size() );
 		uniformBufferMemory.resize( vulkan().swapChainImages.size() );
 
 		for ( size_t i = 0; i < vulkan().swapChainImages.size(); ++i )
-			VulkanApp().createBuffer( bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, uniformBuffer[ i ], uniformBufferMemory[ i ] );
+			VulkanApp().createBuffer( bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffer[ i ], uniformBufferMemory[ i ] );
 	}
 
 	void Shutdown()
 	{
 		for ( size_t i = 0; i < uniformBuffer.size(); ++i )
 		{
-			vulkan().device.destroyBuffer( uniformBuffer[ i ], nullptr );
-			vulkan().device.freeMemory( uniformBufferMemory[ i ], nullptr );
+			vkDestroyBuffer( vulkan().device, uniformBuffer[ i ], nullptr );
+			vkFreeMemory( vulkan().device, uniformBufferMemory[ i ], nullptr );
 		}
 	}
 
-	std::vector< vk::Buffer > uniformBuffer; // Buffer per swap chain image
-	std::vector< vk::DeviceMemory > uniformBufferMemory; // Buffer memory per swap chain image
+	std::vector< VkBuffer > uniformBuffer; // Buffer per swap chain image
+	std::vector< VkDeviceMemory > uniformBufferMemory; // Buffer memory per swap chain image
 	T UBO;
 };
 
@@ -96,17 +96,17 @@ public:
 	inline const string &GetShaderName() { return m_ShaderName; }
 
 	virtual void InitShaderParams() = 0;
-	virtual const std::vector< vk::DescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() = 0;
-	virtual const std::vector< vk::WriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) = 0; // TODO: Make reference
-	virtual const std::vector< vk::PushConstantRange > GetPushConstants() { return {}; }
-	virtual void recordToCommandBuffer( vk::CommandBuffer &commandBuffer, const MeshVK &mesh ) {}
+	virtual const std::vector< VkDescriptorSetLayoutBinding > &GetDescriptorSetLayoutBindings() = 0;
+	virtual const std::vector< VkWriteDescriptorSet > GetDescriptorWrites( MaterialVK &material, size_t imageIndex ) = 0; // TODO: Make reference
+	virtual const std::vector< VkPushConstantRange > GetPushConstants() { return {}; }
+	virtual void recordToCommandBuffer( VkCommandBuffer &commandBuffer, const MeshVK &mesh ) {}
 
 	const std::vector< MaterialParameter_t > &GetMaterialParams() { return m_MaterialParams; }
 	const VulkanPipelineContext &PipelineCtx() const { return m_Pipeline; }
 
 //protected:
 	std::vector< MaterialParameter_t > m_MaterialParams;
-	vk::DescriptorSetLayout m_vkDescriptorSetLayout;
+	VkDescriptorSetLayout m_vkDescriptorSetLayout = VK_NULL_HANDLE;
 
 	string m_ShaderName;
 

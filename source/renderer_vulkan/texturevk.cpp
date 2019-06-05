@@ -58,64 +58,63 @@ void TextureVK::Load( const std::array< string, 6 > &faces )
 
 	m_nMipLevels = static_cast< uint32_t >( std::floor( std::log2( std::max( texWidth, texHeight ) ) ) ) + 1;
 
-	vk::DeviceSize imageSize = memWriter.size();
-	vk::Buffer stagingBuffer;
-	vk::DeviceMemory stagingBufferMemory;
+	VkDeviceSize imageSize = memWriter.size();
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
 
-	VulkanApp().createBuffer( imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
+	VulkanApp().createBuffer( imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
 
 	void *pData = nullptr;
-	vulkan().device.mapMemory( stagingBufferMemory, 0, imageSize, vk::MemoryMapFlags(), &pData );
+	vkMapMemory( vulkan().device, stagingBufferMemory, 0, imageSize, 0, &pData );
 		//std::memcpy( pData, ppPixels.data(), static_cast< size_t >( imageSize ) );
 		std::memcpy( pData, memWriter.data(), static_cast< size_t >( imageSize ) );
-	vulkan().device.unmapMemory( stagingBufferMemory );
+	vkUnmapMemory( vulkan().device, stagingBufferMemory );
 
 	VulkanApp().createImage( static_cast< uint32_t >( texWidth ),
 			static_cast< uint32_t >( texHeight ),
 			m_nMipLevels,
-			vk::Format::eR8G8B8A8Unorm,
-			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal,
+			VK_FORMAT_R8G8B8A8_UNORM,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			m_vkTextureImage,
 			m_vkTextureImageMemory,
 			true );
 
-	VulkanApp().transitionImageLayout( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, m_nMipLevels, true );
+	VulkanApp().transitionImageLayout( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_nMipLevels, true );
 	VulkanApp().copyBufferToImage( stagingBuffer, m_vkTextureImage, static_cast< uint32_t >( texWidth ), static_cast< uint32_t >( texHeight ), static_cast< uint32_t >( STBI_rgb_alpha ), true );
-	VulkanApp().generateMipMaps( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, texWidth, texHeight, m_nMipLevels, true );
+	VulkanApp().generateMipMaps( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, texWidth, texHeight, m_nMipLevels, true );
 
 	// TODO: If we don't generate mip maps, transition
 	//VulkanApp().transitionImageLayout( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_nMipLevels );
 
-	vulkan().device.destroyBuffer( stagingBuffer, nullptr );
-	vulkan().device.freeMemory( stagingBufferMemory, nullptr );
+	vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
+	vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
 
 	// Create Texture Image View
-	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, m_nMipLevels, vk::ImageViewType::eCube );
+	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_nMipLevels, VK_IMAGE_VIEW_TYPE_CUBE );
 
 	// Create Texture Sampler
-	vk::SamplerCreateInfo samplerInfo = {};
-	samplerInfo.magFilter = vk::Filter::eLinear;
-	samplerInfo.minFilter = vk::Filter::eLinear;
-	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	VkSamplerCreateInfo samplerInfo = {};
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	samplerInfo.magFilter = VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerInfo.anisotropyEnable = VK_TRUE;
 	samplerInfo.maxAnisotropy = 16.0f;
-	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
 	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = vk::CompareOp::eAlways;
-	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	samplerInfo.mipLodBias = 0.0f;
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = static_cast< float >( m_nMipLevels );
 
-	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
+	if ( vkCreateSampler( vulkan().device, &samplerInfo, nullptr, &m_vkTextureSampler ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-	else
-		m_vkTextureSampler = std::move( sampler );
 }
 
 void TextureVK::LoadRGBA( const unsigned char *pPixels, size_t width, size_t height, bool bGenMipMaps /*= false*/ )
@@ -125,64 +124,63 @@ void TextureVK::LoadRGBA( const unsigned char *pPixels, size_t width, size_t hei
 	if ( bGenMipMaps )
 		m_nMipLevels = static_cast< uint32_t >( std::floor( std::log2( std::max( width, height ) ) ) ) + 1;
 
-	vk::DeviceSize imageSize = width * height * numChannels;
-	vk::Buffer stagingBuffer;
-	vk::DeviceMemory stagingBufferMemory;
+	VkDeviceSize imageSize = width * height * numChannels;
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
 
-	VulkanApp().createBuffer( imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory );
+	VulkanApp().createBuffer( imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_CACHED_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
 
 	void *pData = nullptr;
-	vulkan().device.mapMemory( stagingBufferMemory, 0, imageSize, vk::MemoryMapFlags(), &pData );
+	vkMapMemory( vulkan().device, stagingBufferMemory, 0, imageSize, 0, &pData );
 		std::memcpy( pData, pPixels, static_cast< size_t >( imageSize ) );
-	vulkan().device.unmapMemory( stagingBufferMemory );
+	vkUnmapMemory( vulkan().device, stagingBufferMemory );
 
 	VulkanApp().createImage( static_cast< uint32_t >( width ),
 			static_cast< uint32_t >( height ),
 			m_nMipLevels,
-			vk::Format::eR8G8B8A8Unorm,
-			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal,
+			VK_FORMAT_R8G8B8A8_UNORM,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			m_vkTextureImage,
 			m_vkTextureImageMemory );
 
-	VulkanApp().transitionImageLayout( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, m_nMipLevels );
+	VulkanApp().transitionImageLayout( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_nMipLevels );
 	VulkanApp().copyBufferToImage( stagingBuffer, m_vkTextureImage, static_cast< uint32_t >( width ), static_cast< uint32_t >( height ), static_cast< uint32_t >( numChannels ) );
 
 	// Generate Mipmaps
 	if ( bGenMipMaps )
-		VulkanApp().generateMipMaps( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, static_cast< int32_t >( width ), static_cast< int32_t >( height ), m_nMipLevels );
+		VulkanApp().generateMipMaps( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, static_cast< int32_t >( width ), static_cast< int32_t >( height ), m_nMipLevels );
 	else
-		VulkanApp().transitionImageLayout( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, m_nMipLevels );
+		VulkanApp().transitionImageLayout( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, m_nMipLevels );
 
-	vulkan().device.destroyBuffer( stagingBuffer, nullptr );
-	vulkan().device.freeMemory( stagingBufferMemory, nullptr );
+	vkDestroyBuffer( vulkan().device, stagingBuffer, nullptr );
+	vkFreeMemory( vulkan().device, stagingBufferMemory, nullptr );
 
 	// Create Texture Image View
-	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, m_nMipLevels, vk::ImageViewType::e2D );
+	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_nMipLevels, VK_IMAGE_VIEW_TYPE_2D );
 
 	// Create Texture Sampler
-	vk::SamplerCreateInfo samplerInfo;
-	samplerInfo.magFilter = vk::Filter::eLinear;
-	samplerInfo.minFilter = vk::Filter::eLinear;
-	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	VkSamplerCreateInfo samplerInfo;
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	samplerInfo.magFilter = VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerInfo.anisotropyEnable = VK_TRUE;
 	samplerInfo.maxAnisotropy = 16.0f;
-	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
 	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = vk::CompareOp::eAlways;
-	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	samplerInfo.mipLodBias = 0.0f;
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = static_cast< float >( m_nMipLevels );
 
-	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
+	if ( vkCreateSampler( vulkan().device, &samplerInfo, nullptr, &m_vkTextureSampler ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-	else
-		m_vkTextureSampler = std::move( sampler );
 }
 
 void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
@@ -213,46 +211,44 @@ void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
 	m_nMipLevels = m_ktxVulkanTexture.levelCount;
 
 	// Create Texture Image View
-	m_vkTextureImageView = VulkanApp().createImageView( m_ktxVulkanTexture.image, vk::Format( m_ktxVulkanTexture.imageFormat ), vk::ImageAspectFlagBits::eColor, m_ktxVulkanTexture.levelCount, vk::ImageViewType( m_ktxVulkanTexture.viewType ) );
+	m_vkTextureImageView = VulkanApp().createImageView( m_ktxVulkanTexture.image, m_ktxVulkanTexture.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_ktxVulkanTexture.levelCount, m_ktxVulkanTexture.viewType );
 
-	vk::SamplerCreateInfo samplerInfo;
-	samplerInfo.minFilter = vk::Filter::eLinear;
-	samplerInfo.magFilter = vk::Filter::eLinear;
-	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	VkSamplerCreateInfo samplerInfo = {};
+	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.magFilter = VK_FILTER_LINEAR;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerInfo.anisotropyEnable = VK_TRUE;
 	samplerInfo.maxAnisotropy = 16.0f;
 
-	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
 	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = vk::CompareOp::eAlways;
-	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	samplerInfo.mipLodBias = 0.0f;
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = static_cast< float >( m_ktxVulkanTexture.levelCount );
 
-	if ( auto[ result, sampler ] = vulkan().device.createSampler( samplerInfo, nullptr ); result != vk::Result::eSuccess )
+	if ( vkCreateSampler( vulkan().device, &samplerInfo, nullptr, &m_vkTextureSampler ) != VK_SUCCESS )
 		throw std::runtime_error( "[Vulkan]Failed to create texture sampler!" );
-	else
-		m_vkTextureSampler = std::move( sampler );
 
 	ktxTexture_Destroy( pTexture );
 }
 
 void TextureVK::Shutdown()
 {
-	if ( m_vkTextureSampler )
+	if ( m_vkTextureSampler != VK_NULL_HANDLE )
 	{
-		vulkan().device.destroySampler( m_vkTextureSampler, nullptr );
-		m_vkTextureSampler = nullptr;
+		vkDestroySampler( vulkan().device, m_vkTextureSampler, nullptr );
+		m_vkTextureSampler = VK_NULL_HANDLE;
 	}
 
-	if ( m_vkTextureImageView )
+	if ( m_vkTextureImageView != VK_NULL_HANDLE )
 	{
-		vulkan().device.destroyImageView( m_vkTextureImageView, nullptr );
-		m_vkTextureImageView = nullptr;
+		vkDestroyImageView( vulkan().device, m_vkTextureImageView, nullptr );
+		m_vkTextureImageView = VK_NULL_HANDLE;
 	}
 
 	if ( m_ktxVulkanTexture.image != VK_NULL_HANDLE && m_ktxVulkanTexture.deviceMemory != VK_NULL_HANDLE )
@@ -262,15 +258,15 @@ void TextureVK::Shutdown()
 		m_ktxVulkanTexture.deviceMemory = VK_NULL_HANDLE;
 	}
 
-	if ( m_vkTextureImage )
+	if ( m_vkTextureImage != VK_NULL_HANDLE )
 	{
-		vulkan().device.destroyImage( m_vkTextureImage, nullptr );
-		m_vkTextureImage = nullptr;
+		vkDestroyImage( vulkan().device, m_vkTextureImage, nullptr );
+		m_vkTextureImage = VK_NULL_HANDLE;
 	}
 
-	if ( m_vkTextureImageMemory )
+	if ( m_vkTextureImageMemory != VK_NULL_HANDLE )
 	{
-		vulkan().device.freeMemory( m_vkTextureImageMemory, nullptr );
-		m_vkTextureImageMemory = nullptr;
+		vkFreeMemory( vulkan().device, m_vkTextureImageMemory, nullptr );
+		m_vkTextureImageMemory = VK_NULL_HANDLE;
 	}
 }
