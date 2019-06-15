@@ -30,7 +30,7 @@ bool RendererVulkan::Init()
 		return false;
 	}
 
-	config cfg = g_pEngine->GetConfig();
+	const config &cfg = g_pEngine->GetConfig();
 	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
 	if ( cfg.windowConfig.fullscreen )
@@ -51,6 +51,9 @@ bool RendererVulkan::Init()
 		printf( "Renderer: %s\n", SDL_GetError() );
 		return false;
 	}
+
+	// Process events immediately because creating the window can signal a window resize event :/
+	GetSDL_Core()->ProcessEvents();
 
 	SDL_SetWindowGrab( m_pMainWindow, SDL_TRUE );
 	SDL_SetRelativeMouseMode( SDL_TRUE );

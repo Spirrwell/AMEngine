@@ -383,6 +383,7 @@ namespace vkApp
 		MaterialVK *m_pSkyboxMaterial = nullptr;
 
 		VulkanThreadPool m_ThreadPool;
+		bool m_bInit = false;
 	};
 }
 

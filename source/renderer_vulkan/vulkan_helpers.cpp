@@ -221,7 +221,7 @@ namespace vkApp
 		//m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/cube/BasicMaterial.amat" );
 		//m_pTestMaterial = new MaterialVK( string( GAME_DIR ) + "materials/chalet/chalet.amat" );
 		//m_pTestMesh = new MeshVK( vertices, indexBuffer, m_pTestMaterial );
-
+		m_bInit = true;
 		return true;
 	}
 
@@ -561,6 +561,9 @@ namespace vkApp
 
 	void VulkanApp::ProcessEvent( const SDL_Event &event )
 	{
+		if ( !m_bInit )
+			return;
+
 		if ( event.type == SDL_WINDOWEVENT )
 		{
 			config &cfg = g_pEngine->GetConfig();
@@ -815,7 +818,7 @@ namespace vkApp
 			std::min( swapChainSupport->capabilities.minImageCount + 1, swapChainSupport->capabilities.maxImageCount ) :
 			swapChainSupport->capabilities.minImageCount + 1;
 
-		VkSwapchainCreateInfoKHR createInfo;
+		VkSwapchainCreateInfoKHR createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		createInfo.surface = vulkan().surface;
 
