@@ -31,10 +31,12 @@ bool RendererVulkan::Init()
 	}
 
 	const config &cfg = g_pEngine->GetConfig();
-	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	Uint32 windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI;
 
 	if ( cfg.windowConfig.fullscreen )
 		windowFlags |= SDL_WINDOW_FULLSCREEN;
+	else
+		windowFlags |= SDL_WINDOW_RESIZABLE;
 
 	m_pMainWindow = SDL_CreateWindow
 	(
