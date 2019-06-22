@@ -468,6 +468,7 @@ namespace vkApp
 		}
 
 		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
 		presentInfo.swapchainCount = 1;
@@ -650,9 +651,10 @@ namespace vkApp
 #if VULKAN_VALIDATION_LAYERS
 	void VulkanApp::setupDebugCallback()
 	{
-		VkDebugUtilsMessengerCreateInfoEXT createInfo;
+		VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_FLAG_BITS_MAX_ENUM_EXT;
+		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		createInfo.pfnUserCallback = debugCallback;
 		createInfo.pUserData = nullptr;
 
@@ -1175,6 +1177,7 @@ namespace vkApp
 	VkImageView VulkanApp::createImageView( VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels, VkImageViewType imageViewType )
 	{
 		VkImageViewCreateInfo viewInfo = {};
+		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewInfo.image = image;
 		viewInfo.viewType = imageViewType;
 		viewInfo.format = format;

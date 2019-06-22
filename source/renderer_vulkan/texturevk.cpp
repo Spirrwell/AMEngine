@@ -161,7 +161,7 @@ void TextureVK::LoadRGBA( const unsigned char *pPixels, size_t width, size_t hei
 	m_vkTextureImageView = VulkanApp().createImageView( m_vkTextureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, m_nMipLevels, VK_IMAGE_VIEW_TYPE_2D );
 
 	// Create Texture Sampler
-	VkSamplerCreateInfo samplerInfo;
+	VkSamplerCreateInfo samplerInfo = {};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
 	samplerInfo.minFilter = VK_FILTER_LINEAR;
@@ -214,6 +214,7 @@ void TextureVK::LoadKtx( const std::filesystem::path &ktxFile )
 	m_vkTextureImageView = VulkanApp().createImageView( m_ktxVulkanTexture.image, m_ktxVulkanTexture.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT, m_ktxVulkanTexture.levelCount, m_ktxVulkanTexture.viewType );
 
 	VkSamplerCreateInfo samplerInfo = {};
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	samplerInfo.minFilter = VK_FILTER_LINEAR;
 	samplerInfo.magFilter = VK_FILTER_LINEAR;
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;

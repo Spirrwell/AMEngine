@@ -80,6 +80,8 @@ void ShaderVK::Shutdown()
 
 void ShaderVK::InitPipelineInfo()
 {
+	m_Pipeline.DepthStencilState = {};
+	m_Pipeline.DepthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	m_Pipeline.DepthStencilState.depthTestEnable = VK_TRUE;
 	m_Pipeline.DepthStencilState.depthWriteEnable = VK_TRUE;
 	m_Pipeline.DepthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
@@ -195,7 +197,7 @@ void ShaderVK::createGraphicsPipeline()
 	vertShaderStageInfo.pName = "main";
 
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
-	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 	fragShaderStageInfo.module = m_Pipeline.ShaderModules[ FRAGMENT_SHADER ];
 	fragShaderStageInfo.pName = "main";
@@ -315,7 +317,7 @@ void ShaderVK::createGraphicsPipeline()
 	pipelineInfo.layout = m_Pipeline.PipelineLayout;
 	pipelineInfo.renderPass = vulkan().renderPass;
 	pipelineInfo.subpass = 0;
-	pipelineInfo.basePipelineHandle = nullptr; // Optional
+	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
 
 	if ( vkCreateGraphicsPipelines( vulkan().device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline.Pipeline ) != VK_SUCCESS )

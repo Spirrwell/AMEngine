@@ -84,6 +84,7 @@ const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( Mater
 	std::vector< VkWriteDescriptorSet > descriptorWrites = {};
 	descriptorWrites.resize( 2 );
 
+	descriptorWrites[ 0 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[ 0 ].dstSet = material.m_vkDescriptorSets[ imageIndex ];
 	descriptorWrites[ 0 ].dstBinding = 0;
 	descriptorWrites[ 0 ].dstArrayElement = 0;
@@ -91,6 +92,7 @@ const std::vector< VkWriteDescriptorSet > TestShader::GetDescriptorWrites( Mater
 	descriptorWrites[ 0 ].descriptorCount = 1;
 	descriptorWrites[ 0 ].pBufferInfo = &bufferInfo;
 
+	descriptorWrites[ 1 ].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrites[ 1 ].dstSet = material.m_vkDescriptorSets[ imageIndex ];
 	descriptorWrites[ 1 ].dstBinding = 1;
 	descriptorWrites[ 1 ].dstArrayElement = 0;
